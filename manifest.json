@@ -1,0 +1,8 @@
+{
+  "name": "Lets Taco Da Nang",
+  "short_name": "Lets Taco",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1A0800",
+  "theme_color": "#1A0800"
+}
