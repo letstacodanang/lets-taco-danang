@@ -187,13 +187,22 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 <div class="toast" id="toast"><div class="toast-t" id="tt"></div><div id="tm"></div></div>
 <div class="lw" id="lw">
   <div class="lb">
-    <div class="ll">LETS TACO</div>
-    <div class="ls">Owner Dashboard</div>
-    <div class="fg"><label>Email</label><input type="email" id="le" placeholder="letstacodanang@gmail.com" autocomplete="username"></div>
-    <div class="fg"><label>Password</label><input type="password" id="lp" placeholder="Enter password" autocomplete="current-password"></div>
-    <button class="btn-l" id="lbtn">ENTER DASHBOARD</button>
-    <div class="err" id="lerr">Incorrect email or password</div>
-    <div class="err" id="llock"></div>
+    <div class="ll">LET'S TACO</div>
+    <div class="ls" id="lsub">Staff Login</div>
+    <div id="sv">
+      <div class="fg"><label>Staff Password</label><input type="password" id="lps" placeholder="Enter staff password" onkeydown="if(event.key==='Enter')doSL()"></div>
+      <div class="fg" id="nf" style="display:none"><label>Your Name</label><input type="text" id="ln" placeholder="e.g. Minh, Lan, Danny" onkeydown="if(event.key==='Enter')doSL()"><div style="font-size:0.72rem;color:#B8A99A;margin-top:6px;line-height:1.5">Use the same name every shift.</div></div>
+      <button class="btn-l" id="lbs" onclick="doSL()">START SHIFT</button>
+      <div style="text-align:center;margin-top:15px"><button onclick="showOL()" style="background:transparent;border:none;color:#B8A99A;font-size:0.75rem;cursor:pointer;text-decoration:underline">Owner login</button></div>
+    </div>
+    <div id="ov" style="display:none">
+      <div class="fg"><label>Email</label><input type="email" id="le" placeholder="letstacodanang@gmail.com" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fg"><label>Password</label><input type="password" id="lp" placeholder="Owner password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-l" id="lbtn" onclick="doLogin()">OWNER LOGIN</button>
+      <div style="text-align:center;margin-top:15px"><button onclick="showSL()" style="background:transparent;border:none;color:#B8A99A;font-size:0.75rem;cursor:pointer;text-decoration:underline">Staff login</button></div>
+    </div>
+    <div class="err" id="lerr" style="display:none"></div>
+    <div class="err" id="llock" style="display:none"></div>
   </div>
 </div>
 <div class="app" id="app">
@@ -202,12 +211,14 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
     <div class="sb-clk" id="clk">00:00:00</div>
     <nav class="sb-nav">
       <div class="ni active" data-pg="home"><span class="ni-ic">🏠</span><span>Home</span><span class="nb" id="nb">0</span></div>
+      <div class="ni" data-pg="dinein"><span class="ni-ic">🍽️</span><span>Dine In</span></div>
       <div class="ni" data-pg="orders"><span class="ni-ic">📋</span><span>Orders</span></div>
-      <div class="ni" data-pg="customers"><span class="ni-ic">👥</span><span>Customers</span></div>
-      <div class="ni" data-pg="revenue"><span class="ni-ic">💰</span><span>Revenue</span></div>
+      <div class="ni owner-only" data-pg="customers"><span class="ni-ic">👥</span><span>Customers</span></div>
+      <div class="ni owner-only" data-pg="revenue"><span class="ni-ic">💰</span><span>Revenue</span></div>
       <div class="ni" data-pg="menu"><span class="ni-ic">🌮</span><span>Menu</span></div>
-      <div class="ni" data-pg="settings"><span class="ni-ic">⚙️</span><span>Settings</span></div>
+      <div class="ni owner-only" data-pg="settings"><span class="ni-ic">⚙️</span><span>Settings</span></div>
       <div class="ni" data-pg="help"><span class="ni-ic">📖</span><span>Guide</span></div>
+      <div class="ni owner-only" onclick="checkPin()" style="border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">🔐</span><span>Owner</span></div>
     </nav>
     <div class="sb-bot"><button class="btn-out" id="lout">Logout</button></div>
   </div>
@@ -298,6 +309,9 @@ var SB = 'https://kigqjuxxoeoeezjguuxu.supabase.co';
 var SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpZ3FqdXh4b2VvZWV6amd1dXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTgxNjIsImV4cCI6MjA5NTYzNDE2Mn0.e-V7jsZ0yEjHUziUeFAZQkNDgxKmMq_v4TcYcHBEyhQ';
 var AEMAIL = 'letstacodanang@gmail.com';
 var APASS = 'LetsTaco2024!';
+var SPASS='LetsWork2024!';
+var OPIN='1011';
+var isOwner=false,currentStaff='',shiftId=null;
 var allO = [], allC = [], curF = 'all', nId = null, dId = null, attempts = 0, locked = false, rOpen = true;
 var MENU = [
   {id:'birria',name:'Birria Tacos',desc:'Slow Cooked Beef',price:'125k-180k'},
@@ -354,6 +368,7 @@ setInterval(function(){
 document.getElementById('lbtn').addEventListener('click',doLogin);
 document.getElementById('lp').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 document.getElementById('lout').addEventListener('click',function(){
+  if(shiftId){sbF('/rest/v1/staff_shifts?id=eq.'+shiftId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({logout_time:new Date().toISOString()})});shiftId=null;}
   document.getElementById('app').style.display='none';
   document.getElementById('lw').style.display='flex';
   document.getElementById('lp').value='';
@@ -396,6 +411,8 @@ function doLogin(){
     document.getElementById('app').style.display='flex';
     err.style.display='none';
     attempts=0;
+    isOwner=true;currentStaff='Owner';
+    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
     initApp();
     return;
   }
@@ -416,7 +433,7 @@ function doLogin(){
   }
 }
 
-var PGT={home:'Dashboard',orders:'All Orders',customers:'Customers',revenue:'Revenue',menu:'Menu Items',settings:'Settings',help:'Staff Guide'};
+var PGT={home:'Dashboard',dinein:'Dine In',orders:'All Orders',customers:'Customers',revenue:'Revenue',menu:'Menu Items',settings:'Settings',help:'Staff Guide'};
 function showPg(pg){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
@@ -426,6 +443,7 @@ function showPg(pg){
   if(pg==='orders')renderOL(curF==='all'?allO:allO.filter(function(o){return o.status===curF;}),document.getElementById('aol'));
   if(pg==='customers')renderCL();
   if(pg==='revenue')loadRev();
+  if(pg==='dinein')renderTG();
 }
 function initApp(){loadO();loadC();renderMenu();setInterval(loadO,30000);}
 
@@ -577,7 +595,24 @@ function renderMenu(){
 </script>
 
 
-<div class="pg" id="pg-help">
+
+    <div class="pg" id="pg-dinein">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#D4A017;letter-spacing:2px">DINE IN - TABLE STATUS</div>
+        <button onclick="openNTO(0)" style="background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;border:none;padding:10px 20px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:0.95rem;letter-spacing:2px;cursor:pointer">+ NEW TABLE ORDER</button>
+      </div>
+      <div id="tgrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-bottom:20px"></div>
+      <div id="tdetail" style="display:none">
+        <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.2);border-radius:8px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:#D4A017;letter-spacing:2px" id="tdt">TABLE ORDERS</div>
+            <button onclick="document.getElementById('tdetail').style.display='none'" style="background:transparent;border:1px solid rgba(212,160,23,0.2);color:#B8A99A;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:0.8rem">Close</button>
+          </div>
+          <div id="tdlist"></div>
+        </div>
+      </div>
+    </div>
+    <div class="pg" id="pg-help">
   <div style="max-width:700px;">
     <div style="background:linear-gradient(135deg,rgba(212,160,23,0.1),rgba(230,126,34,0.05));border:1px solid rgba(212,160,23,0.3);border-radius:8px;padding:20px;margin-bottom:20px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:#D4A017;letter-spacing:3px;margin-bottom:5px;">STAFF GUIDE</div><div style="font-size:0.85rem;color:#B8A99A;">Everything you need to run the restaurant. Read before your first shift.</div></div>
     <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;"><div style="width:36px;height:36px;background:linear-gradient(135deg,#D4A017,#E67E22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#0F0500;flex-shrink:0;">1</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#FAF0E6;letter-spacing:2px;">NEW ORDER ARRIVES</div></div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Red badge on Home tab shows new orders</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Order appears at top with PLACED status</span></div><div style="display:flex;gap:8px;"><span style="color:#D4A017;">&#8594;</span><span>Check name, items, address, contact method</span></div></div></div>
@@ -591,6 +626,28 @@ function renderMenu(){
   </div>
 </div>
 
+
+<div id="ntmod" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:5000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:#0F0500;border:1px solid rgba(212,160,23,0.3);border-radius:12px;width:480px;max-width:95vw;max-height:92vh;overflow-y:auto">
+    <div style="padding:18px 20px;border-bottom:1px solid rgba(212,160,23,0.15);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#0F0500">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#D4A017;letter-spacing:2px">NEW DINE IN ORDER</div>
+      <button onclick="document.getElementById('ntmod').style.display='none'" style="background:transparent;border:1px solid rgba(212,160,23,0.2);color:#B8A99A;width:30px;height:30px;border-radius:50%;cursor:pointer">x</button>
+    </div>
+    <div style="padding:18px">
+      <div style="margin-bottom:12px"><label style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;display:block;margin-bottom:5px">Table Number</label>
+        <input id="ntt" type="number" min="1" max="20" placeholder="1-20" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#FAF0E6;padding:11px;border-radius:5px;font-size:1rem;outline:none"></div>
+      <div style="margin-bottom:12px"><label style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;display:block;margin-bottom:5px">Customer Name (optional)</label>
+        <input id="ntn" type="text" placeholder="e.g. Table 5 group" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#FAF0E6;padding:11px;border-radius:5px;font-size:1rem;outline:none"></div>
+      <div style="margin-bottom:12px"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px">Items</div>
+        <div id="ntmg" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div></div>
+      <div id="ntil" style="margin-bottom:12px"></div>
+      <div style="margin-bottom:12px"><label style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;display:block;margin-bottom:5px">Notes</label>
+        <textarea id="ntnotes" rows="2" placeholder="Special requests..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#FAF0E6;padding:11px;border-radius:5px;font-size:0.9rem;outline:none;resize:none"></textarea></div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:#D4A017;margin-bottom:12px" id="nttot">TOTAL: 0</div>
+      <button onclick="placeTO()" style="width:100%;padding:13px;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;cursor:pointer">PLACE ORDER</button>
+    </div>
+  </div>
+</div>
 <div id="chat-overlay" onclick="closeChat()" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:4000;display:none;backdrop-filter:blur(4px);"></div>
 <div id="chat-window" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.92);width:460px;max-width:95vw;background:#0F0500;border:1px solid rgba(212,160,23,0.3);border-radius:12px;z-index:4001;display:none;flex-direction:column;transition:transform 0.25s,opacity 0.25s;opacity:0;box-shadow:0 30px 80px rgba(0,0,0,0.8);">
   <div style="padding:18px 20px;border-bottom:1px solid rgba(212,160,23,0.15);display:flex;justify-content:space-between;align-items:center;">
@@ -612,10 +669,143 @@ function renderMenu(){
 var chatOId=null;
 var SMSGS={accepted:"Hi {n}! Your order {r} has been accepted. We are getting ready to cook your tacos!",prepping:"Hi {n}! Order {r} is being prepared now. Fresh ingredients, real Mexican flavour!",cooking:"Hi {n}! Order {r} is cooking right now. It smells incredible in here!",dispatched:"Hi {n}! Great news - order {r} is on its way to you! Driver will contact you shortly.",delivered:"Hi {n}! Hope you love your tacos! Order {r} has been delivered. Thank you so much!"};
 function openChat(oid){var o=allO.find(function(x){return x.id===oid;});if(!o)return;chatOId=oid;var cm=o.contact_method||'whatsapp';document.getElementById('chat-name').textContent=o.customer_name||'Customer';document.getElementById('chat-ref').textContent=(o.order_ref||'')+' - '+(o.customer_phone||'')+' - '+cm.toUpperCase();var sb=document.getElementById('chat-send');sb.style.background=cm==='zalo'?'linear-gradient(135deg,#0068FF,#0052CC)':'linear-gradient(135deg,#25D366,#128C7E)';document.getElementById('chat-note').textContent='Opens in '+(cm==='zalo'?'Zalo':'WhatsApp')+' - dashboard stays open';document.getElementById('chat-msg').value='';renderCH(o);showCW();}
-function openChatAuto(oid,ns){var o=allO.find(function(x){return x.id===oid;});if(!o)return;var tpl=SMSGS[ns];if(!tpl)return;var msg=tpl.replace('{n}',o.customer_name||'friend').replace('{r}',o.order_ref||'');chatOId=oid;var cm=o.contact_method||'whatsapp';document.getElementById('chat-name').textContent=o.customer_name||'Customer';document.getElementById('chat-ref').textContent=(o.order_ref||'')+' - '+ns.toUpperCase()+' - tap SEND to notify';var sb=document.getElementById('chat-send');sb.style.background=cm==='zalo'?'linear-gradient(135deg,#0068FF,#0052CC)':'linear-gradient(135deg,#25D366,#128C7E)';document.getElementById('chat-note').textContent='Opens in '+(cm==='zalo'?'Zalo':'WhatsApp')+' - dashboard stays open';document.getElementById('chat-msg').value=msg;renderCH(o);showCW();}
+function openChatAuto(oid,ns){
+  var _x=allO.find(function(o){return o.id===oid;});
+  if(_x&&_x.order_type==="dinein")return;var o=allO.find(function(x){return x.id===oid;});if(!o)return;var tpl=SMSGS[ns];if(!tpl)return;var msg=tpl.replace('{n}',o.customer_name||'friend').replace('{r}',o.order_ref||'');chatOId=oid;var cm=o.contact_method||'whatsapp';document.getElementById('chat-name').textContent=o.customer_name||'Customer';document.getElementById('chat-ref').textContent=(o.order_ref||'')+' - '+ns.toUpperCase()+' - tap SEND to notify';var sb=document.getElementById('chat-send');sb.style.background=cm==='zalo'?'linear-gradient(135deg,#0068FF,#0052CC)':'linear-gradient(135deg,#25D366,#128C7E)';document.getElementById('chat-note').textContent='Opens in '+(cm==='zalo'?'Zalo':'WhatsApp')+' - dashboard stays open';document.getElementById('chat-msg').value=msg;renderCH(o);showCW();}
 function showCW(){var ov=document.getElementById('chat-overlay');var cw=document.getElementById('chat-window');ov.style.display='block';cw.style.display='flex';setTimeout(function(){cw.style.transform='translate(-50%,-50%) scale(1)';cw.style.opacity='1';},10);}
 function renderCH(o){var log=o.chat_log?(typeof o.chat_log==='string'?JSON.parse(o.chat_log):o.chat_log):[];var con=document.getElementById('chat-history');if(!log.length){con.innerHTML='<div style="color:#B8A99A;font-size:0.8rem;text-align:center;padding:15px;">No messages yet</div>';return;}con.innerHTML=log.map(function(m){var own=m.from==='owner';return '<div style="display:flex;justify-content:'+(own?'flex-end':'flex-start')+';"><div style="max-width:82%;background:'+(own?'linear-gradient(135deg,#D4A017,#E67E22)':'rgba(255,255,255,0.07)')+';color:'+(own?'#0F0500':'#FAF0E6')+';padding:9px 13px;border-radius:'+(own?'12px 12px 2px 12px':'12px 12px 12px 2px')+';font-size:0.85rem;line-height:1.5;"><div>'+m.text+'</div><div style="font-size:0.65rem;opacity:0.6;margin-top:3px;text-align:right;">'+m.time+'</div></div></div>';}).join('');con.scrollTop=con.scrollHeight;}
 function sendChat(){var msg=document.getElementById('chat-msg').value.trim();if(!msg||!chatOId)return;var o=allO.find(function(x){return x.id===chatOId;});if(!o)return;var cm=o.contact_method||'whatsapp';var ph=(o.customer_phone||'').replace(/[^0-9+]/g,'');if(ph.startsWith('0'))ph='+84'+ph.substring(1);var url=cm==='zalo'?('https://zalo.me/'+ph.replace('+','')):('https://wa.me/'+ph.replace('+','')+'/send?text='+encodeURIComponent(msg));var win=window.open(url,'_blank');var now=new Date();var t=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');var log=o.chat_log?(typeof o.chat_log==='string'?JSON.parse(o.chat_log):o.chat_log):[];log.push({from:'owner',text:msg,time:t});sbF('/rest/v1/orders?id=eq.'+chatOId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({chat_log:log})}).then(function(){loadO();renderCH(Object.assign({},o,{chat_log:log}));});document.getElementById('chat-msg').value='';if(win)setTimeout(function(){try{win.close();}catch(e){}},4000);}
 function closeChat(){var cw=document.getElementById('chat-window');var ov=document.getElementById('chat-overlay');cw.style.transform='translate(-50%,-50%) scale(0.92)';cw.style.opacity='0';setTimeout(function(){cw.style.display='none';ov.style.display='none';},220);chatOId=null;}
+
+function showSL(){document.getElementById('sv').style.display='block';document.getElementById('ov').style.display='none';document.getElementById('lsub').textContent='Staff Login';}
+function showOL(){document.getElementById('sv').style.display='none';document.getElementById('ov').style.display='block';document.getElementById('lsub').textContent='Owner Login';}
+function doSL(){
+  var p=document.getElementById('lps').value,err=document.getElementById('lerr');
+  err.style.display='none';
+  if(p!==SPASS){err.style.display='block';err.textContent='Wrong password. Ask your manager.';return;}
+  var nf=document.getElementById('nf'),ni=document.getElementById('ln');
+  if(nf.style.display==='none'||nf.style.display===''){
+    var sv=localStorage.getItem('lt_sn');
+    if(sv){currentStaff=sv;startSS();return;}
+    nf.style.display='block';document.getElementById('lbs').textContent='CONFIRM NAME';ni.focus();return;
+  }
+  var nm=ni.value.trim();
+  if(!nm){err.style.display='block';err.textContent='Please enter your name.';return;}
+  var sv=localStorage.getItem('lt_sn');
+  if(sv&&sv.toLowerCase()!==nm.toLowerCase()){err.style.display='block';err.textContent='Use your registered name: '+sv;return;}
+  localStorage.setItem('lt_sn',nm);currentStaff=nm;startSS();
+}
+function startSS(){
+  isOwner=false;
+  sbF('/rest/v1/staff_shifts',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({staff_name:currentStaff,login_time:new Date().toISOString()})}).then(function(d){if(d&&d.length>0)shiftId=d[0].id;});
+  document.getElementById('lw').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});
+  showT('Welcome '+currentStaff+'!','Shift started. Have a great service!');
+  initApp();
+}
+function checkPin(){
+  var p=prompt('Enter Owner PIN:');if(!p)return;
+  if(p===OPIN){
+    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
+    showT('Owner Access Unlocked','30 minute session');
+    setTimeout(function(){if(!isOwner){document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});}showT('Owner Access','Session expired');},1800000);
+  }else{showT('Wrong PIN','Access denied');}
+}
+var ntItems=[];
+var NTM=[
+  {n:'Birria x2',p:125000},{n:'Birria x3',p:180000},{n:'Steak x2',p:115000},{n:'Steak x3',p:165000},
+  {n:'Pork x2',p:110000},{n:'Pork x3',p:160000},{n:'Chicken x2',p:105000},{n:'Chicken x3',p:150000},
+  {n:'Carnitas x2',p:110000},{n:'Carnitas x3',p:160000},{n:'Rice Chicken',p:100000},{n:'Rice Pork',p:120000},
+  {n:'Rice Steak',p:140000},{n:'Extra Cheese',p:10000},{n:'Extra Avocado',p:10000},
+  {n:'Birria Sauce',p:25000},{n:'Rice Chips',p:99000},{n:'Coke',p:15000},{n:'7Up',p:15000}
+];
+function openNTO(pf){
+  ntItems=[];
+  document.getElementById('ntt').value=pf||'';
+  document.getElementById('ntn').value='';
+  document.getElementById('ntnotes').value='';
+  document.getElementById('ntil').innerHTML='';
+  document.getElementById('nttot').textContent='TOTAL: 0';
+  var g=document.getElementById('ntmg'),h='';
+  NTM.forEach(function(item,i){
+    h+='<button onclick="addNTI('+i+')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.15);border-radius:5px;padding:9px;text-align:left;cursor:pointer;touch-action:manipulation">';
+    h+='<div style="font-size:0.8rem;color:#FAF0E6">'+item.n+'</div>';
+    h+='<div style="font-size:0.75rem;color:#D4A017;margin-top:2px">'+fV(item.p)+'</div></button>';
+  });
+  g.innerHTML=h;
+  document.getElementById('ntmod').style.display='flex';
+}
+function addNTI(i){
+  var item=NTM[i],ex=ntItems.findIndex(function(x){return x.name===item.n;});
+  if(ex>-1)ntItems[ex].qty++;else ntItems.push({name:item.n,price:item.p,qty:1});
+  renderNTI();
+}
+function removeNTI(i){ntItems.splice(i,1);renderNTI();}
+function renderNTI(){
+  var tot=ntItems.reduce(function(s,it){return s+it.price*it.qty;},0);
+  document.getElementById('nttot').textContent='TOTAL: '+fV(tot);
+  var list=document.getElementById('ntil'),h='';
+  if(!ntItems.length){list.innerHTML='';return;}
+  h='<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.1);border-radius:5px;padding:10px">';
+  ntItems.forEach(function(it,i){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
+    h+='<span style="font-size:0.85rem;color:#FAF0E6">'+it.qty+'x '+it.name+'</span>';
+    h+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.85rem;color:#D4A017">'+fV(it.price*it.qty)+'</span>';
+    h+='<button onclick="removeNTI('+i+')" style="background:transparent;border:none;color:#C0392B;cursor:pointer;font-size:1.1rem;line-height:1">x</button></div></div>';
+  });
+  h+='</div>';list.innerHTML=h;
+}
+async function placeTO(){
+  var tn=document.getElementById('ntt').value,cn=document.getElementById('ntn').value.trim()||'Table '+tn;
+  var notes=document.getElementById('ntnotes').value.trim();
+  if(!tn){showT('Error','Enter table number');return;}
+  if(!ntItems.length){showT('Error','Add at least one item');return;}
+  var tot=ntItems.reduce(function(s,it){return s+it.price*it.qty;},0);
+  var ref='LTD-T'+tn+'-'+Date.now().toString(36).toUpperCase().slice(-4);
+  var od={order_ref:ref,customer_name:cn,customer_email:'dinein@letstaco.vn',customer_phone:'',order_type:'dinein',table_number:String(tn),payment_method:'cash',payment_status:'pending',items:ntItems,subtotal:tot,total:tot,points_earned:0,status:'accepted',special_instructions:notes||null,staff_name:currentStaff,contact_method:'dinein'};
+  var r=await sbF('/rest/v1/orders',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(od)});
+  if(r&&r.length>0){document.getElementById('ntmod').style.display='none';showT('Order Placed!','Table '+tn);loadO().then(function(){renderTG();});}
+  else showT('Error','Could not place order');
+}
+function renderTG(){
+  var g=document.getElementById('tgrid');if(!g)return;
+  var h='';
+  for(var t=1;t<=20;t++){
+    var to=allO.filter(function(o){return String(o.table_number)===String(t)&&o.order_type==='dinein'&&o.status!=='delivered'&&o.status!=='cancelled';});
+    var occ=to.length>0;
+    var bg=occ?'linear-gradient(135deg,#E67E22,#D35400)':'rgba(255,255,255,0.04)';
+    var tc=occ?'#0F0500':'#B8A99A';
+    var bdr=occ?'2px solid #E67E22':'1px solid rgba(212,160,23,0.15)';
+    var sub=occ?(to.length+(to.length>1?' orders':' order')):'Empty';
+    h+='<div onclick="viewT('+t+')" style="background:'+bg+';border:'+bdr+';border-radius:8px;padding:14px 6px;text-align:center;cursor:pointer;touch-action:manipulation">';
+    h+='<div style="font-family:Bebas Neue,sans-serif;font-size:1.5rem;color:'+tc+';letter-spacing:1px">'+t+'</div>';
+    h+='<div style="font-size:0.62rem;color:'+(occ?'rgba(15,5,0,0.6)':'rgba(184,169,154,0.6)')+';text-transform:uppercase;letter-spacing:1px">'+sub+'</div></div>';
+  }
+  g.innerHTML=h;
+}
+function viewT(t){
+  var to=allO.filter(function(o){return String(o.table_number)===String(t)&&o.order_type==='dinein';});
+  document.getElementById('tdt').textContent='TABLE '+t+(to.length?' - '+to.length+' ORDER'+(to.length>1?'S':''):'- EMPTY');
+  var h='';
+  if(!to.length){
+    h='<div style="color:#B8A99A;text-align:center;padding:20px;font-size:0.9rem">No orders yet.</div>';
+    h+='<button onclick="openNTO('+t+')" style="width:100%;background:rgba(212,160,23,0.08);border:1px dashed rgba(212,160,23,0.3);color:#D4A017;padding:11px;border-radius:5px;font-family:Bebas Neue,sans-serif;font-size:0.95rem;letter-spacing:2px;cursor:pointer;margin-top:8px">+ PLACE ORDER</button>';
+  } else {
+    to.forEach(function(o){
+      var items=Array.isArray(o.items)?o.items:[];
+      var ih=items.map(function(it){return (it.qty||1)+'x '+(it.name||it);}).join(', ');
+      h+='<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.1);border-radius:5px;padding:12px;margin-bottom:8px">';
+      h+='<div style="display:flex;justify-content:space-between;margin-bottom:5px">';
+      h+='<div style="font-family:Bebas Neue,sans-serif;color:#D4A017;font-size:0.95rem">'+o.order_ref+'</div>';
+      h+='<span style="font-size:0.72rem;background:rgba(230,126,34,0.15);color:#E67E22;padding:2px 7px;border-radius:3px">'+(o.status||'placed').toUpperCase()+'</span></div>';
+      h+='<div style="font-size:0.82rem;color:#B8A99A;margin-bottom:5px">'+ih+'</div>';
+      h+='<div style="font-family:Bebas Neue,sans-serif;color:#D4A017">'+fV(o.total||0)+'</div></div>';
+    });
+    h+='<button onclick="openNTO('+t+')" style="width:100%;background:rgba(212,160,23,0.06);border:1px dashed rgba(212,160,23,0.25);color:#D4A017;padding:11px;border-radius:5px;font-family:Bebas Neue,sans-serif;font-size:0.9rem;letter-spacing:2px;cursor:pointer;margin-top:4px">+ ADD MORE ITEMS</button>';
+  }
+  document.getElementById('tdlist').innerHTML=h;
+  document.getElementById('tdetail').style.display='block';
+}
 </script>
 </html>
