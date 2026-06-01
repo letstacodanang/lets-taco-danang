@@ -117,10 +117,10 @@ function render(orders){
       else if(action==="COLLECTED")ns="delivered";
       if(!ns)return;
       var u={status:ns};
-      var ts={cooking:"cooking_at",ready:"ready_at",delivered:"delivered_at"};
+      var ts={cooking:"cooking_at",delivered:"delivered_at"};
       if(ts[ns])u[ts[ns]]=new Date().toISOString();
       this.textContent="...";this.disabled=true;
-      fetch(SB+"/rest/v1/orders?id=eq."+id,{method:"PATCH",headers:{"apikey":SK,"Authorization":"Bearer "+SK,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(u)}).then(function(){poll();});
+      fetch(SB+"/rest/v1/orders?id=eq."+id,{method:"PATCH",headers:{"apikey":SK,"Authorization":"Bearer "+SK,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(u)}).then(function(r){if(r.ok||r.status===204){poll();}else{r.text().then(function(t){console.error("PATCH failed:",r.status,t);});}}).catch(function(e){console.error("fetch error:",e);});
     });
   });
 }
