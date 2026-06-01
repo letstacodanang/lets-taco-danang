@@ -62,6 +62,7 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 .oc.sk{border-left:3px solid #F39C12;}
 .oc.sd{border-left:3px solid #27AE60;}
 .oc.sv2{border-left:3px solid #B8A99A;}
+.oc.sd2{border-left:3px solid #27AE60;}
 .oc.sc2{border-left:3px solid #C0392B;}
 .oh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px;flex-wrap:wrap;gap:10px;}
 .oref{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#D4A017;letter-spacing:2px;}
@@ -76,6 +77,7 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 .sb-d{background:rgba(39,174,96,0.15);color:#27AE60;border-color:rgba(39,174,96,0.3);}
 .sb-v{background:rgba(184,169,154,0.1);color:#B8A99A;border-color:rgba(184,169,154,0.2);}
 .sb-c{background:rgba(192,57,43,0.15);color:#C0392B;border-color:rgba(192,57,43,0.3);}
+.sb-g{background:rgba(39,174,96,0.15);color:#27AE60;border-color:rgba(39,174,96,0.3);}
 .oitems{margin:15px 0;padding:15px;background:rgba(255,255,255,0.02);border-radius:4px;}
 .oirow{display:flex;justify-content:space-between;font-size:0.85rem;padding:4px 0;color:#B8A99A;}
 .oirow span:first-child{color:#FAF0E6;}
@@ -147,6 +149,7 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 .ma{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
 .mc{background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;border:none;padding:10px 25px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;border-radius:4px;cursor:pointer;}
 .mx{background:transparent;border:1px solid rgba(212,160,23,0.15);color:#B8A99A;padding:10px 25px;font-family:'Jost',sans-serif;font-size:0.85rem;border-radius:4px;cursor:pointer;}
+@keyframes alertPulse{0%,100%{opacity:1;}50%{opacity:0.85;}}
 .toast{position:fixed;bottom:30px;right:30px;background:#1A0800;border:1px solid #D4A017;border-radius:4px;padding:15px 25px;color:#FAF0E6;font-size:0.85rem;z-index:9999;transform:translateX(200%);transition:transform 0.3s;max-width:300px;}
 .toast.show{transform:translateX(0);}
 .toast-t{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#D4A017;margin-bottom:3px;}
@@ -206,6 +209,7 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
   </div>
 </div>
 <div class="app" id="app">
+<div id="ready-alert" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9000;background:linear-gradient(135deg,#27AE60,#2ECC71);color:white;padding:14px 24px;text-align:center;cursor:pointer;animation:alertPulse 1s infinite;box-shadow:0 4px 20px rgba(39,174,96,0.6);" onclick="handleReadyAlert()"><span style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;" id="ready-alert-text">ORDER READY FOR PICKUP</span><span style="margin-left:20px;font-size:0.8rem;letter-spacing:2px;opacity:0.9;">TAP TO VIEW</span></div>
   <div class="sb">
     <div class="sb-top"><div class="sb-n">LETS TACO</div><div class="sb-s">Admin Dashboard</div></div>
     <div class="sb-clk" id="clk">00:00:00</div>
@@ -218,6 +222,7 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
       <div class="ni" data-pg="menu"><span class="ni-ic">🌮</span><span>Menu</span></div>
       <div class="ni owner-only" data-pg="settings"><span class="ni-ic">⚙️</span><span>Settings</span></div>
       <div class="ni" data-pg="help"><span class="ni-ic">📖</span><span>Guide</span></div>
+      <a href="/kitchen" target="_blank" class="ni" style="text-decoration:none;border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">👨‍🍳</span><span>Kitchen</span></a>
       <div class="ni owner-only" onclick="checkPin()" style="border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">🔐</span><span>Owner</span></div>
     </nav>
     <div class="sb-bot"><button class="btn-out" id="lout">Logout</button></div>
@@ -247,6 +252,7 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
         <button class="fc" data-f="accepted">Accepted</button>
         <button class="fc" data-f="prepping">Prepping</button>
         <button class="fc" data-f="cooking">Cooking</button>
+        <button class="fc" data-f="ready">Ready</button>
         <button class="fc" data-f="dispatched">Out for Delivery</button>
         <button class="fc" data-f="delivered">Delivered</button>
       </div>
@@ -323,13 +329,13 @@ var MENU = [
   {id:'chips',name:'Rice Chips + Avocado Salsa',desc:'Banh Gao',price:'99k'},
   {id:'dip',name:'Birria Dipping Sauce',desc:'Extra',price:'25k'}
 ];
-var SKS = ['placed','accepted','prepping','cooking','dispatched','delivered'];
-var SLS = ['Placed','Accepted','Prepping','Cooking','Out for Delivery','Delivered'];
-var SIS = ['📥','✅','🔪','🔥','🛵','🎉'];
-var SCS = {placed:'sp',accepted:'sa',prepping:'sr',cooking:'sk',dispatched:'sd',delivered:'sv2',cancelled:'sc2'};
-var SBS = {placed:'sb-p',accepted:'sb-a',prepping:'sb-r',cooking:'sb-k',dispatched:'sb-d',delivered:'sb-v',cancelled:'sb-c'};
-var NS = {placed:'accepted',accepted:'prepping',prepping:'cooking',dispatched:'delivered'};
-var NL = {placed:'Accept Order',accepted:'Prepping',prepping:'Cooking',dispatched:'Delivered'};
+var SKS = ['placed','accepted','prepping','cooking','ready','dispatched','delivered'];
+var SLS = ['Placed','Accepted','Prepping','Cooking','Ready','Out for Delivery','Delivered'];
+var SIS = ['📥','✅','🔪','🔥','✅','🛵','🎉'];
+var SCS = {placed:'sp',accepted:'sa',prepping:'sr',cooking:'sk',ready:'sd2',dispatched:'sd',delivered:'sv2',cancelled:'sc2'};
+var SBS = {placed:'sb-p',accepted:'sb-a',prepping:'sb-r',cooking:'sb-k',ready:'sb-g',dispatched:'sb-d',delivered:'sb-v',cancelled:'sb-c'};
+var NS = {placed:'accepted',accepted:'prepping',prepping:'cooking',cooking:'ready',dispatched:'delivered'};
+var NL = {placed:'Accept Order',accepted:'Prepping',prepping:'Cooking',cooking:'Mark Ready',dispatched:'Delivered'};
 
 function sbF(p,o){
   o=o||{};
@@ -445,7 +451,26 @@ function showPg(pg){
   if(pg==='revenue')loadRev();
   if(pg==='dinein')renderTG();
 }
-function initApp(){loadO();loadC();renderMenu();setInterval(loadO,30000);}
+function initApp(){loadO();loadC();renderMenu();setInterval(loadO,30000);setInterval(checkReadyAlert,8000);}
+var lastReadyIds=[];
+function checkReadyAlert(){
+  var readyOrds=allO.filter(function(o){return o.status==='ready';});
+  var ids=readyOrds.map(function(o){return o.id;});
+  var newReady=ids.filter(function(id){return lastReadyIds.indexOf(id)===-1;});
+  if(newReady.length>0){
+    var o=readyOrds.find(function(x){return x.id===newReady[0];});
+    var msg=o?(o.order_type==='dinein'?'TABLE '+(o.table_number||'?')+' ORDER READY FOR PICKUP':'ORDER '+(o.order_ref||'')+ ' IS READY'):'ORDER READY FOR PICKUP';
+    document.getElementById('ready-alert-text').textContent=msg;
+    document.getElementById('ready-alert').style.display='block';
+    try{var ac=new(window.AudioContext||window.webkitAudioContext)();var os=ac.createOscillator();var gs=ac.createGain();os.connect(gs);gs.connect(ac.destination);os.frequency.value=880;gs.gain.setValueAtTime(0.5,ac.currentTime);gs.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.4);os.start(ac.currentTime);os.stop(ac.currentTime+0.4);}catch(e){}
+  }
+  if(ids.length===0)document.getElementById('ready-alert').style.display='none';
+  lastReadyIds=ids;
+}
+function handleReadyAlert(){
+  document.getElementById('ready-alert').style.display='none';
+  showPg('dinein');
+}
 
 function loadO(){
   return sbF('/rest/v1/orders?select=*&order=created_at.desc&limit=100').then(function(data){
@@ -495,8 +520,8 @@ function renderOL(orders,container){
     var ph=(o.customer_phone||'').replace(/[^0-9]/g,'');
     var wm=encodeURIComponent('Hello '+(o.customer_name||'')+'! Order '+(o.order_ref||'')+' is now: '+SLS[si]+'. Thanks - Lets Taco!');
     var acts='';
-    if(NL[o.status]&&o.status!=='cooking')acts+='<button class="abtn abtn-gold" data-adv="'+o.id+'" data-ns="'+NS[o.status]+'">'+NL[o.status]+'</button>';
-    if(o.status==='cooking')acts+='<button class="abtn abtn-gold" data-drv="'+o.id+'">Assign Driver</button>';
+    if(NL[o.status])acts+='<button class="abtn abtn-gold" data-adv="'+o.id+'" data-ns="'+NS[o.status]+'">'+NL[o.status]+'</button>';
+    if(o.status==='ready'&&o.order_type!=='dinein')acts+='<button class="abtn abtn-gold" data-drv="'+o.id+'">Assign Driver</button>';
     var cm=o.contact_method||'whatsapp';var cml=cm==='zalo'?'Zalo':'WhatsApp';var cmc=cm==='zalo'?'linear-gradient(135deg,#0068FF,#0052CC)':'linear-gradient(135deg,#25D366,#128C7E)';acts+='<button class="abtn" style="background:'+cmc+';color:white;" data-msg="'+o.id+'">'+cml+'</button>';
     acts+='<button class="abtn abtn-muted" data-nts="'+o.id+'">Notes</button>';
     if(o.status!=='delivered'&&o.status!=='cancelled')acts+='<button class="abtn abtn-red" data-cnc="'+o.id+'">Cancel</button>';
