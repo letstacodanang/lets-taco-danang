@@ -199,7 +199,7 @@ footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);paddi
     <p class="hero-sub">Real Mexican Grill &middot; Da Nang, Vietnam</p>
     <div class="hero-rating"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span style="font-size:0.85rem">&nbsp;<strong style="color:var(--gold)">4.9</strong> &middot; 144 Google Reviews &middot; Da Nang's #1</span></div>
     <div class="hero-cta">
-      <a href="https://wa.me/84909923941?text=Hi! I want to order tacos" target="_blank" class="btn-primary">Order Now via WhatsApp</a>
+      <button onclick="toggleCart()" class="btn-primary" style="border:none;cursor:pointer">Order Now</button>
       <a href="#menu" class="btn-secondary">View Menu</a>
     </div>
   </div>
@@ -276,7 +276,7 @@ footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);paddi
         <div class="menu-card-desc">Rich slow-braised beef, melted cheese, crispy golden tortilla, consomme for dipping. The one that started it all.</div>
         <div class="menu-card-price">
           <div><div class="price-vnd">&#8363;125k &ndash; &#8363;180k</div><div class="price-label">2 or 3 tacos</div></div>
-          <a href="https://wa.me/84909923941?text=Hi! I want to order Birria Tacos" target="_blank" class="btn-primary" style="padding:10px 20px;font-size:0.75rem">Order</a>
+          <button onclick="toggleCart()" class="btn-primary" style="padding:10px 20px;font-size:0.75rem;border:none;cursor:pointer">Order</button>
         </div>
       </div>
     </div>
@@ -288,7 +288,7 @@ footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);paddi
         <div class="menu-card-desc">Sizzling marinated steak charred to perfection, golden corn tortilla, crisp white onion, fresh cilantro, smoky salsa.</div>
         <div class="menu-card-price">
           <div><div class="price-vnd">&#8363;115k &ndash; &#8363;165k</div><div class="price-label">2 or 3 tacos</div></div>
-          <a href="https://wa.me/84909923941?text=Hi! I want to order Grilled Steak Tacos" target="_blank" class="btn-primary" style="padding:10px 20px;font-size:0.75rem">Order</a>
+          <button onclick="toggleCart()" class="btn-primary" style="padding:10px 20px;font-size:0.75rem;border:none;cursor:pointer">Order</button>
         </div>
       </div>
     </div>
@@ -301,7 +301,7 @@ footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);paddi
         <div class="menu-card-desc">Authentic al pastor seasoning, grilled until smoky and tender. A love letter to Mexican street food tradition.</div>
         <div class="menu-card-price">
           <div><div class="price-vnd">&#8363;110k &ndash; &#8363;160k</div><div class="price-label">2 or 3 tacos</div></div>
-          <a href="https://wa.me/84909923941?text=Hi! I want to order Grilled Pork Tacos" target="_blank" class="btn-primary" style="padding:10px 20px;font-size:0.75rem">Order</a>
+          <button onclick="toggleCart()" class="btn-primary" style="padding:10px 20px;font-size:0.75rem;border:none;cursor:pointer">Order</button>
         </div>
       </div>
     </div>
@@ -313,7 +313,7 @@ footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);paddi
         <div class="menu-card-desc">Juicy grilled chicken with Mexican spices, white onion, fresh cilantro, and our smoky house salsa.</div>
         <div class="menu-card-price">
           <div><div class="price-vnd">&#8363;105k &ndash; &#8363;150k</div><div class="price-label">2 or 3 tacos</div></div>
-          <a href="https://wa.me/84909923941?text=Hi! I want to order Grilled Chicken Tacos" target="_blank" class="btn-primary" style="padding:10px 20px;font-size:0.75rem">Order</a>
+          <button onclick="toggleCart()" class="btn-primary" style="padding:10px 20px;font-size:0.75rem;border:none;cursor:pointer">Order</button>
         </div>
       </div>
     </div>
@@ -325,7 +325,7 @@ footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);paddi
         <div class="menu-card-desc">Slow-cooked pork braised for hours until impossibly tender, crisped on the griddle. Pure soul food.</div>
         <div class="menu-card-price">
           <div><div class="price-vnd">&#8363;110k &ndash; &#8363;160k</div><div class="price-label">2 or 3 tacos</div></div>
-          <a href="https://wa.me/84909923941?text=Hi! I want to order Carnitas Tacos" target="_blank" class="btn-primary" style="padding:10px 20px;font-size:0.75rem">Order</a>
+          <button onclick="toggleCart()" class="btn-primary" style="padding:10px 20px;font-size:0.75rem;border:none;cursor:pointer">Order</button>
         </div>
       </div>
     </div>
@@ -337,14 +337,14 @@ footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);paddi
         <div class="menu-card-desc">Fragrant Mexican-spiced fried rice with your choice of chicken, pork, or steak. The perfect sidekick.</div>
         <div class="menu-card-price">
           <div><div class="price-vnd">&#8363;100k &ndash; &#8363;140k</div><div class="price-label">Chicken / Pork / Steak</div></div>
-          <a href="https://wa.me/84909923941?text=Hi! I want to order Mexican Fried Rice" target="_blank" class="btn-primary" style="padding:10px 20px;font-size:0.75rem">Order</a>
+          <button onclick="toggleCart()" class="btn-primary" style="padding:10px 20px;font-size:0.75rem;border:none;cursor:pointer">Order</button>
         </div>
       </div>
     </div>
   </div>
   <div style="text-align:center">
     <p style="color:var(--muted);margin-bottom:20px;font-size:0.85rem">Add cheese &#8363;10k &middot; Avocado &#8363;10k &middot; Side salsa &#8363;20k &middot; Rice chips with avocado salsa &#8363;99k &middot; Coke/7Up &#8363;15k</p>
-    <a href="https://wa.me/84909923941?text=Hi! I want to order" target="_blank" class="btn-primary">Order via WhatsApp</a>
+    <button onclick="toggleCart()" class="btn-primary" style="border:none;cursor:pointer">Order Now</button>
   </div>
 </section>
 
@@ -402,7 +402,7 @@ footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);paddi
       <div class="info-item"><div class="info-icon">&#128336;</div><div><div class="info-label">Opening Hours</div><div class="hours-grid"><span class="hours-day">Monday</span><span class="hours-closed">Closed</span><span class="hours-day">Tuesday</span><span class="hours-time">4:00 PM - 12:00 AM</span><span class="hours-day">Wednesday</span><span class="hours-time">4:00 PM - 12:00 AM</span><span class="hours-day">Thursday</span><span class="hours-time">4:00 PM - 12:00 AM</span><span class="hours-day">Friday</span><span class="hours-time">4:00 PM - 12:00 AM</span><span class="hours-day">Saturday</span><span class="hours-time">4:00 PM - 12:00 AM</span><span class="hours-day">Sunday</span><span class="hours-time">4:00 PM - 12:00 AM</span></div></div></div>
       <div class="info-item"><div class="info-icon">&#128241;</div><div><div class="info-label">WhatsApp</div><div class="info-value"><a href="https://wa.me/84909923941">0909 923 941</a></div></div></div>
       <div class="info-item"><div class="info-icon">&#128231;</div><div><div class="info-label">Email</div><div class="info-value"><a href="mailto:letstacodanang@gmail.com">letstacodanang@gmail.com</a></div></div></div>
-      <a href="https://wa.me/84909923941?text=Hi! I want to order some tacos" target="_blank" class="btn-primary" style="display:inline-flex;align-items:center;gap:10px;width:fit-content">WhatsApp Us Now</a>
+      <button onclick="toggleCart()" class="btn-primary" style="display:inline-flex;align-items:center;gap:10px;width:fit-content;border:none;cursor:pointer">Order Now</button>
     </div>
     <div class="map-frame">
       <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d983.0!2d108.2476!3d16.0194!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314217fc21b0b8a3%3A0xd2611e9ca83e2cf0!2sLet%27s%20Taco%20Da%20Nang!5e0!3m2!1sen!2s!4v1" allowfullscreen="" loading="lazy"></iframe>
