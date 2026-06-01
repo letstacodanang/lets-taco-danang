@@ -456,7 +456,11 @@ geoWelcome();
 <div style="padding:25px 25px 20px;border-bottom:1px solid rgba(212,160,23,0.15);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:linear-gradient(to bottom,#1A0800,#0F0500);"><div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:#D4A017;letter-spacing:3px;">YOUR ORDER</div><div style="font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;">Let's Taco Da Nang</div></div><button onclick="toggleCart()" style="background:transparent;border:1px solid rgba(212,160,23,0.2);color:#B8A99A;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.1rem;">✕</button></div>
 <div id="cart-view-menu" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">
 <div style="padding:15px 15px 0;"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:12px;">Tap + to add items</div><div id="cart-menu-items"></div></div>
-<div id="cart-items-section" style="display:none;border-top:1px solid rgba(212,160,23,0.15);padding:15px;"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:10px;">Your Order</div><div id="cart-items-list"></div><input id="cart-notes" placeholder="Any special requests? (no onion, extra spicy...)" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.15);color:#FAF0E6;padding:10px 14px;border-radius:4px;font-family:'Jost',sans-serif;font-size:0.85rem;outline:none;margin-top:10px;"><div id="cart-summary" style="margin-top:15px;border-top:1px solid rgba(212,160,23,0.1);padding-top:15px;"></div></div>
+<div id="cart-items-section" style="display:none;border-top:1px solid rgba(212,160,23,0.15);padding:15px;"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:10px;">Your Order</div><div id="cart-items-list"></div><div style="margin-top:12px;padding:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,160,23,0.1);border-radius:6px;">
+<div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">Extras & Add-ons</div>
+<div id="addon-items"></div>
+</div>
+<input id="cart-notes" placeholder="Any special requests? (no onion, extra spicy...)" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.15);color:#FAF0E6;padding:10px 14px;border-radius:4px;font-family:'Jost',sans-serif;font-size:0.85rem;outline:none;margin-top:10px;"><div id="cart-summary" style="margin-top:15px;border-top:1px solid rgba(212,160,23,0.1);padding-top:15px;"></div></div>
 <div id="cart-checkout-row" style="display:none;padding:15px;flex-shrink:0;border-top:1px solid rgba(212,160,23,0.15);"><button onclick="goToCheckout()" style="width:100%;background:linear-gradient(135deg,#C0392B,#E67E22);color:white;border:none;padding:18px;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;border-radius:8px;cursor:pointer;">CHECKOUT 🌮</button><div style="text-align:center;font-size:0.7rem;color:#B8A99A;margin-top:8px;letter-spacing:1px;">Earn loyalty points with every order</div></div>
 </div>
 <div id="cart-view-checkout" style="flex:1;overflow-y:auto;display:none;flex-direction:column;">
@@ -465,8 +469,8 @@ geoWelcome();
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:#D4A017;letter-spacing:2px;margin-bottom:5px;">Your Details</div>
 <div style="font-size:0.8rem;color:#B8A99A;margin-bottom:20px;">We need this to confirm your order</div>
 <div style="margin-bottom:14px;"><label style="display:block;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:6px;">Your Name *</label><input id="c-name" placeholder="What should we call you?" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#FAF0E6;padding:14px;border-radius:6px;font-family:'Jost',sans-serif;font-size:1rem;outline:none;"></div>
-<div style="margin-bottom:14px;"><label style="display:block;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:6px;">Email *</label><input id="c-email" type="email" placeholder="your@email.com" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#FAF0E6;padding:14px;border-radius:6px;font-family:'Jost',sans-serif;font-size:1rem;outline:none;"></div>
-<div style="margin-bottom:14px;">
+<div id="email-row" style="margin-bottom:14px;"><label style="display:block;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:6px;">Email *</label><input id="c-email" type="email" placeholder="your@email.com" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#FAF0E6;padding:14px;border-radius:6px;font-family:'Jost',sans-serif;font-size:1rem;outline:none;"></div>
+<div id="cm-row" style="margin-bottom:14px;">
 <label style="display:block;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">How should we contact you? *</label>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
 <button id="cm-wa" onclick="setCM('whatsapp')" style="padding:13px 10px;border-radius:8px;font-family:'Jost',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;"><span style="font-size:1.2rem;">💬</span>WhatsApp</button>
@@ -491,8 +495,9 @@ geoWelcome();
 <input id="c-phone" placeholder="e.g. 0909 123 456" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#FAF0E6;padding:14px;border-radius:6px;font-family:'Jost',sans-serif;font-size:1rem;outline:none;">
 </div>
 </div>
-<div style="margin-bottom:14px;"><label style="display:block;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">How would you like it? *</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><button id="type-delivery" onclick="setOT('delivery')" style="padding:14px;border-radius:6px;font-family:'Jost',sans-serif;font-size:0.9rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;background:linear-gradient(135deg,#C0392B,#E67E22);color:white;border:none;font-weight:600;">🛵 Delivery</button><button id="type-pickup" onclick="setOT('pickup')" style="padding:14px;border-radius:6px;font-family:'Jost',sans-serif;font-size:0.9rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;background:rgba(255,255,255,0.04);color:#B8A99A;border:1px solid rgba(212,160,23,0.2);font-weight:600;">🏃 Pickup</button></div></div>
-<div id="addr-row" style="margin-bottom:14px;"><label style="display:block;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:6px;">Delivery Address *</label><input id="c-address" placeholder="Your full address in Da Nang" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#FAF0E6;padding:14px;border-radius:6px;font-family:'Jost',sans-serif;font-size:1rem;outline:none;"></div>
+<div style="margin-bottom:14px;"><label style="display:block;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">How would you like it? *</label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><button id="type-delivery" onclick="setOT('delivery')" style="padding:12px 6px;border-radius:6px;font-family:Jost,sans-serif;font-size:0.8rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;background:linear-gradient(135deg,#C0392B,#E67E22);color:white;border:none;font-weight:600;">🛵 Delivery</button><button id="type-pickup" onclick="setOT('pickup')" style="padding:12px 6px;border-radius:6px;font-family:Jost,sans-serif;font-size:0.8rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;background:rgba(255,255,255,0.04);color:#B8A99A;border:1px solid rgba(212,160,23,0.2);font-weight:600;">🏃 Pickup</button><button id="type-dinein" onclick="setOT('dinein')" style="padding:12px 6px;border-radius:6px;font-family:Jost,sans-serif;font-size:0.8rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;background:rgba(255,255,255,0.04);color:#B8A99A;border:1px solid rgba(212,160,23,0.2);font-weight:600;">🍽️ Dine In</button></div></div>
+<div id="addr-row" style="margin-bottom:14px;"><label style="display:block;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:6px;">Delivery Address *</label><input id="c-address" placeholder="Your full address in Da Nang" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#FAF0E6;padding:14px;border-radius:6px;font-family:Jost,sans-serif;font-size:1rem;outline:none;"></div>
+<div id="table-row" style="display:none;margin-bottom:14px;"><label style="display:block;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:6px;">Table Number *</label><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;" id="table-picker"></div><input id="c-table" type="hidden" value=""></div>
 <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:15px;margin-bottom:15px;"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:10px;">Order Summary</div><div id="checkout-summary"></div></div>
 <div style="background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.3);border-radius:8px;padding:15px;margin-bottom:20px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#D4A017;letter-spacing:2px;margin-bottom:8px;">💳 HOW TO PAY</div><div style="font-size:0.85rem;color:#FAF0E6;line-height:1.7;">Place your order first, then WhatsApp us to pay. We start cooking once payment is confirmed.</div><a href="https://wa.me/84909923941" target="_blank" style="display:block;margin-top:12px;text-align:center;background:#25D366;color:white;padding:12px;border-radius:6px;text-decoration:none;font-family:'Jost',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:1px;">💬 WhatsApp to Pay: 0909 923 941</a></div>
 <div id="co-err" style="display:none;color:#C0392B;font-size:0.85rem;text-align:center;margin-bottom:12px;padding:10px;background:rgba(192,57,43,0.1);border-radius:4px;"></div>
@@ -549,20 +554,99 @@ var CM=[
   {id:'rice_p',name:'Fried Rice — Pork',desc:'Fragrant Mexican spiced rice',p1:120000,e:'🍚'},
   {id:'rice_s',name:'Fried Rice — Steak',desc:'Fragrant Mexican spiced rice',p1:140000,e:'🍚'},
   {id:'chips',name:'Rice Chips + Avocado Salsa',desc:'Crispy chips with fresh guacamole',p1:99000,e:'🥑'},
-  {id:'dip',name:'Birria Dipping Sauce',desc:'Extra consomme for dipping',p1:25000,e:'🍵'}
+  {id:'dip',name:'Birria Dipping Sauce',desc:'Extra consomme for dipping',p1:25000,e:'🍵'},
+  {id:'cheese',name:'Extra Cheese',desc:'Melted on top',p1:10000,e:'🧀'},
+  {id:'avo',name:'Extra Avocado',desc:'Fresh sliced avocado',p1:10000,e:'🥑'},
+  {id:'coke',name:'Coke',desc:'Ice cold Coca-Cola',p1:15000,e:'🥤'},
+  {id:'7up',name:'7Up',desc:'Ice cold 7Up',p1:15000,e:'🥤'}
 ];
 function sbC(p,o){o=o||{};return fetch(SBC+p,Object.assign({},o,{headers:Object.assign({'apikey':SKC,'Authorization':'Bearer '+SKC,'Content-Type':'application/json'},o.headers||{})})).then(function(r){return r.status===204?null:r.json();}).catch(function(){return null;});}
 function gR(){var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r='LTD-';for(var i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
 function fV(n){n=parseInt(n)||0;if(n>=1000000)return'\u20ab'+(n/1e6).toFixed(1)+'M';if(n>=1000)return'\u20ab'+(n/1000).toFixed(0)+'k';return'\u20ab'+n;}
 function toggleCart(){var sb=document.getElementById('cart-sidebar');var ov=document.getElementById('cart-overlay');var open=sb.style.right==='0px';if(open){sb.style.right='-460px';ov.style.display='none';ov.style.background='rgba(0,0,0,0)';}else{sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);renderCM();}}
-function renderCM(){var h='';for(var i=0;i<CM.length;i++){var m=CM[i];var q=cart[m.id]||0;var pl=m.p2?'2 tacos: '+fV(m.p2)+' · 3 tacos: '+fV(m.p3):fV(m.p1);h+='<div class="cmi"><div style="flex:1;"><div style="font-family:Bebas Neue,sans-serif;font-size:1.15rem;color:#FAF0E6;letter-spacing:1px;">'+m.e+' '+m.name+'</div><div style="font-size:0.78rem;color:#B8A99A;margin-top:3px;">'+m.desc+'</div><div style="font-size:1rem;color:#D4A017;margin-top:5px;font-family:Bebas Neue,sans-serif;letter-spacing:1px;">'+pl+'</div></div><div class="qc"><button class="qb" onclick="cQ(\''+m.id+'\',-1)">−</button><span class="qn">'+q+'</span><button class="qb" onclick="cQ(\''+m.id+'\',1)">+</button></div></div>';}document.getElementById('cart-menu-items').innerHTML=h;uCS();}
+function renderCM(){var h='';for(var i=0;i<CM.length;i++){var m=CM[i];var q=cart[m.id]||0;var pl=m.p2?'2 tacos: '+fV(m.p2)+' · 3 tacos: '+fV(m.p3):fV(m.p1);h+='<div class="cmi"><div style="flex:1;"><div style="font-family:Bebas Neue,sans-serif;font-size:1.15rem;color:#FAF0E6;letter-spacing:1px;">'+m.e+' '+m.name+'</div><div style="font-size:0.78rem;color:#B8A99A;margin-top:3px;">'+m.desc+'</div><div style="font-size:1rem;color:#D4A017;margin-top:5px;font-family:Bebas Neue,sans-serif;letter-spacing:1px;">'+pl+'</div></div><div class="qc"><button class="qb" onclick="cQ(\''+m.id+'\',-1)">−</button><span class="qn">'+q+'</span><button class="qb" onclick="cQ(\''+m.id+'\',1)">+</button></div></div>';}document.getElementById('cart-menu-items').innerHTML=h;
+  // Render add-ons
+  var ADDONS=[
+    {id:'cheese',name:'Extra Cheese',p:10000,e:'🧀'},
+    {id:'avo',name:'Extra Avocado',p:10000,e:'🥑'},
+    {id:'dip',name:'Birria Sauce',p:25000,e:'🍵'},
+    {id:'chips',name:'Rice Chips + Avo Salsa',p:99000,e:'🥑'},
+    {id:'coke',name:'Coke',p:15000,e:'🥤'},
+    {id:'7up',name:'7Up',p:15000,e:'🥤'}
+  ];
+  var ag=document.getElementById('addon-items');
+  if(ag){
+    var ADDONS2=[
+      {id:'cheese',name:'Extra Cheese',p:10000,e:'🧀'},
+      {id:'avo',name:'Extra Avocado',p:10000,e:'🥑'},
+      {id:'dip',name:'Birria Sauce',p:25000,e:'🍵'},
+      {id:'chips',name:'Rice Chips',p:99000,e:'🥑'},
+      {id:'coke',name:'Coke',p:15000,e:'🥤'},
+      {id:'7up',name:'7Up',p:15000,e:'🥤'}
+    ];
+    var ah='';
+    ADDONS2.forEach(function(a){
+      var q=cart[a.id]||0;
+      ah+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">';
+      ah+='<div style="font-size:0.82rem;color:#FAF0E6;">'+a.e+' '+a.name;
+      ah+='<span style="color:#D4A017;margin-left:8px;font-family:Bebas Neue,sans-serif;">'+fV(a.p)+'</span></div>';
+      ah+='<div style="display:flex;align-items:center;gap:8px;">';
+      if(q>0){
+        ah+='<button data-aid="'+a.id+'" data-d="-1" style="width:26px;height:26px;border-radius:50%;border:1px solid rgba(212,160,23,0.4);background:transparent;color:#D4A017;font-size:1.2rem;cursor:pointer;line-height:1;">-</button>';
+        ah+='<span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:#FAF0E6;min-width:18px;text-align:center;">'+q+'</span>';
+      }
+      ah+='<button data-aid="'+a.id+'" data-d="1" style="width:26px;height:26px;border-radius:50%;border:1px solid rgba(212,160,23,0.4);background:transparent;color:#D4A017;font-size:1rem;cursor:pointer;line-height:1;">+</button>';
+      ah+='</div></div>';
+    });
+    ag.innerHTML=ah;
+    ag.querySelectorAll('[data-aid]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        cQ(this.getAttribute('data-aid'),parseInt(this.getAttribute('data-d')));
+      });
+    });
+  }
+  uCS();
+}
 function cQ(id,d){var c=cart[id]||0;var n=Math.max(0,c+d);if(!n)delete cart[id];else cart[id]=n;renderCM();}
 function gCI(){var its=[],tot=0,pts=0;for(var i=0;i<CM.length;i++){var m=CM[i];var q=cart[m.id]||0;if(!q)continue;var p=m.p2?(q>=3?m.p3:m.p2):m.p1;if(m.p2)pts+=(q>=3?3:2);tot+=p;its.push({id:m.id,name:m.name,qty:q,price:p});}return{items:its,total:tot,points:pts};}
 function gTI(){var t=0;Object.values(cart).forEach(function(v){t+=v;});return t;}
 function uCS(){var d=gCI();var cc=document.getElementById('cart-count');var ti=gTI();cc.style.display=ti>0?'flex':'none';cc.textContent=ti;var is=document.getElementById('cart-items-section');var cr=document.getElementById('cart-checkout-row');if(d.items.length>0){is.style.display='block';cr.style.display='block';var lh='';d.items.forEach(function(it){lh+='<div class="cl"><span>'+it.qty+'x '+it.name+'</span><span>'+fV(it.price)+'</span></div>';});document.getElementById('cart-items-list').innerHTML=lh;var sh='<div class="cl"><span>Subtotal</span><span>'+fV(d.total)+'</span></div><div class="cl"><span>TOTAL</span><span>'+fV(d.total)+'</span></div><div style="font-size:0.78rem;color:#B8A99A;margin-top:8px;text-align:center;">You will earn <strong style="color:#D4A017;">+'+d.points+' loyalty points</strong></div>';document.getElementById('cart-summary').innerHTML=sh;}else{is.style.display='none';cr.style.display='none';}}
 function goToCheckout(){if(!gTI())return;var d=gCI();document.getElementById('cart-view-menu').style.display='none';document.getElementById('cart-view-checkout').style.display='flex';var sh='';d.items.forEach(function(it){sh+='<div class="cl"><span>'+it.qty+'x '+it.name+'</span><span>'+fV(it.price)+'</span></div>';});sh+='<div class="cl"><span>TOTAL</span><span>'+fV(d.total)+'</span></div>';document.getElementById('checkout-summary').innerHTML=sh;}
 function backToMenu(){document.getElementById('cart-view-menu').style.display='flex';document.getElementById('cart-view-checkout').style.display='none';}
-function setOT(t){oType=t;document.getElementById('type-delivery').style.background=t==='delivery'?'linear-gradient(135deg,#C0392B,#E67E22)':'rgba(255,255,255,0.04)';document.getElementById('type-delivery').style.color=t==='delivery'?'white':'#B8A99A';document.getElementById('type-pickup').style.background=t==='pickup'?'linear-gradient(135deg,#C0392B,#E67E22)':'rgba(255,255,255,0.04)';document.getElementById('type-pickup').style.color=t==='pickup'?'white':'#B8A99A';document.getElementById('addr-row').style.display=t==='delivery'?'block':'none';}
+function setOT(t){
+  oType=t;
+  var btns=['delivery','pickup','dinein'];
+  btns.forEach(function(b){
+    var el=document.getElementById('type-'+b);
+    if(!el)return;
+    var active=t===b;
+    el.style.background=active?'linear-gradient(135deg,#C0392B,#E67E22)':'rgba(255,255,255,0.04)';
+    el.style.color=active?'white':'#B8A99A';
+    el.style.border=active?'none':'1px solid rgba(212,160,23,0.2)';
+  });
+  document.getElementById('addr-row').style.display=t==='delivery'?'block':'none';
+  document.getElementById('table-row').style.display=t==='dinein'?'block':'none';
+  var cmRow=document.getElementById('cm-row');
+  if(cmRow)cmRow.style.display=t==='dinein'?'none':'block';
+  var emailRow=document.getElementById('email-row');
+  if(emailRow)emailRow.style.display=t==='dinein'?'none':'block';
+  if(t==='dinein'){renderTablePicker();}
+}
+function renderTablePicker(){
+  var g=document.getElementById('table-picker');
+  if(!g)return;
+  var cur=document.getElementById('c-table').value;
+  var h='';
+  for(var i=1;i<=20;i++){
+    var sel=String(cur)===String(i);
+    h+='<button type="button" onclick="pickTable('+i+')" style="padding:10px 4px;border-radius:6px;font-family:Bebas Neue,sans-serif;font-size:1.1rem;cursor:pointer;border:2px solid '+(sel?'#D4A017':'rgba(212,160,23,0.2)')+';background:'+(sel?'rgba(212,160,23,0.2)':'rgba(255,255,255,0.03)')+';color:'+(sel?'#D4A017':'#B8A99A')+';">'+i+'</button>';
+  }
+  g.innerHTML=h;
+}
+function pickTable(n){
+  document.getElementById('c-table').value=n;
+  renderTablePicker();
+}
 var contactMethod='whatsapp';
 function setCM(m){
   contactMethod=m;
@@ -572,15 +656,31 @@ function setCM(m){
   if(m==='whatsapp'){wa.style.background='linear-gradient(135deg,#25D366,#128C7E)';wa.style.color='white';wa.style.border='none';zl.style.background='rgba(255,255,255,0.04)';zl.style.color='#B8A99A';zl.style.border='2px solid rgba(255,255,255,0.1)';}
   else{zl.style.background='linear-gradient(135deg,#0068FF,#0052CC)';zl.style.color='white';zl.style.border='none';wa.style.background='rgba(255,255,255,0.04)';wa.style.color='#B8A99A';wa.style.border='2px solid rgba(255,255,255,0.1)';}
 }
-async function placeOrder(){var btn=document.getElementById('place-btn');var err=document.getElementById('co-err');err.style.display='none';var d=gCI();if(!d.items.length){err.style.display='block';err.textContent='Your cart is empty! Add some tacos first.';return;}var name=document.getElementById('c-name').value.trim();var email=document.getElementById('c-email').value.trim().toLowerCase();var phone=document.getElementById('c-phone').value.trim();if(!name||!email||!phone){err.style.display='block';err.textContent='Please fill in your name, email and WhatsApp number.';return;}if(oType==='delivery'&&!document.getElementById('c-address').value.trim()){err.style.display='block';err.textContent='Please enter your delivery address.';return;}btn.textContent='PLACING YOUR ORDER...';btn.disabled=true;try{var ex=await sbC('/rest/v1/customers?email=eq.'+encodeURIComponent(email)+'&select=*');var cId=null;cust=null;if(ex&&ex.length>0){cId=ex[0].id;cust=ex[0];}else{var nc=await sbC('/rest/v1/customers',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({name:name,email:email,phone:phone,total_orders:0,total_points:0,total_spent:0})});if(nc&&nc.length>0){cId=nc[0].id;cust=nc[0];}}var ref=gR();var od={order_ref:ref,customer_id:cId,customer_name:name,customer_email:email,customer_phone:phone,delivery_address:oType==='delivery'?document.getElementById('c-address').value.trim():null,order_type:oType,payment_method:oType==='delivery'?'prepay':'cash',payment_status:'pending',items:d.items,subtotal:d.total,total:d.total,points_earned:d.points,status:'placed',special_instructions:document.getElementById('cart-notes').value||null,contact_method:contactMethod};var ord=await sbC('/rest/v1/orders',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(od)});if(ord&&ord.length>0){oId=ord[0].id;if(cId){var np=(cust&&cust.total_points||0)+d.points;await sbC('/rest/v1/customers?id=eq.'+cId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({total_points:np,total_spent:((cust&&cust.total_spent)||0)+d.total})});}showTracker(ref,d);}else throw new Error('x');}catch(e){btn.textContent='PLACE ORDER 🌮';btn.disabled=false;err.style.display='block';err.textContent='Something went wrong. Please WhatsApp us directly at 0909 923 941.';}}
-function showTracker(ref,d){document.getElementById('cart-view-checkout').style.display='none';document.getElementById('cart-view-tracker').style.display='flex';document.getElementById('tracker-ref').textContent=ref;var wm=encodeURIComponent('Hi! I just placed order '+ref+'. Total: '+fV(d.total)+'. Confirming payment now!');document.getElementById('pay-wa-link').href='https://wa.me/84909923941?text='+wm;if(oType==='pickup')document.getElementById('payment-reminder').style.display='none';rTR('placed');if(oId)tInt=setInterval(pollS,10000);cart={};document.getElementById('cart-count').style.display='none';}
+async function placeOrder(){var btn=document.getElementById('place-btn');var err=document.getElementById('co-err');err.style.display='none';var d=gCI();if(!d.items.length){err.style.display='block';err.textContent='Your cart is empty! Add some tacos first.';return;}var name=document.getElementById('c-name').value.trim();var email=document.getElementById('c-email').value.trim().toLowerCase();var phone=document.getElementById('c-phone').value.trim();if(!name){err.style.display='block';err.textContent='Please enter your name.';return;}if(oType==='dinein'){var tbl=document.getElementById('c-table').value;if(!tbl){err.style.display='block';err.textContent='Please select your table number.';return;}}else{if(!email||!phone){err.style.display='block';err.textContent='Please fill in your email and phone number.';return;}}if(oType==='delivery'&&!document.getElementById('c-address').value.trim()){err.style.display='block';err.textContent='Please enter your delivery address.';return;}btn.textContent='PLACING YOUR ORDER...';btn.disabled=true;try{var ex=await sbC('/rest/v1/customers?email=eq.'+encodeURIComponent(email)+'&select=*');var cId=null;cust=null;if(ex&&ex.length>0){cId=ex[0].id;cust=ex[0];}else{var nc=await sbC('/rest/v1/customers',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({name:name,email:email,phone:phone,total_orders:0,total_points:0,total_spent:0})});if(nc&&nc.length>0){cId=nc[0].id;cust=nc[0];}}var ref=gR();var tblNum=oType==='dinein'?document.getElementById('c-table').value:null;var od={order_ref:ref,customer_id:cId,customer_name:name,customer_email:oType==='dinein'?'dinein@letstaco.vn':email,customer_phone:oType==='dinein'?'':phone,delivery_address:oType==='delivery'?document.getElementById('c-address').value.trim():null,order_type:oType,table_number:tblNum,payment_method:oType==='delivery'?'prepay':'cash',payment_status:'pending',items:d.items,subtotal:d.total,total:d.total,points_earned:d.points,status:'placed',special_instructions:document.getElementById('cart-notes').value||null,contact_method:oType==='dinein'?'dinein':contactMethod};var ord=await sbC('/rest/v1/orders',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(od)});if(ord&&ord.length>0){oId=ord[0].id;if(cId){var np=(cust&&cust.total_points||0)+d.points;await sbC('/rest/v1/customers?id=eq.'+cId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({total_points:np,total_spent:((cust&&cust.total_spent)||0)+d.total})});}showTracker(ref,d);}else throw new Error('x');}catch(e){btn.textContent='PLACE ORDER 🌮';btn.disabled=false;err.style.display='block';err.textContent='Something went wrong. Please WhatsApp us directly at 0909 923 941.';}}
+function showTracker(ref,d){document.getElementById('cart-view-checkout').style.display='none';document.getElementById('cart-view-tracker').style.display='flex';document.getElementById('tracker-ref').textContent=ref;var wm=encodeURIComponent('Hi! I just placed order '+ref+'. Total: '+fV(d.total)+'. Confirming payment now!');document.getElementById('pay-wa-link').href='https://wa.me/84909923941?text='+wm;if(oType==='pickup'||oType==='dinein')document.getElementById('payment-reminder').style.display='none';rTR('placed');if(oId)tInt=setInterval(pollS,10000);cart={};document.getElementById('cart-count').style.display='none';}
 function rTR(status){var ss=['placed','accepted','prepping','cooking','dispatched','delivered'];var sl=['Placed','Accepted','Prepping','Cooking','On Way','Done'];var si2=['📥','✅','🔪','🔥','🛵','🎉'];var ix=ss.indexOf(status);var h='';for(var i=0;i<6;i++){var dn=i<ix;var cu=i===ix;h+='<div class="tsm"><div class="tdm'+(dn?' done':cu?' curr':'')+'">'+( dn?'✓':si2[i])+'</div><div class="tlm'+(dn?' done':cu?' curr':'')+'">'+sl[i]+'</div></div>';if(i<5)h+='<div class="tlnm'+(dn?' done':'')+'"></div>';}document.getElementById('order-tracker-steps').innerHTML=h;}
 function pollS(){if(!oId)return;sbC('/rest/v1/orders?id=eq.'+oId+'&select=status,driver_name,driver_phone').then(function(d){if(d&&d.length>0){rTR(d[0].status);if(d[0].status==='dispatched'&&d[0].driver_name){document.getElementById('payment-reminder').innerHTML='<div style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:#27AE60;letter-spacing:2px;margin-bottom:8px;">🛵 ON THE WAY!</div><div style="font-size:0.85rem;color:#FAF0E6;line-height:1.6;">Driver <strong>'+d[0].driver_name+'</strong> is heading to you!<br>Contact: <strong style="color:#D4A017;">'+d[0].driver_phone+'</strong></div>';}if(d[0].status==='delivered'){clearInterval(tInt);document.getElementById('payment-reminder').style.display='none';}}});}
 function newOrder(){clearInterval(tInt);oId=null;document.getElementById('cart-view-tracker').style.display='none';document.getElementById('cart-view-menu').style.display='flex';document.getElementById('cart-view-checkout').style.display='none';['c-name','c-email','c-phone','c-address','cart-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});document.getElementById('place-btn').textContent='PLACE ORDER 🌮';document.getElementById('place-btn').disabled=false;renderCM();}
 window.addEventListener('load',function(){
   setTimeout(function(){var s=document.getElementById('pwa-splash');if(s){s.style.opacity='0';setTimeout(function(){s.style.display='none';},500);}},1800);
   if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){});}
-  if(window.location.search.includes('action=order'))setTimeout(function(){toggleCart();},2000);
+  // Handle ?table=N — auto open cart in dine-in mode
+  var urlP=new URLSearchParams(window.location.search);
+  var tParam=urlP.get('table');
+  if(tParam){
+    setTimeout(function(){
+      toggleCart();
+      setTimeout(function(){
+        setOT('dinein');
+        pickTable(parseInt(tParam));
+        // Auto-scroll to checkout
+        var cv=document.getElementById('cart-view-menu');
+        if(cv)cv.scrollTop=cv.scrollHeight;
+      },300);
+    },2000);
+  } else if(window.location.search.includes('action=order')){
+    setTimeout(function(){toggleCart();},2000);
+  }
 });
 var dP=null;
 function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;}
