@@ -55,7 +55,10 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 .fc{padding:8px 20px;border-radius:30px;border:1px solid rgba(212,160,23,0.15);background:transparent;color:#B8A99A;font-family:'Jost',sans-serif;font-size:0.8rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
 .fc.active,.fc:hover{border-color:#D4A017;color:#D4A017;background:rgba(212,160,23,0.08);}
 .ol{display:flex;flex-direction:column;gap:15px;}
-.oc{background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:25px;}
+.oc{background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;overflow:hidden;}
+.oc-hdr{user-select:none;-webkit-tap-highlight-color:transparent;}
+.oc-hdr:hover{background:rgba(212,160,23,0.04);}
+.oc-body{background:#0F0500;}
 .oc.sp{border-left:3px solid #E67E22;}
 .oc.sa{border-left:3px solid #2980B9;}
 .oc.sr{border-left:3px solid #8E44AD;}
@@ -255,6 +258,7 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
         <button class="fc" data-f="ready">Ready</button>
         <button class="fc" data-f="dispatched">Out for Delivery</button>
         <button class="fc" data-f="delivered">Delivered</button>
+        <button class="fc" data-f="history" style="border-color:rgba(184,169,154,0.3);color:#B8A99A;">History</button>
       </div>
       <div class="ol" id="aol"><div class="empty">Loading...</div></div>
     </div>
@@ -334,8 +338,8 @@ var SLS = ['Placed','Accepted','Prepping','Cooking','Ready','Out for Delivery','
 var SIS = ['📥','✅','🔪','🔥','✅','🛵','🎉'];
 var SCS = {placed:'sp',accepted:'sa',prepping:'sr',cooking:'sk',ready:'sd2',dispatched:'sd',delivered:'sv2',cancelled:'sc2'};
 var SBS = {placed:'sb-p',accepted:'sb-a',prepping:'sb-r',cooking:'sb-k',ready:'sb-g',dispatched:'sb-d',delivered:'sb-v',cancelled:'sb-c'};
-var NS = {placed:'accepted',accepted:'prepping',prepping:'cooking',cooking:'ready',dispatched:'delivered'};
-var NL = {placed:'Accept Order',accepted:'Prepping',prepping:'Cooking',cooking:'Mark Ready',dispatched:'Delivered'};
+var NS = {placed:'accepted',accepted:'prepping',prepping:'cooking',cooking:'ready',ready:'dispatched',dispatched:'delivered'};
+var NL = {placed:'Accept Order',accepted:'Prepping',prepping:'Cooking',cooking:'Mark Ready',ready:'Dispatch',dispatched:'Delivered'};
 
 function sbF(p,o){
   o=o||{};
@@ -398,7 +402,8 @@ document.querySelectorAll('.fc').forEach(function(btn){
     curF=this.getAttribute('data-f');
     document.querySelectorAll('.fc').forEach(function(b){b.classList.remove('active');});
     this.classList.add('active');
-    renderOL(curF==='all'?allO:allO.filter(function(o){return o.status===curF;}),document.getElementById('aol'));
+    var filteredO=curF==='all'?allO.filter(function(o){return o.status!=='delivered'&&o.status!=='cancelled';}):curF==='history'?allO.filter(function(o){return o.status==='delivered'||o.status==='cancelled';}):allO.filter(function(o){return o.status===curF;});
+      renderOL(filteredO,document.getElementById('aol'));
   });
 });
 document.getElementById('cs').addEventListener('input',function(){
@@ -446,7 +451,8 @@ function showPg(pg){
   document.getElementById('pg-'+pg).classList.add('active');
   document.querySelector('[data-pg="'+pg+'"]').classList.add('active');
   document.getElementById('pgt').textContent=PGT[pg]||pg;
-  if(pg==='orders')renderOL(curF==='all'?allO:allO.filter(function(o){return o.status===curF;}),document.getElementById('aol'));
+  if(pg==='orders')var filteredO=curF==='all'?allO.filter(function(o){return o.status!=='delivered'&&o.status!=='cancelled';}):curF==='history'?allO.filter(function(o){return o.status==='delivered'||o.status==='cancelled';}):allO.filter(function(o){return o.status===curF;});
+      renderOL(filteredO,document.getElementById('aol'));
   if(pg==='customers')renderCL();
   if(pg==='revenue')loadRev();
   if(pg==='dinein')renderTG();
@@ -487,9 +493,11 @@ function loadO(){
     var nb=document.getElementById('nb');
     nb.style.display=nc>0?'block':'none';
     nb.textContent=nc;
-    renderOL(act.length>0?act:tod.slice(0,10),document.getElementById('hol'));
+    var liveO=allO.filter(function(o){return['placed','accepted','prepping','cooking','ready','dispatched'].indexOf(o.status)>-1;});
+    renderOL(liveO.length>0?liveO:tod.filter(function(o){return o.status!=='delivered'&&o.status!=='cancelled';}).slice(0,10),document.getElementById('hol'));
     if(document.getElementById('pg-orders').classList.contains('active')){
-      renderOL(curF==='all'?allO:allO.filter(function(o){return o.status===curF;}),document.getElementById('aol'));
+      var filteredO=curF==='all'?allO.filter(function(o){return o.status!=='delivered'&&o.status!=='cancelled';}):curF==='history'?allO.filter(function(o){return o.status==='delivered'||o.status==='cancelled';}):allO.filter(function(o){return o.status===curF;});
+      renderOL(filteredO,document.getElementById('aol'));
     }
   });
 }
@@ -499,55 +507,115 @@ function mkSpan(cls,content){return '<span class="'+cls+'">'+content+'</span>';}
 
 function renderOL(orders,container){
   if(!orders||!orders.length){container.innerHTML=mkDiv('empty','No orders found');return;}
+  // Separate by type
+  var din=orders.filter(function(o){return o.order_type==='dinein';});
+  var tak=orders.filter(function(o){return o.order_type==='takeout'||o.order_type==='pickup';});
+  var del=orders.filter(function(o){return o.order_type==='delivery';});
+  var other=orders.filter(function(o){return ['dinein','takeout','pickup','delivery'].indexOf(o.order_type)===-1;});
+  var all=[].concat(other,din,tak,del);
   var html='';
-  for(var i=0;i<orders.length;i++){
-    var o=orders[i];
-    var items=Array.isArray(o.items)?o.items:[];
-    var si=SKS.indexOf(o.status);
-    var trk='';
-    for(var j=0;j<6;j++){
-      var dn=j<si;var cu=j===si;
-      var dc='tdot'+(dn?' done':cu?' curr':'');
-      var lc='tlbl'+(dn?' done':cu?' curr':'');
-      trk+=mkDiv('tstep',mkDiv(dc,dn?'✓':SIS[j])+mkDiv(lc,SLS[j]));
-      if(j<5)trk+='<div class="tline'+(dn?' done':'')+'"></div>';
-    }
-    var ihtml='';
-    for(var k=0;k<items.length;k++){
-      var it=items[k];
-      ihtml+='<div class="oirow"><span>'+(it.qty||1)+'x '+(it.name||it)+'</span><span>'+fV(it.price||0)+'</span></div>';
-    }
-    var ph=(o.customer_phone||'').replace(/[^0-9]/g,'');
-    var wm=encodeURIComponent('Hello '+(o.customer_name||'')+'! Order '+(o.order_ref||'')+' is now: '+SLS[si]+'. Thanks - Lets Taco!');
-    var acts='';
-    if(NL[o.status])acts+='<button class="abtn abtn-gold" data-adv="'+o.id+'" data-ns="'+NS[o.status]+'">'+NL[o.status]+'</button>';
-    if(o.status==='ready'&&o.order_type!=='dinein')acts+='<button class="abtn abtn-gold" data-drv="'+o.id+'">Assign Driver</button>';
-    var cm=o.contact_method||'whatsapp';var cml=cm==='zalo'?'Zalo':'WhatsApp';var cmc=cm==='zalo'?'linear-gradient(135deg,#0068FF,#0052CC)':'linear-gradient(135deg,#25D366,#128C7E)';acts+='<button class="abtn" style="background:'+cmc+';color:white;" data-msg="'+o.id+'">'+cml+'</button>';
-    acts+='<button class="abtn abtn-muted" data-nts="'+o.id+'">Notes</button>';
-    if(o.status!=='delivered'&&o.status!=='cancelled')acts+='<button class="abtn abtn-red" data-cnc="'+o.id+'">Cancel</button>';
-    var card='';
-    var hints={placed:'Tap Accept to confirm',accepted:'Confirm payment then Prep',prepping:'Tap when on grill',cooking:'Assign driver to dispatch',dispatched:'Tap when customer receives',delivered:'Complete',cancelled:'Cancelled'};
-    card+=mkDiv('oh',mkDiv('',mkDiv('oref',o.order_ref||'LTD-?')+mkDiv('otime',tAgo(o.created_at)))+mkDiv('',mkSpan('sbadge '+(SBS[o.status]||'sb-p'),(o.status||'placed').toUpperCase())+'<div style="font-size:0.65rem;color:#B8A99A;margin-top:4px;text-align:right;">'+(hints[o.status]||'')+'</div>'));
-    card+=mkDiv('onm',o.customer_name||'Customer');
-    card+=mkDiv('oph',(o.customer_phone||'')+' · '+(o.order_type||'delivery')+' · '+(o.payment_method||'cash'));
-    if(o.delivery_address)card+=mkDiv('oph','📍 '+o.delivery_address);
-    if(o.special_instructions)card+='<div class="oph" style="color:#F7DC6F;">📝 '+o.special_instructions+'</div>';
-    card+=mkDiv('tracker',trk);
-    card+=mkDiv('oitems',ihtml);
-    card+=mkDiv('ofoot',mkDiv('ototal',fV(o.total||0))+mkDiv('oacts',acts));
-    html+='<div class="oc '+(SCS[o.status]||'sp')+'">'+card+'</div>';
-  }
+  // Group headers
+  if(din.length&&tak.length+del.length+other.length>0)html+=renderGroup('DINE IN',din);
+  else if(din.length)html+=renderGroup('DINE IN',din);
+  if(tak.length)html+=renderGroup('TAKEOUT',tak);
+  if(del.length)html+=renderGroup('DELIVERY',del);
+  if(other.length)html+=renderGroup('ORDERS',other);
+  if(!html)html=mkDiv('empty','No orders found');
   container.innerHTML=html;
-  container.querySelectorAll('[data-adv]').forEach(function(b){b.addEventListener('click',function(){advO(this.getAttribute('data-adv'),this.getAttribute('data-ns'));});});
-  container.querySelectorAll('[data-drv]').forEach(function(b){b.addEventListener('click',function(){openDM(this.getAttribute('data-drv'));});});
-  container.querySelectorAll('[data-nts]').forEach(function(b){b.addEventListener('click',function(){openNM(this.getAttribute('data-nts'));});});
-  container.querySelectorAll('[data-cnc]').forEach(function(b){b.addEventListener('click',function(){if(!confirm('Cancel?'))return;sbF('/rest/v1/orders?id=eq.'+this.getAttribute('data-cnc'),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'cancelled'})}).then(function(){showT('Cancelled','');loadO();});});});
-  container.querySelectorAll('[data-msg]').forEach(function(b){b.addEventListener('click',function(){openChat(this.getAttribute('data-msg'));});});
+  // Attach expand toggles
+  container.querySelectorAll('.oc-hdr').forEach(function(hdr){
+    hdr.addEventListener('click',function(){
+      var body=this.nextElementSibling;
+      var isOpen=body.style.display!=='none';
+      body.style.display=isOpen?'none':'block';
+      this.querySelector('.oc-arr').textContent=isOpen?'▶':'▼';
+    });
+  });
+  container.querySelectorAll('[data-adv]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();advO(this.getAttribute('data-adv'),this.getAttribute('data-ns'));});});
+  container.querySelectorAll('[data-drv]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();openDM(this.getAttribute('data-drv'));});});
+  container.querySelectorAll('[data-nts]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();openNM(this.getAttribute('data-nts'));});});
+  container.querySelectorAll('[data-cnc]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();if(!confirm('Cancel this order?'))return;sbF('/rest/v1/orders?id=eq.'+this.getAttribute('data-cnc'),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'cancelled'})}).then(function(){showT('Cancelled','');loadO();});});});
+  container.querySelectorAll('[data-msg]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();openChat(this.getAttribute('data-msg'));});});
 }
+function renderGroup(label,orders){
+  var colors={dinein:'#D4A017',takeout:'#5DADE2',delivery:'#BB8FCE'};
+  var lkey=label.toLowerCase().replace(' ','');
+  var col=colors[lkey]||'#B8A99A';
+  var html='<div style="margin-bottom:16px;">';
+  html+='<div style="font-family:Bebas Neue,sans-serif;font-size:0.85rem;letter-spacing:3px;color:'+col+';padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:8px;">'+label+' ('+orders.length+')</div>';
+  for(var i=0;i<orders.length;i++){html+=renderCard(orders[i]);}
+  html+='</div>';
+  return html;
+}
+function renderCard(o){
+  var items=Array.isArray(o.items)?o.items:[];
+  var si=SKS.indexOf(o.status);
+  var trk='';
+  for(var j=0;j<SKS.length;j++){
+    var dn=j<si;var cu=j===si;
+    var dc='tdot'+(dn?' done':cu?' curr':'');
+    var lc='tlbl'+(dn?' done':cu?' curr':'');
+    trk+=mkDiv('tstep',mkDiv(dc,dn?'✓':SIS[j])+mkDiv(lc,SLS[j]));
+    if(j<SKS.length-1)trk+='<div class="tline'+(dn?' done':'')+'"></div>';
+  }
+  var ihtml='';
+  for(var k=0;k<items.length;k++){
+    var it=items[k];
+    ihtml+='<div class="oirow"><span>'+(it.qty||1)+'x '+(it.name||it)+'</span><span>'+fV(it.price||0)+'</span></div>';
+  }
+  var cm=o.contact_method||'whatsapp';
+  var cml=cm==='zalo'?'Zalo':'WhatsApp';
+  var cmc=cm==='zalo'?'linear-gradient(135deg,#0068FF,#0052CC)':'linear-gradient(135deg,#25D366,#128C7E)';
+  var acts='';
+  if(NL[o.status])acts+='<button class="abtn abtn-gold" data-adv="'+o.id+'" data-ns="'+NS[o.status]+'">'+NL[o.status]+'</button>';
+  if(o.status==='ready'&&o.order_type!=='dinein')acts+='<button class="abtn abtn-gold" data-drv="'+o.id+'">Assign Driver</button>';
+  if(cm!=='dinein')acts+='<button class="abtn" style="background:'+cmc+';color:white;" data-msg="'+o.id+'">'+cml+'</button>';
+  acts+='<button class="abtn abtn-muted" data-nts="'+o.id+'">Notes</button>';
+  if(o.status!=='delivered'&&o.status!=='cancelled')acts+='<button class="abtn abtn-red" data-cnc="'+o.id+'">Cancel</button>';
+  var typeTag='';
+  if(o.order_type==='dinein')typeTag='<span style="background:rgba(212,160,23,0.15);color:#D4A017;border:1px solid rgba(212,160,23,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TABLE '+(o.table_number||'?')+'</span>';
+  else if(o.order_type==='delivery')typeTag='<span style="background:rgba(142,68,173,0.15);color:#BB8FCE;border:1px solid rgba(142,68,173,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">DELIVERY</span>';
+  else typeTag='<span style="background:rgba(41,128,185,0.15);color:#5DADE2;border:1px solid rgba(41,128,185,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TAKEOUT</span>';
+  var isNew=o.status==='placed';
+  var card='';
+  // Collapsed header - always visible
+  card+='<div class="oc '+(SCS[o.status]||'sp')+'" style="margin-bottom:8px;padding:0;overflow:hidden;">';
+  card+='<div class="oc-hdr" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;'+(isNew?'background:rgba(192,57,43,0.08);':'')+'">';
+  card+='<div style="display:flex;align-items:center;gap:10px;">';
+  card+='<span class="oc-arr" style="color:#D4A017;font-size:0.7rem;">▶</span>';
+  card+='<span style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:#D4A017;letter-spacing:2px;">'+o.order_ref+'</span>';
+  card+=typeTag;
+  card+='<span class="sbadge '+(SBS[o.status]||'sb-p')+'" style="font-size:0.6rem;padding:3px 8px;">'+o.status.toUpperCase()+'</span>';
+  card+='</div>';
+  card+='<div style="display:flex;align-items:center;gap:8px;">';
+  card+='<span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:#D4A017;">'+fV(o.total||0)+'</span>';
+  card+='<span style="font-size:0.7rem;color:#B8A99A;">'+tAgo(o.created_at)+'</span>';
+  card+='</div>';
+  card+='</div>';
+  // Expanded body - hidden by default, click to expand
+  card+='<div class="oc-body" style="display:none;padding:16px;border-top:1px solid rgba(212,160,23,0.1);">';
+  card+=mkDiv('onm',o.customer_name||'Customer');
+  if(o.customer_phone)card+=mkDiv('oph',o.customer_phone+' · '+(o.order_type||'takeout'));
+  if(o.delivery_address)card+=mkDiv('oph','📍 '+o.delivery_address);
+  if(o.special_instructions)card+='<div class="oph" style="color:#F7DC6F;">📝 '+o.special_instructions+'</div>';
+  card+=mkDiv('tracker',trk);
+  card+=mkDiv('oitems',ihtml);
+  card+=mkDiv('ofoot',mkDiv('ototal',fV(o.total||0))+mkDiv('oacts',acts));
+  card+='</div>';
+  card+='</div>';
+  return card;
+}
+
 function advO(id,ns){
-  var ts={accepted:'accepted_at',prepping:'prepping_at',cooking:'cooking_at',dispatched:'dispatched_at',delivered:'delivered_at'};
-  var u={status:ns};if(ts[ns])u[ts[ns]]=new Date().toISOString();
-  sbF('/rest/v1/orders?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(u)}).then(function(){showT('Updated','Status: '+ns);loadO().then(function(){setTimeout(function(){openChatAuto(id,ns);},800);});});
+  var ts={accepted:'accepted_at',prepping:'prepping_at',cooking:'cooking_at',ready:'ready_at',dispatched:'dispatched_at',delivered:'delivered_at'};
+  var u={status:ns};
+  if(ts[ns])u[ts[ns]]=new Date().toISOString();
+  sbF('/rest/v1/orders?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(u)}).then(function(r){
+    showT('Updated','Status: '+ns);
+    loadO().then(function(){
+      setTimeout(function(){openChatAuto(id,ns);},800);
+    });
+  }).catch(function(e){showT('Error','Could not update order');console.error(e);});
 }
 function openNM(id){nId=id;var o=allO.find(function(x){return x.id===id;});document.getElementById('ni').value=o?(o.owner_notes||''):'';document.getElementById('nmo').classList.add('show');}
 function saveN(){if(!nId)return;sbF('/rest/v1/orders?id=eq.'+nId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({owner_notes:document.getElementById('ni').value})}).then(function(){document.getElementById('nmo').classList.remove('show');showT('Notes Saved','');loadO();});}
