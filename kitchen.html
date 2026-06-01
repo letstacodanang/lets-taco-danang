@@ -117,10 +117,12 @@ function render(orders){
       else if(action==="COLLECTED")ns="delivered";
       if(!ns)return;
       var u={status:ns};
-      var ts={cooking:"cooking_at",delivered:"delivered_at"};
-      if(ts[ns])u[ts[ns]]=new Date().toISOString();
-      this.textContent="...";this.disabled=true;
-      fetch(SB+"/rest/v1/orders?id=eq."+id,{method:"PATCH",headers:{"apikey":SK,"Authorization":"Bearer "+SK,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(u)}).then(function(r){if(r.ok||r.status===204){poll();}else{r.text().then(function(t){console.error("PATCH failed:",r.status,t);});}}).catch(function(e){console.error("fetch error:",e);});
+      // timestamp columns optional - just update status
+      try{var ts={cooking:'cooking_at',delivered:'delivered_at'};if(ts[ns])u[ts[ns]]=new Date().toISOString();}catch(e){}
+      var origTxt=this.textContent;
+      this.textContent="SAVING...";this.disabled=true;this.style.opacity="0.6";
+      var _btn=this;
+      fetch(SB+"/rest/v1/orders?id=eq."+id,{method:"PATCH",headers:{"apikey":SK,"Authorization":"Bearer "+SK,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(u)}).then(function(r){if(r.ok||r.status===204){poll();}else{r.text().then(function(t){console.error("PATCH failed:",r.status,t);_btn.textContent=origTxt;_btn.disabled=false;_btn.style.opacity="1";alert("Update failed: "+r.status+" - "+t);});}}).catch(function(e){console.error("fetch error:",e);_btn.textContent=origTxt;_btn.disabled=false;_btn.style.opacity="1";});
     });
   });
 }
