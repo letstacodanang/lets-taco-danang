@@ -156,20 +156,20 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 .empty{color:#B8A99A;text-align:center;padding:40px;font-size:0.9rem;}
 
 @media(max-width:1024px) and (min-width:769px){
-  .sb{width:200px;}
-  .main{margin-left:200px;padding:20px;}
+  .sb{width:180px;}
+  .main{margin-left:180px;padding:16px;}
   .ni{padding:10px 18px;font-size:0.75rem;}
   .sg{grid-template-columns:repeat(2,1fr);}
   .rg,.setg{grid-template-columns:1fr;}
   .abtn{padding:10px 14px;font-size:0.8rem;min-height:44px;}
 }
 @media(max-width:768px){
-  .sb{width:100%;height:68px;flex-direction:row;bottom:auto;border-right:none;border-bottom:1px solid rgba(212,160,23,0.2);position:fixed;top:0;}
+  .sb{width:100%;height:60px;flex-direction:row;bottom:auto;border-right:none;border-bottom:1px solid rgba(212,160,23,0.2);position:fixed;top:0;}
   .sb-top,.sb-clk,.sb-bot{display:none;}
-  .sb-nav{display:flex;flex-direction:row;padding:0;overflow-x:auto;width:100%;justify-content:space-around;}
-  .ni{flex-direction:column;gap:4px;padding:8px 6px;font-size:0.58rem;min-width:48px;align-items:center;}
+  .sb-nav{display:flex;flex-direction:row;padding:0;overflow-x:auto;width:100%;justify-content:flex-start;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .ni{flex-direction:column;gap:2px;padding:6px 8px;font-size:0.55rem;min-width:52px;align-items:center;flex-shrink:0;}
   .ni-ic{font-size:1.4rem;}
-  .main{margin-left:0;margin-top:68px;padding:12px;}
+  .main{margin-left:0;margin-top:60px;padding:12px;}
   .sg{grid-template-columns:repeat(2,1fr);gap:10px;}
   .sc{padding:16px;}
   .sv{font-size:1.8rem;}
@@ -626,7 +626,7 @@ function renderMenu(){
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#D4A017;letter-spacing:2px">DINE IN - TABLE STATUS</div>
         <button onclick="openNTO(0)" style="background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;border:none;padding:10px 20px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:0.95rem;letter-spacing:2px;cursor:pointer">+ NEW TABLE ORDER</button>
       </div>
-      <div id="tgrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-bottom:20px"></div>
+      <div id="tgrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px"></div>
       <div id="tdetail" style="display:none">
         <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.2);border-radius:8px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
@@ -638,7 +638,7 @@ function renderMenu(){
       </div>
     </div>
     <div class="pg" id="pg-help">
-  <div style="max-width:700px;">
+  <div style="max-width:700px;padding-bottom:40px;">
     <div style="background:linear-gradient(135deg,rgba(212,160,23,0.1),rgba(230,126,34,0.05));border:1px solid rgba(212,160,23,0.3);border-radius:8px;padding:20px;margin-bottom:20px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:#D4A017;letter-spacing:3px;margin-bottom:5px;">STAFF GUIDE</div><div style="font-size:0.85rem;color:#B8A99A;">Everything you need to run the restaurant. Read before your first shift.</div></div>
     <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;"><div style="width:36px;height:36px;background:linear-gradient(135deg,#D4A017,#E67E22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#0F0500;flex-shrink:0;">1</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#FAF0E6;letter-spacing:2px;">NEW ORDER ARRIVES</div></div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Red badge on Home tab shows new orders</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Order appears at top with PLACED status</span></div><div style="display:flex;gap:8px;"><span style="color:#D4A017;">&#8594;</span><span>Check name, items, address, contact method</span></div></div></div>
     <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;"><div style="width:36px;height:36px;background:linear-gradient(135deg,#D4A017,#E67E22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#0F0500;flex-shrink:0;">2</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#FAF0E6;letter-spacing:2px;">ACCEPT AND NOTIFY</div></div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Tap Accept Order — message window opens automatically</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#27AE60;">&#8594;</span><span>Tap SEND MESSAGE to notify customer via WhatsApp or Zalo</span></div><div style="display:flex;gap:8px;"><span style="color:#C0392B;">&#9888;</span><strong style="color:#FAF0E6;">Delivery orders must be paid BEFORE cooking starts</strong></div></div></div>
