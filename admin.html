@@ -151,15 +151,36 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 .toast.show{transform:translateX(0);}
 .toast-t{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#D4A017;margin-bottom:3px;}
 .empty{color:#B8A99A;text-align:center;padding:40px;font-size:0.9rem;}
+
+@media(max-width:1024px) and (min-width:769px){
+  .sb{width:200px;}
+  .main{margin-left:200px;padding:20px;}
+  .ni{padding:10px 18px;font-size:0.75rem;}
+  .sg{grid-template-columns:repeat(2,1fr);}
+  .rg,.setg{grid-template-columns:1fr;}
+  .abtn{padding:10px 14px;font-size:0.8rem;min-height:44px;}
+}
 @media(max-width:768px){
-.sb{width:100%;height:60px;flex-direction:row;bottom:auto;border-right:none;border-bottom:1px solid rgba(212,160,23,0.15);}
-.sb-top,.sb-clk,.sb-bot{display:none;}
-.sb-nav{display:flex;flex-direction:row;padding:0;overflow-x:auto;}
-.ni{flex-direction:column;gap:3px;padding:8px 12px;font-size:0.6rem;}
-.ni-ic{font-size:1.2rem;}
-.main{margin-left:0;margin-top:60px;padding:15px;}
-.sg{grid-template-columns:repeat(2,1fr);}
-.rg,.setg{grid-template-columns:1fr;}}
+  .sb{width:100%;height:68px;flex-direction:row;bottom:auto;border-right:none;border-bottom:1px solid rgba(212,160,23,0.2);position:fixed;top:0;}
+  .sb-top,.sb-clk,.sb-bot{display:none;}
+  .sb-nav{display:flex;flex-direction:row;padding:0;overflow-x:auto;width:100%;justify-content:space-around;}
+  .ni{flex-direction:column;gap:4px;padding:8px 6px;font-size:0.58rem;min-width:48px;align-items:center;}
+  .ni-ic{font-size:1.4rem;}
+  .main{margin-left:0;margin-top:68px;padding:12px;}
+  .sg{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .sc{padding:16px;}
+  .sv{font-size:1.8rem;}
+  .rg,.setg{grid-template-columns:1fr;}
+  .abtn{padding:12px 14px;font-size:0.8rem;min-height:44px;}
+  .oacts{gap:8px;flex-wrap:wrap;}
+  .oh{flex-direction:column;gap:8px;}
+  #chat-window{width:100vw;max-width:100vw;top:auto;bottom:0;left:0;transform:translateY(8px);border-radius:16px 16px 0 0;transition:transform 0.25s,opacity 0.25s;}
+}
+
+.abtn{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.ni{-webkit-tap-highlight-color:transparent;user-select:none;}
+.fc{touch-action:manipulation;min-height:40px;}
+*{-webkit-font-smoothing:antialiased;}
 </style>
 </head>
 <body>
@@ -186,6 +207,7 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
       <div class="ni" data-pg="revenue"><span class="ni-ic">💰</span><span>Revenue</span></div>
       <div class="ni" data-pg="menu"><span class="ni-ic">🌮</span><span>Menu</span></div>
       <div class="ni" data-pg="settings"><span class="ni-ic">⚙️</span><span>Settings</span></div>
+      <div class="ni" data-pg="help"><span class="ni-ic">📖</span><span>Guide</span></div>
     </nav>
     <div class="sb-bot"><button class="btn-out" id="lout">Logout</button></div>
   </div>
@@ -293,7 +315,7 @@ var SIS = ['📥','✅','🔪','🔥','🛵','🎉'];
 var SCS = {placed:'sp',accepted:'sa',prepping:'sr',cooking:'sk',dispatched:'sd',delivered:'sv2',cancelled:'sc2'};
 var SBS = {placed:'sb-p',accepted:'sb-a',prepping:'sb-r',cooking:'sb-k',dispatched:'sb-d',delivered:'sb-v',cancelled:'sb-c'};
 var NS = {placed:'accepted',accepted:'prepping',prepping:'cooking',dispatched:'delivered'};
-var NL = {placed:'Accept Order',accepted:'Start Prepping',prepping:'Start Cooking',dispatched:'Mark Delivered'};
+var NL = {placed:'Accept Order',accepted:'Prepping',prepping:'Cooking',dispatched:'Delivered'};
 
 function sbF(p,o){
   o=o||{};
@@ -394,7 +416,7 @@ function doLogin(){
   }
 }
 
-var PGT={home:'Dashboard',orders:'All Orders',customers:'Customers',revenue:'Revenue',menu:'Menu Items',settings:'Settings'};
+var PGT={home:'Dashboard',orders:'All Orders',customers:'Customers',revenue:'Revenue',menu:'Menu Items',settings:'Settings',help:'Staff Guide'};
 function showPg(pg){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
@@ -461,7 +483,8 @@ function renderOL(orders,container){
     acts+='<button class="abtn abtn-muted" data-nts="'+o.id+'">Notes</button>';
     if(o.status!=='delivered'&&o.status!=='cancelled')acts+='<button class="abtn abtn-red" data-cnc="'+o.id+'">Cancel</button>';
     var card='';
-    card+=mkDiv('oh',mkDiv('',mkDiv('oref',o.order_ref||'LTD-?')+mkDiv('otime',tAgo(o.created_at)))+mkSpan('sbadge '+(SBS[o.status]||'sb-p'),(o.status||'placed').toUpperCase()));
+    var hints={placed:'Tap Accept to confirm',accepted:'Confirm payment then Prep',prepping:'Tap when on grill',cooking:'Assign driver to dispatch',dispatched:'Tap when customer receives',delivered:'Complete',cancelled:'Cancelled'};
+    card+=mkDiv('oh',mkDiv('',mkDiv('oref',o.order_ref||'LTD-?')+mkDiv('otime',tAgo(o.created_at)))+mkDiv('',mkSpan('sbadge '+(SBS[o.status]||'sb-p'),(o.status||'placed').toUpperCase())+'<div style="font-size:0.65rem;color:#B8A99A;margin-top:4px;text-align:right;">'+(hints[o.status]||'')+'</div>'));
     card+=mkDiv('onm',o.customer_name||'Customer');
     card+=mkDiv('oph',(o.customer_phone||'')+' · '+(o.order_type||'delivery')+' · '+(o.payment_method||'cash'));
     if(o.delivery_address)card+=mkDiv('oph','📍 '+o.delivery_address);
@@ -552,6 +575,21 @@ function renderMenu(){
   });
 }
 </script>
+
+
+<div class="pg" id="pg-help">
+  <div style="max-width:700px;">
+    <div style="background:linear-gradient(135deg,rgba(212,160,23,0.1),rgba(230,126,34,0.05));border:1px solid rgba(212,160,23,0.3);border-radius:8px;padding:20px;margin-bottom:20px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:#D4A017;letter-spacing:3px;margin-bottom:5px;">STAFF GUIDE</div><div style="font-size:0.85rem;color:#B8A99A;">Everything you need to run the restaurant. Read before your first shift.</div></div>
+    <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;"><div style="width:36px;height:36px;background:linear-gradient(135deg,#D4A017,#E67E22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#0F0500;flex-shrink:0;">1</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#FAF0E6;letter-spacing:2px;">NEW ORDER ARRIVES</div></div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Red badge on Home tab shows new orders</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Order appears at top with PLACED status</span></div><div style="display:flex;gap:8px;"><span style="color:#D4A017;">&#8594;</span><span>Check name, items, address, contact method</span></div></div></div>
+    <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;"><div style="width:36px;height:36px;background:linear-gradient(135deg,#D4A017,#E67E22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#0F0500;flex-shrink:0;">2</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#FAF0E6;letter-spacing:2px;">ACCEPT AND NOTIFY</div></div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Tap Accept Order — message window opens automatically</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#27AE60;">&#8594;</span><span>Tap SEND MESSAGE to notify customer via WhatsApp or Zalo</span></div><div style="display:flex;gap:8px;"><span style="color:#C0392B;">&#9888;</span><strong style="color:#FAF0E6;">Delivery orders must be paid BEFORE cooking starts</strong></div></div></div>
+    <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;"><div style="width:36px;height:36px;background:linear-gradient(135deg,#D4A017,#E67E22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#0F0500;flex-shrink:0;">3</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#FAF0E6;letter-spacing:2px;">COOK THE ORDER</div></div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Tap Prepping when preparing ingredients</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Tap Cooking when tacos are on the grill</span></div><div style="display:flex;gap:8px;"><span style="color:#D4A017;">&#8594;</span><span>Each tap auto-notifies customer of their order status</span></div></div></div>
+    <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;"><div style="width:36px;height:36px;background:linear-gradient(135deg,#D4A017,#E67E22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#0F0500;flex-shrink:0;">4</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#FAF0E6;letter-spacing:2px;">DISPATCH DELIVERY</div></div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Tap Assign Driver, enter driver name and phone</span></div><div style="display:flex;gap:8px;"><span style="color:#D4A017;">&#8594;</span><span>Customer auto-receives driver name and contact number</span></div></div></div>
+    <div style="background:#1A0800;border:1px solid rgba(39,174,96,0.2);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;"><div style="width:36px;height:36px;background:linear-gradient(135deg,#27AE60,#2ECC71);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:white;flex-shrink:0;">5</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#FAF0E6;letter-spacing:2px;">ORDER COMPLETE</div></div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#27AE60;">&#8594;</span><span>Tap Delivered when customer confirms receipt</span></div><div style="display:flex;gap:8px;"><span style="color:#27AE60;">&#8594;</span><span>Thank you message sent. Loyalty points added automatically.</span></div></div></div>
+    <div style="background:rgba(41,128,185,0.08);border:1px solid rgba(41,128,185,0.3);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#5DADE2;letter-spacing:2px;margin-bottom:12px;">PICKUP ORDERS</div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#5DADE2;">&#8594;</span><span>Pickup customers pay when they arrive, no prepayment needed</span></div><div style="display:flex;gap:8px;"><span style="color:#5DADE2;">&#8594;</span><span>After cooking tap Delivered when they collect their order</span></div></div></div>
+    <div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.3);border-radius:8px;padding:20px;margin-bottom:15px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#C0392B;letter-spacing:2px;margin-bottom:12px;">IMPORTANT RULES</div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#C0392B;font-weight:700;">1.</span><span>Never cancel an order without calling the customer first</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#C0392B;font-weight:700;">2.</span><span>Delivery orders must be paid before cooking starts</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#C0392B;font-weight:700;">3.</span><span>Always send the notification message at each status change</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#C0392B;font-weight:700;">4.</span><span>Problems? WhatsApp owner: <strong style="color:#FAF0E6;">0909 923 941</strong></span></div><div style="display:flex;gap:8px;"><span style="color:#C0392B;font-weight:700;">5.</span><span>Never share the admin password with anyone</span></div></div></div>
+    <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:20px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#D4A017;letter-spacing:2px;margin-bottom:12px;">LOYALTY POINTS</div><div style="font-size:0.9rem;color:#B8A99A;line-height:1.9;"><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>Every taco ordered = 1 point added automatically</span></div><div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#D4A017;">&#8594;</span><span>10 points = 15% discount on next order applied automatically</span></div><div style="display:flex;gap:8px;"><span style="color:#D4A017;">&#8594;</span><span>See each customer points in the Customers tab</span></div></div></div>
+  </div>
+</div>
 
 <div id="chat-overlay" onclick="closeChat()" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:4000;display:none;backdrop-filter:blur(4px);"></div>
 <div id="chat-window" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.92);width:460px;max-width:95vw;background:#0F0500;border:1px solid rgba(212,160,23,0.3);border-radius:12px;z-index:4001;display:none;flex-direction:column;transition:transform 0.25s,opacity 0.25s;opacity:0;box-shadow:0 30px 80px rgba(0,0,0,0.8);">
