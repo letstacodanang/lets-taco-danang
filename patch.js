@@ -1,52 +1,59 @@
 const fs = require('fs');
 
-// Safety check — make sure we are working on the right file
 const html = fs.readFileSync('index.html', 'utf8');
 
 if (html.includes('Lam Tuyen')) {
-  console.log('STOP — Wrong file detected. Contains Lam Tuyen.');
+  console.log('STOP — Wrong file. Contains Lam Tuyen.');
   process.exit(1);
 }
+console.log('✅ File identity confirmed — Lets Taco Da Nang');
 
-if (!html.includes("Let's Taco") && !html.includes("lets-taco")) {
-  console.log('STOP — File does not look like the taco restaurant.');
-  process.exit(1);
-}
+// Fix duplicate photo on Grilled Chicken card
+// Currently using the same photo as Grilled Pork (419311.jpg)
+// Replace SECOND occurrence of 419311 with the chicken photo (418145)
 
-console.log('✅ File identity confirmed — Let\'s Taco Da Nang');
+const duplicatePhoto = 'IMG_1779730373155_1779730419311.jpg';
+const chickenPhoto = 'IMG_1779730373148_1779730418145.jpg';
 
-// THE FIX — pay-wa-link does not exist in HTML
-// showTracker tries to set href on it and crashes silently
-// We replace the broken reference with working WhatsApp link logic
+const base = 'https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/';
 
-const broken = `var wm=encodeURIComponent('Hi! I just placed order '+ref+'. Total: '+fV(d.total)+'. Confirming payment now!');document.getElementById('pay-wa-link').href='https://wa.me/84909923941?text='+wm;`;
+const oldSrc = base + duplicatePhoto;
+const newSrc = base + chickenPhoto;
 
-const fixed = `var wm=encodeURIComponent('Hi! I just placed order '+ref+'. Total: '+fV(d.total)+'. Confirming payment now!');var waLink=document.getElementById('pay-wa-link');if(waLink)waLink.href='https://wa.me/84909923941?text='+wm;`;
+// Count how many times the duplicate appears
+const count = (html.match(new RegExp(oldSrc.replace(/\./g,'\\.'),'g'))||[]).length;
+console.log('Found duplicate photo used', count, 'times');
 
-if (!html.includes(broken)) {
-  console.log('⚠️  Bug pattern not found — may already be fixed or code changed.');
-  console.log('Check index.html manually for pay-wa-link reference.');
+if (count < 2) {
+  console.log('⚠️  Expected 2 uses of duplicate photo, found', count);
+  console.log('Check index.html manually.');
   process.exit(0);
 }
 
-const fixed_html = html.replace(broken, fixed);
+// Replace only the SECOND occurrence (Grilled Chicken card)
+let fixed = html;
+const firstPos = fixed.indexOf(oldSrc);
+const secondPos = fixed.indexOf(oldSrc, firstPos + 1);
+fixed = fixed.substring(0, secondPos) + newSrc + fixed.substring(secondPos + oldSrc.length);
+
+console.log('✅ Replaced second occurrence with chicken photo');
 
 // JS Validation
 const scripts = [];
 let pos = 0;
 while (true) {
-  const s = fixed_html.indexOf('<script>', pos);
+  const s = fixed.indexOf('<script>', pos);
   if (s === -1) break;
-  const e = fixed_html.indexOf('<\/script>', s);
+  const e = fixed.indexOf('<\/script>', s);
   if (e === -1) break;
-  scripts.push(fixed_html.substring(s + 8, e));
+  scripts.push(fixed.substring(s + 8, e));
   pos = e + 9;
 }
 
 let ok = true;
 scripts.forEach(function(sc, i) {
   try { new Function(sc); }
-  catch(e) { console.log('❌ JS Error in block', i, ':', e.message); ok = false; }
+  catch(e) { console.log('JS Error block', i, ':', e.message); ok = false; }
 });
 
 if (!ok) {
@@ -55,6 +62,5 @@ if (!ok) {
 }
 
 console.log('✅ JS validation passed');
-
-fs.writeFileSync('index.html', fixed_html, 'utf8');
-console.log('✅ index.html saved — pay-wa-link bug fixed');
+fs.writeFileSync('index.html', fixed, 'utf8');
+console.log('✅ index.html saved — Grilled Chicken now has correct photo');
