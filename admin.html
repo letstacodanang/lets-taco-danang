@@ -272,15 +272,49 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
       <div class="cg" id="cl"><div class="empty">Loading...</div></div>
     </div>
     <div class="pg" id="pg-revenue">
-      <div class="sg">
-        <div class="sc"><div class="si">📅</div><div class="sl">Today</div><div class="sv" id="r1">0</div></div>
-        <div class="sc"><div class="si">📆</div><div class="sl">This Week</div><div class="sv" id="r2">0</div></div>
-        <div class="sc"><div class="si">🗓️</div><div class="sl">This Month</div><div class="sv" id="r3">0</div></div>
-        <div class="sc"><div class="si">🏆</div><div class="sl">All Time</div><div class="sv" id="r4">0</div></div>
+      <!-- Period selector -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="rp-btn active" data-p="today" style="padding:8px 18px;border-radius:20px;border:1px solid rgba(212,160,23,0.4);background:rgba(212,160,23,0.15);color:#D4A017;font-family:Jost,sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">Today</button>
+        <button class="rp-btn" data-p="week" style="padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#B8A99A;font-family:Jost,sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">This Week</button>
+        <button class="rp-btn" data-p="month" style="padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#B8A99A;font-family:Jost,sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">This Month</button>
+        <button class="rp-btn" data-p="all" style="padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#B8A99A;font-family:Jost,sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">All Time</button>
       </div>
+      <!-- Total revenue -->
+      <div style="background:linear-gradient(135deg,rgba(212,160,23,0.08),rgba(212,160,23,0.03));border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:20px;margin-bottom:16px;text-align:center;">
+        <div style="font-size:0.7rem;letter-spacing:3px;text-transform:uppercase;color:#B8A99A;margin-bottom:4px;">Total Revenue</div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:2.8rem;color:#D4A017;letter-spacing:2px;" id="r-total">₫0</div>
+        <div style="font-size:0.75rem;color:#B8A99A;margin-top:4px;" id="r-orders">0 delivered orders</div>
+      </div>
+      <!-- Split by type -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div style="background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:16px;text-align:center;">
+          <div style="font-size:1.4rem;margin-bottom:4px;">🍽️</div>
+          <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">Dine In</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:1.4rem;color:#D4A017;" id="r-dinein">₫0</div>
+          <div style="font-size:0.7rem;color:#B8A99A;margin-top:2px;" id="r-dinein-cnt">0 orders</div>
+        </div>
+        <div style="background:#1A0800;border:1px solid rgba(41,128,185,0.2);border-radius:8px;padding:16px;text-align:center;">
+          <div style="font-size:1.4rem;margin-bottom:4px;">🏃</div>
+          <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">Takeout</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:1.4rem;color:#5DADE2;" id="r-takeout">₫0</div>
+          <div style="font-size:0.7rem;color:#B8A99A;margin-top:2px;" id="r-takeout-cnt">0 orders</div>
+        </div>
+        <div style="background:#1A0800;border:1px solid rgba(142,68,173,0.2);border-radius:8px;padding:16px;text-align:center;">
+          <div style="font-size:1.4rem;margin-bottom:4px;">🛵</div>
+          <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">Delivery</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:1.4rem;color:#BB8FCE;" id="r-delivery">₫0</div>
+          <div style="font-size:0.7rem;color:#B8A99A;margin-top:2px;" id="r-delivery-cnt">0 orders</div>
+        </div>
+      </div>
+      <!-- Charts -->
       <div class="rg">
         <div class="rc"><div class="rt">Orders This Week</div><div class="chart-w" id="wc"></div><div style="display:flex;justify-content:space-around;margin-top:5px;" id="wl"></div></div>
         <div class="rc"><div class="rt">Top Items</div><div class="top-items" id="ti"><div class="empty">No data</div></div></div>
+      </div>
+      <!-- Daily report -->
+      <div style="margin-top:20px;">
+        <div style="font-family:Bebas Neue,sans-serif;font-size:1rem;letter-spacing:3px;color:#D4A017;margin-bottom:12px;">END OF DAY REPORTS</div>
+        <div id="daily-reports-list"><div class="empty">Loading reports...</div></div>
       </div>
     </div>
     <div class="pg" id="pg-menu">
@@ -459,7 +493,59 @@ function showPg(pg){
   if(pg==='revenue')loadRev();
   if(pg==='dinein')renderTG();
 }
-function initApp(){loadO();loadC();renderMenu();setInterval(loadO,30000);setInterval(checkReadyAlert,8000);}
+function initApp(){
+  loadO();loadC();renderMenu();
+  setInterval(loadO,30000);
+  setInterval(checkReadyAlert,8000);
+  setInterval(checkEOD,60000); // Check every minute for 2am report
+}
+var eodDone=false;
+function checkEOD(){
+  var n=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'}));
+  var h=n.getHours();var m=n.getMinutes();
+  // Run at 2:00am - 2:01am Vietnam time, once per session
+  if(h===2&&m===0&&!eodDone){
+    eodDone=true;
+    generateEOD();
+  }
+  // Reset flag after 2:05am so it doesn't re-run
+  if(h===2&&m>=5)eodDone=false;
+}
+function generateEOD(){
+  var now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'}));
+  var yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
+  var yDate=yesterday.toISOString().split('T')[0];
+  sbF('/rest/v1/orders?select=*&status=eq.delivered&created_at=gte.'+yDate+'T00:00:00&created_at=lt.'+yDate+'T23:59:59').then(function(orders){
+    if(!orders)return;
+    var din=orders.filter(function(o){return o.order_type==='dinein';});
+    var tak=orders.filter(function(o){return o.order_type==='pickup'||o.order_type==='takeout';});
+    var del=orders.filter(function(o){return o.order_type==='delivery';});
+    var ic={};
+    orders.forEach(function(o){
+      var items=Array.isArray(o.items)?o.items:[];
+      items.forEach(function(it){ic[it.name||it]=(ic[it.name||it]||0)+(it.qty||1);});
+    });
+    var topItem=Object.entries(ic).sort(function(a,b){return b[1]-a[1];})[0];
+    var staff=[...new Set(orders.map(function(o){return o.staff_name;}).filter(Boolean))].join(', ');
+    var report={
+      report_date:yDate,
+      dine_in_revenue:din.reduce(function(s,o){return s+(o.total||0);},0),
+      dine_in_orders:din.length,
+      takeout_revenue:tak.reduce(function(s,o){return s+(o.total||0);},0),
+      takeout_orders:tak.length,
+      delivery_revenue:del.reduce(function(s,o){return s+(o.total||0);},0),
+      delivery_orders:del.length,
+      total_discounts:orders.reduce(function(s,o){return s+(o.manual_discount||0);},0),
+      net_revenue:orders.reduce(function(s,o){return s+(o.total||0);},0),
+      top_item:topItem?topItem[0]:null,
+      new_customers:0,
+      staff_on_duty:staff
+    };
+    sbF('/rest/v1/daily_reports',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(report)}).then(function(){
+      showT('Report saved','End of day report for '+yDate+' saved');
+    });
+  });
+}
 var lastReadyIds=[];
 function checkReadyAlert(){
   var readyOrds=allO.filter(function(o){return o.status==='ready';});
@@ -661,34 +747,108 @@ function renderCL(list){
 }
 
 function loadRev(){
+  var now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'}));
+  var today=now.toISOString().split('T')[0];
+  var wa=new Date(now);wa.setDate(wa.getDate()-7);
+  var ma=new Date(now);ma.setDate(1);
   sbF('/rest/v1/orders?select=*&status=eq.delivered').then(function(data){
     if(!data)return;
-    var now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'}));
-    var today=now.toISOString().split('T')[0];
-    var wa=new Date(now);wa.setDate(wa.getDate()-7);
-    var ma=new Date(now);ma.setDate(1);
+    // Get active period
+    var period=window.revPeriod||'today';
+    var filtered=data.filter(function(o){
+      if(period==='today')return o.created_at&&o.created_at.startsWith(today);
+      if(period==='week')return new Date(o.created_at)>=wa;
+      if(period==='month')return new Date(o.created_at)>=ma;
+      return true;
+    });
+    // Total
+    var total=filtered.reduce(function(s,o){return s+(o.total||0);},0);
+    document.getElementById('r-total').textContent=fV(total);
+    document.getElementById('r-orders').textContent=filtered.length+' delivered orders';
+    // Split by type
+    var din=filtered.filter(function(o){return o.order_type==='dinein';});
+    var tak=filtered.filter(function(o){return o.order_type==='pickup'||o.order_type==='takeout';});
+    var del=filtered.filter(function(o){return o.order_type==='delivery';});
+    document.getElementById('r-dinein').textContent=fV(din.reduce(function(s,o){return s+(o.total||0);},0));
+    document.getElementById('r-dinein-cnt').textContent=din.length+' orders';
+    document.getElementById('r-takeout').textContent=fV(tak.reduce(function(s,o){return s+(o.total||0);},0));
+    document.getElementById('r-takeout-cnt').textContent=tak.length+' orders';
+    document.getElementById('r-delivery').textContent=fV(del.reduce(function(s,o){return s+(o.total||0);},0));
+    document.getElementById('r-delivery-cnt').textContent=del.length+' orders';
+    // Legacy stat cards
     document.getElementById('r1').textContent=fV(data.filter(function(o){return o.created_at&&o.created_at.startsWith(today);}).reduce(function(s,o){return s+(o.total||0);},0));
     document.getElementById('r2').textContent=fV(data.filter(function(o){return new Date(o.created_at)>=wa;}).reduce(function(s,o){return s+(o.total||0);},0));
     document.getElementById('r3').textContent=fV(data.filter(function(o){return new Date(o.created_at)>=ma;}).reduce(function(s,o){return s+(o.total||0);},0));
     document.getElementById('r4').textContent=fV(data.reduce(function(s,o){return s+(o.total||0);},0));
-    var b=[0,0,0,0,0,0,0];
-    data.forEach(function(o){if(!o.created_at)return;var d=Math.floor((now-new Date(o.created_at))/86400000);if(d>=0&&d<7)b[6-d]+=(o.total||0);});
-    var mx=Math.max.apply(null,b.concat([1]));
+    // Weekly chart
     var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    var dl=[];for(var i=6;i>=0;i--){var d=new Date(now);d.setDate(d.getDate()-i);dl.push(days[d.getDay()]);}
-    var ch='',wl='';
-    for(var j=0;j<7;j++){
-      ch+='<div class="cbar-w"><div class="cbar" style="height:'+Math.round(b[j]/mx*100)+'%" data-val="'+fV(b[j])+'"></div></div>';
-      wl+='<div style="font-size:0.65rem;color:#B8A99A;flex:1;text-align:center;">'+dl[j]+'</div>';
+    var wdata=[0,0,0,0,0,0,0];
+    data.filter(function(o){return new Date(o.created_at)>=wa;}).forEach(function(o){
+      var d=new Date(o.created_at).getDay();wdata[d]+=(o.total||0);
+    });
+    var mx=Math.max.apply(null,wdata)||1;
+    var ch=document.getElementById('wc');var wl=document.getElementById('wl');
+    ch.innerHTML='';wl.innerHTML='';
+    wdata.forEach(function(v,i){
+      var bar=document.createElement('div');
+      bar.style.cssText='display:inline-block;width:12%;margin:0 0.5%;background:linear-gradient(0deg,#D4A017,#E8C547);border-radius:3px 3px 0 0;height:'+Math.round((v/mx)*80)+'px;vertical-align:bottom;';
+      ch.appendChild(bar);
+      var lbl=document.createElement('div');
+      lbl.style.cssText='display:inline-block;width:12%;margin:0 0.5%;text-align:center;font-size:0.6rem;color:#B8A99A;';
+      lbl.textContent=days[i];wl.appendChild(lbl);
+    });
+    // Top items
+    var ic={};
+    data.forEach(function(o){
+      var items=Array.isArray(o.items)?o.items:[];
+      items.forEach(function(it){ic[it.name||it]=(ic[it.name||it]||0)+(it.qty||1);});
+    });
+    var sorted=Object.entries(ic).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+    var ti=document.getElementById('ti');
+    if(sorted.length){
+      ti.innerHTML=sorted.map(function(x){
+        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.85rem;"><span>'+x[0]+'</span><span style="color:#D4A017;font-family:Bebas Neue,sans-serif;">'+x[1]+'x</span></div>';
+      }).join('');
     }
-    document.getElementById('wc').innerHTML=ch;
-    document.getElementById('wl').innerHTML=wl;
-    var cnt={};
-    data.forEach(function(o){(Array.isArray(o.items)?o.items:[]).forEach(function(i){var n=i.name||i;cnt[n]=(cnt[n]||0)+(i.qty||1);});});
-    var s=Object.entries(cnt).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
-    document.getElementById('ti').innerHTML=s.length?s.map(function(e){return '<div class="top-item"><span style="color:#FAF0E6;">'+e[0]+'</span><span style="color:#D4A017;font-family:Bebas Neue,sans-serif;font-size:1.1rem;">'+e[1]+'</span></div>';}).join(''):mkDiv('empty','No data');
+    // Load daily reports
+    loadDailyReports();
+  });
+  // Attach period buttons
+  document.querySelectorAll('.rp-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      window.revPeriod=this.getAttribute('data-p');
+      document.querySelectorAll('.rp-btn').forEach(function(b){
+        b.style.background='transparent';b.style.color='#B8A99A';b.style.borderColor='rgba(255,255,255,0.1)';
+      });
+      this.style.background='rgba(212,160,23,0.15)';this.style.color='#D4A017';this.style.borderColor='rgba(212,160,23,0.4)';
+      loadRev();
+    });
   });
 }
+function loadDailyReports(){
+  sbF('/rest/v1/daily_reports?select=*&order=report_date.desc&limit=14').then(function(data){
+    var el=document.getElementById('daily-reports-list');
+    if(!el)return;
+    if(!data||!data.length){el.innerHTML='<div class="empty">No reports yet — first report generates tonight at 2am</div>';return;}
+    var h='';
+    data.forEach(function(r){
+      h+='<div style="background:#1A0800;border:1px solid rgba(212,160,23,0.1);border-radius:8px;padding:14px;margin-bottom:8px;">';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+      h+='<span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:#D4A017;letter-spacing:2px;">'+r.report_date+'</span>';
+      h+='<span style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:#FAF0E6;">'+fV(r.net_revenue||0)+'</span>';
+      h+='</div>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:0.75rem;">';
+      h+='<div style="color:#D4A017;">🍽️ Dine In<br><span style="color:#FAF0E6;font-family:Bebas Neue,sans-serif;">'+fV(r.dine_in_revenue||0)+'</span> ('+( r.dine_in_orders||0)+' orders)</div>';
+      h+='<div style="color:#5DADE2;">🏃 Takeout<br><span style="color:#FAF0E6;font-family:Bebas Neue,sans-serif;">'+fV(r.takeout_revenue||0)+'</span> ('+( r.takeout_orders||0)+' orders)</div>';
+      h+='<div style="color:#BB8FCE;">🛵 Delivery<br><span style="color:#FAF0E6;font-family:Bebas Neue,sans-serif;">'+fV(r.delivery_revenue||0)+'</span> ('+( r.delivery_orders||0)+' orders)</div>';
+      h+='</div>';
+      if(r.top_item)h+='<div style="margin-top:8px;font-size:0.72rem;color:#B8A99A;">🏆 Top item: '+r.top_item+' · Staff: '+(r.staff_on_duty||'—')+'</div>';
+      h+='</div>';
+    });
+    el.innerHTML=h;
+  });
+}
+
 
 function renderMenu(){
   var sv=JSON.parse(localStorage.getItem('menuAv')||'{}');
