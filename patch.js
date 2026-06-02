@@ -1,270 +1,297 @@
 const fs = require('fs');
 
-// ============================================
-// KITCHEN.HTML — FULL PAYMENT LOGIC REWRITE
-// ============================================
+const html = fs.readFileSync('admin.html', 'utf8');
 
-const kitchen = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lets Taco — Kitchen</title>
-<meta name="robots" content="noindex,nofollow">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@400;600&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:#0a0300;color:#FAF0E6;font-family:Jost,sans-serif;min-height:100vh;overflow-x:hidden;}
-header{background:#1A0800;border-bottom:2px solid rgba(212,160,23,0.3);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
-.hlogo{font-family:Bebas Neue,sans-serif;font-size:1.8rem;color:#D4A017;letter-spacing:4px;}
-.hright{display:flex;align-items:center;gap:20px;}
-.hclock{font-family:Bebas Neue,sans-serif;font-size:1.4rem;color:#FAF0E6;letter-spacing:2px;}
-.hcount{background:rgba(212,160,23,0.15);border:1px solid rgba(212,160,23,0.3);border-radius:6px;padding:6px 16px;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;color:#D4A017;}
-.hpoll{width:10px;height:10px;border-radius:50%;background:#27AE60;animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.3);}}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;padding:20px;max-width:1600px;margin:0 auto;}
-.empty-state{text-align:center;padding:80px 20px;color:#B8A99A;grid-column:1/-1;}
-.empty-state .emoji{font-size:4rem;margin-bottom:12px;}
-.empty-state p{font-size:1rem;letter-spacing:2px;text-transform:uppercase;}
-.card{border-radius:10px;padding:20px;border:2px solid;transition:transform 0.2s;animation:slideIn 0.3s ease;}
-@keyframes slideIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
-.card:hover{transform:translateY(-2px);}
-.card.cnew{background:rgba(192,57,43,0.12);border-color:#C0392B;box-shadow:0 0 20px rgba(192,57,43,0.2);}
-.card.ccooking{background:rgba(230,126,34,0.1);border-color:#E67E22;box-shadow:0 0 20px rgba(230,126,34,0.15);}
-.card.cready{background:rgba(39,174,96,0.1);border-color:#27AE60;animation:readyPulse 2s infinite;}
-.card.cunpaid{background:rgba(192,57,43,0.08);border-color:#C0392B;animation:unpaidPulse 1.5s infinite;}
-@keyframes readyPulse{0%,100%{box-shadow:0 0 20px rgba(39,174,96,0.3);}50%{box-shadow:0 0 40px rgba(39,174,96,0.6);}}
-@keyframes unpaidPulse{0%,100%{box-shadow:0 0 15px rgba(192,57,43,0.3);}50%{box-shadow:0 0 35px rgba(192,57,43,0.7);}}
-.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
-.card-ref{font-family:Bebas Neue,sans-serif;font-size:1.6rem;color:#D4A017;letter-spacing:3px;}
-.card-type{font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:4px;font-weight:600;}
-.type-dinein{background:rgba(212,160,23,0.2);color:#D4A017;border:1px solid rgba(212,160,23,0.4);}
-.type-takeout{background:rgba(41,128,185,0.2);color:#5DADE2;border:1px solid rgba(41,128,185,0.4);}
-.type-delivery{background:rgba(142,68,173,0.2);color:#BB8FCE;border:1px solid rgba(142,68,173,0.4);}
-.card-table{font-family:Bebas Neue,sans-serif;font-size:2.8rem;color:#FAF0E6;text-align:center;padding:8px 0;letter-spacing:2px;}
-.card-customer{font-size:0.85rem;color:#B8A99A;margin-bottom:12px;}
-.card-items{background:rgba(0,0,0,0.3);border-radius:6px;padding:12px;margin-bottom:14px;}
-.item-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.9rem;}
-.item-row:last-child{border-bottom:none;}
-.item-qty{color:#D4A017;font-family:Bebas Neue,sans-serif;font-size:1.1rem;margin-right:8px;}
-.item-name{color:#FAF0E6;flex:1;}
-.card-notes{background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);border-radius:6px;padding:10px;margin-bottom:14px;font-size:0.82rem;color:#F7DC6F;line-height:1.5;}
-.card-time{font-size:0.72rem;color:#B8A99A;margin-bottom:14px;}
-.card-btn{width:100%;padding:14px;border:none;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:1.2rem;letter-spacing:3px;cursor:pointer;transition:all 0.2s;touch-action:manipulation;}
-.btn-start{background:linear-gradient(135deg,#C0392B,#E67E22);color:white;}
-.btn-ready{background:linear-gradient(135deg,#27AE60,#2ECC71);color:white;}
-.btn-collected{background:rgba(255,255,255,0.1);color:#B8A99A;border:1px solid rgba(255,255,255,0.15);}
-.btn-disabled{background:rgba(192,57,43,0.15);color:#C0392B;border:2px solid rgba(192,57,43,0.4);cursor:not-allowed;}
-.unpaid-banner{background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.5);border-radius:8px;padding:12px;margin-bottom:14px;text-align:center;}
-.unpaid-banner-title{font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:#E74C3C;letter-spacing:3px;margin-bottom:4px;}
-.unpaid-banner-sub{font-size:0.75rem;color:#B8A99A;}
-.paid-banner{background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);border-radius:8px;padding:8px 12px;margin-bottom:14px;text-align:center;}
-.paid-banner-title{font-family:Bebas Neue,sans-serif;font-size:1rem;color:#27AE60;letter-spacing:3px;}
-.status-badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
-.badge-new{background:rgba(192,57,43,0.2);color:#E74C3C;border:1px solid rgba(192,57,43,0.4);}
-.badge-cooking{background:rgba(230,126,34,0.2);color:#E67E22;border:1px solid rgba(230,126,34,0.4);}
-.badge-ready{background:rgba(39,174,96,0.2);color:#27AE60;border:1px solid rgba(39,174,96,0.4);}
-.badge-unpaid{background:rgba(192,57,43,0.2);color:#E74C3C;border:1px solid rgba(192,57,43,0.5);}
-.section-header{grid-column:1/-1;font-family:Bebas Neue,sans-serif;font-size:1.2rem;letter-spacing:4px;padding:10px 0 5px;border-bottom:1px solid rgba(212,160,23,0.15);margin-bottom:5px;}
-.section-dinein{color:#D4A017;}
-.section-other{color:#5DADE2;}
-@media(max-width:600px){.grid{grid-template-columns:1fr;padding:12px;gap:12px;}.card-ref{font-size:1.3rem;}.card-table{font-size:2.2rem;}}
-</style>
-</head>
-<body>
-<header>
-  <div class="hlogo">KITCHEN — LETS TACO</div>
-  <div class="hright">
-    <div class="hcount" id="kcount">0 ACTIVE</div>
-    <div class="hclock" id="kclock">00:00:00</div>
-    <div class="hpoll" title="Live — polling every 8s"></div>
-  </div>
-</header>
-<div class="grid" id="kgrid">
-  <div class="empty-state"><div class="emoji">🌮</div><p>No active orders — standing by</p></div>
-</div>
-<script>
-var SB="https://kigqjuxxoeoeezjguuxu.supabase.co";
-var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpZ3FqdXh4b2VvZWV6amd1dXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTgxNjIsImV4cCI6MjA5NTYzNDE2Mn0.e-V7jsZ0yEjHUziUeFAZQkNDgxKmMq_v4TcYcHBEyhQ";
-var lastIds=[];
-var lastPaidIds=[];
-
-function mkCtx(){return new(window.AudioContext||window.webkitAudioContext)();}
-function beep(ctx,freq,start,dur){var o=ctx.createOscillator();var g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=freq;g.gain.setValueAtTime(0.4,start);g.gain.exponentialRampToValueAtTime(0.001,start+dur);o.start(start);o.stop(start+dur);}
-function playNew(){try{var c=mkCtx();[0,0.18,0.36].forEach(function(t){beep(c,880,c.currentTime+t,0.12);});}catch(e){}}
-function playReady(){try{var c=mkCtx();[0,0.15,0.30,0.45].forEach(function(t,i){beep(c,600+i*120,c.currentTime+t,0.14);});}catch(e){}}
-function playPaid(){try{var c=mkCtx();[0,0.12,0.24].forEach(function(t,i){beep(c,500+i*150,c.currentTime+t,0.15);});}catch(e){}}
-
-function sbF(p){return fetch(SB+p,{headers:{"apikey":SK,"Authorization":"Bearer "+SK}}).then(function(r){return r.json();}).catch(function(){return null;});}
-function fV(n){n=parseInt(n)||0;if(n>=1000)return "\\u20ab"+(n/1000).toFixed(0)+"k";return "\\u20ab"+n;}
-function tAgo(ts){if(!ts)return "";var d=Math.floor((Date.now()-new Date(ts))/1000);if(d<60)return d+"s ago";if(d<3600)return Math.floor(d/60)+"m ago";return Math.floor(d/3600)+"h ago";}
-
-function typeLabel(o){
-  if(o.order_type==="dinein")return "<span class=\\"card-type type-dinein\\">DINE IN</span>";
-  if(o.order_type==="delivery")return "<span class=\\"card-type type-delivery\\">DELIVERY</span>";
-  return "<span class=\\"card-type type-takeout\\">TAKEOUT</span>";
-}
-
-function isPaid(o){
-  // Dine in is always considered paid upfront for cooking purposes
-  if(o.order_type==="dinein")return true;
-  // Takeout and delivery require payment_status = paid
-  return o.payment_status==="paid";
-}
-
-function statusMap(o){
-  var s=o.status;
-  var paid=isPaid(o);
-  // Unpaid takeout/delivery — blocked
-  if(!paid&&(s==="placed"||s==="accepted"||s==="prepping")){
-    return{cls:"cunpaid",badge:"badge-unpaid",label:"AWAITING PAYMENT",btn:"btn-disabled",btntxt:"AWAITING PAYMENT",blocked:true};
-  }
-  if(s==="placed"||s==="accepted"||s==="prepping")return{cls:"cnew",badge:"badge-new",label:"NEW ORDER",btn:"btn-start",btntxt:"START COOKING",blocked:false};
-  if(s==="cooking")return{cls:"ccooking",badge:"badge-cooking",label:"COOKING",btn:"btn-ready",btntxt:"MARK READY",blocked:false};
-  if(s==="ready")return{cls:"cready",badge:"badge-ready",label:"READY FOR PICKUP",btn:"btn-collected",btntxt:"COLLECTED",blocked:false};
-  return null;
-}
-
-function render(orders){
-  var g=document.getElementById("kgrid");
-  var active=orders.filter(function(o){return["placed","accepted","prepping","cooking","ready"].indexOf(o.status)>-1;});
-  document.getElementById("kcount").textContent=active.length+" ACTIVE";
-
-  if(!active.length){
-    g.innerHTML="<div class=\\"empty-state\\"><div class=\\"emoji\\">🌮</div><p>No active orders — standing by</p></div>";
-    lastIds=[];
-    return;
-  }
-
-  // Detect newly paid orders — play sound
-  var nowPaidIds=active.filter(function(o){return isPaid(o)&&o.order_type!=="dinein";}).map(function(o){return o.id;});
-  var newlyPaid=nowPaidIds.filter(function(id){return lastPaidIds.indexOf(id)===-1;});
-  if(newlyPaid.length>0&&lastPaidIds.length>0)playPaid();
-  lastPaidIds=nowPaidIds;
-
-  // Detect new orders
-  var newIds=active.map(function(o){return o.id;});
-  var hasNew=newIds.some(function(id){return lastIds.indexOf(id)===-1;});
-  var hasReady=active.some(function(o){return o.status==="ready"&&lastIds.indexOf(o.id)===-1;});
-  if(hasNew&&lastIds.length>0)playNew();
-  if(hasReady)playReady();
-  lastIds=newIds;
-
-  // Separate dine-in from takeout/delivery
-  var dinein=active.filter(function(o){return o.order_type==="dinein";});
-  var other=active.filter(function(o){return o.order_type!=="dinein";});
-
-  var html="";
-
-  // DINE IN SECTION
-  if(dinein.length>0){
-    html+="<div class=\\"section-header section-dinein\\">🍽️ DINE IN — COOK IMMEDIATELY</div>";
-    dinein.forEach(function(o){html+=renderCard(o);});
-  }
-
-  // TAKEOUT + DELIVERY SECTION
-  if(other.length>0){
-    html+="<div class=\\"section-header section-other\\">🛵 TAKEOUT & DELIVERY</div>";
-    other.forEach(function(o){html+=renderCard(o);});
-  }
-
-  g.innerHTML=html;
-
-  // Attach button listeners
-  g.querySelectorAll(".card-btn:not(.btn-disabled)").forEach(function(btn){
-    btn.addEventListener("click",function(){
-      var id=this.getAttribute("data-id");
-      var action=this.getAttribute("data-action");
-      var ns="";
-      if(action==="START COOKING")ns="cooking";
-      else if(action==="MARK READY")ns="ready";
-      else if(action==="COLLECTED")ns="delivered";
-      if(!ns)return;
-      var u={status:ns};
-      try{var ts={cooking:"cooking_at",delivered:"delivered_at"};if(ts[ns])u[ts[ns]]=new Date().toISOString();}catch(e){}
-      var origTxt=this.textContent;
-      this.textContent="SAVING...";this.disabled=true;this.style.opacity="0.6";
-      var _btn=this;
-      fetch(SB+"/rest/v1/orders?id=eq."+id,{method:"PATCH",headers:{"apikey":SK,"Authorization":"Bearer "+SK,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(u)}).then(function(r){
-        if(r.ok||r.status===204){
-          if(ns==="delivered"){
-            var card=_btn.closest(".card");
-            if(card){card.style.transition="opacity 0.4s,transform 0.4s";card.style.opacity="0";card.style.transform="scale(0.95)";setTimeout(function(){poll();},400);}
-            else poll();
-          } else poll();
-        } else {
-          r.text().then(function(t){_btn.textContent=origTxt;_btn.disabled=false;_btn.style.opacity="1";alert("Update failed: "+r.status);});
-        }
-      }).catch(function(){_btn.textContent=origTxt;_btn.disabled=false;_btn.style.opacity="1";});
-    });
-  });
-}
-
-function renderCard(o){
-  var sm=statusMap(o);
-  if(!sm)return "";
-  var paid=isPaid(o);
-  var items=Array.isArray(o.items)?o.items:[];
-  var ihtml=items.map(function(it){
-    return "<div class=\\"item-row\\"><span class=\\"item-qty\\">"+(it.qty||1)+"x</span><span class=\\"item-name\\">"+(it.name||it)+"</span><span style=\\"color:#B8A99A;\\">"+fV(it.price||0)+"</span></div>";
-  }).join("");
-  var tableRow=o.table_number?"<div class=\\"card-table\\">TABLE "+o.table_number+"</div>":"";
-  var notesRow=o.special_instructions?"<div class=\\"card-notes\\">📝 "+o.special_instructions+"</div>":"";
-
-  // Payment status banner for takeout/delivery
-  var payBanner="";
-  if(o.order_type!=="dinein"){
-    if(!paid){
-      payBanner="<div class=\\"unpaid-banner\\"><div class=\\"unpaid-banner-title\\">⛔ AWAITING PAYMENT</div><div class=\\"unpaid-banner-sub\\">Do not cook until payment is confirmed by staff</div></div>";
-    } else {
-      payBanner="<div class=\\"paid-banner\\"><div class=\\"paid-banner-title\\">✅ PAID — COOK NOW</div></div>";
-    }
-  }
-
-  var html="";
-  html+="<div class=\\"card "+sm.cls+"\\">";
-  html+="<div class=\\"card-header\\"><div><div class=\\"card-ref\\">"+o.order_ref+"</div><span class=\\"status-badge "+sm.badge+"\\">"+sm.label+"</span></div>"+typeLabel(o)+"</div>";
-  html+=tableRow;
-  html+="<div class=\\"card-customer\\">"+(o.customer_name||"Customer")+(o.customer_phone?" · "+o.customer_phone:"")+"</div>";
-  html+=payBanner;
-  html+="<div class=\\"card-items\\">"+ihtml+"</div>";
-  html+=notesRow;
-  html+="<div class=\\"card-time\\">Ordered "+tAgo(o.created_at)+"</div>";
-  html+="<button class=\\"card-btn "+sm.btn+"\\" data-id=\\""+o.id+"\\" data-action=\\""+sm.btntxt+"\\">"+sm.btntxt+"</button>";
-  html+="</div>";
-  return html;
-}
-
-function poll(){
-  sbF("/rest/v1/orders?select=*&status=in.(placed,accepted,prepping,cooking,ready)&order=created_at.asc").then(function(d){if(d)render(d);});
-}
-
-setInterval(function(){
-  var n=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Ho_Chi_Minh"}));
-  document.getElementById("kclock").textContent=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")+":"+String(n.getSeconds()).padStart(2,"0");
-},1000);
-
-poll();
-setInterval(poll,8000);
-</script>
-</body>
-</html>`;
-
-// Safety check
-if (kitchen.includes('Lam Tuyen')) {
-  console.log('STOP — Lam Tuyen detected in new content.');
+if (html.includes('Lam Tuyen')) {
+  console.log('STOP — Wrong file detected.');
   process.exit(1);
 }
+console.log('✅ File confirmed — Lets Taco Da Nang');
 
-// Validate JS
+let fixed = html;
+
+// ============================================
+// FIX 1 — COLLAPSIBLE SIDEBAR
+// Default: 68px wide (icons only)
+// Hover: expands to 240px with labels
+// Main content adjusts automatically
+// ============================================
+
+const oldSbCSS = `.sb{position:fixed;left:0;top:0;bottom:0;width:240px;background:#1A0800;border-right:1px solid rgba(212,160,23,0.15);display:flex;flex-direction:column;z-index:100;}`;
+
+const newSbCSS = `.sb{position:fixed;left:0;top:0;bottom:0;width:68px;background:#1A0800;border-right:1px solid rgba(212,160,23,0.15);display:flex;flex-direction:column;z-index:100;transition:width 0.25s cubic-bezier(0.4,0,0.2,1);overflow:hidden;}
+.sb:hover{width:240px;}
+.sb:hover .sb-label{opacity:1;width:auto;max-width:160px;}
+.sb:hover .sb-top{padding:30px 25px 20px;}
+.sb:hover .sb-n{opacity:1;}
+.sb:hover .sb-s{opacity:1;}
+.sb:hover .sb-clk{opacity:1;padding:15px 25px;}
+.sb:hover .sb-bot{padding:20px 25px;}
+.sb:hover .btn-out{opacity:1;}
+.sb:hover .ni{padding:12px 25px;justify-content:flex-start;}
+.sb:hover .nb{display:flex;}`;
+
+if (fixed.includes(oldSbCSS)) {
+  fixed = fixed.replace(oldSbCSS, newSbCSS);
+  console.log('✅ Fix 1a: Sidebar collapse CSS added');
+} else {
+  console.log('⚠️  Fix 1a: sidebar CSS not found — trying append');
+}
+
+// Update sidebar top section CSS
+const oldSbTop = `.sb-top{padding:30px 25px 20px;border-bottom:1px solid rgba(212,160,23,0.15);}`;
+const newSbTop = `.sb-top{padding:15px 0 10px;border-bottom:1px solid rgba(212,160,23,0.15);transition:padding 0.25s;overflow:hidden;display:flex;flex-direction:column;align-items:center;}`;
+if (fixed.includes(oldSbTop)) {
+  fixed = fixed.replace(oldSbTop, newSbTop);
+  console.log('✅ Fix 1b: sb-top CSS updated');
+}
+
+// Update sb-n (logo text)
+const oldSbN = `.sb-n{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#D4A017;letter-spacing:3px;}`;
+const newSbN = `.sb-n{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#D4A017;letter-spacing:3px;opacity:0;transition:opacity 0.2s;white-space:nowrap;}`;
+if (fixed.includes(oldSbN)) {
+  fixed = fixed.replace(oldSbN, newSbN);
+  console.log('✅ Fix 1c: sb-n logo hidden when collapsed');
+}
+
+// Update sb-s (subtitle)
+const oldSbS = `.sb-s{font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;}`;
+const newSbS = `.sb-s{font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;opacity:0;transition:opacity 0.2s;white-space:nowrap;}`;
+if (fixed.includes(oldSbS)) {
+  fixed = fixed.replace(oldSbS, newSbS);
+  console.log('✅ Fix 1d: sb-s subtitle hidden when collapsed');
+}
+
+// Update clock
+const oldSbClk = `.sb-clk{padding:15px 25px;border-bottom:1px solid rgba(212,160,23,0.15);font-size:1.1rem;color:#D4A017;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;}`;
+const newSbClk = `.sb-clk{padding:10px 0;border-bottom:1px solid rgba(212,160,23,0.15);font-size:1rem;color:#D4A017;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;text-align:center;opacity:0;transition:opacity 0.2s,padding 0.25s;white-space:nowrap;overflow:hidden;}`;
+if (fixed.includes(oldSbClk)) {
+  fixed = fixed.replace(oldSbClk, newSbClk);
+  console.log('✅ Fix 1e: clock hidden when collapsed');
+}
+
+// Update ni (nav item) — collapsed shows only icon centered
+const oldNi = `.ni{display:flex;align-items:center;gap:12px;padding:12px 25px;cursor:pointer;color:#B8A99A;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;position:relative;transition:all 0.2s;}`;
+const newNi = `.ni{display:flex;align-items:center;gap:12px;padding:12px 0;justify-content:center;cursor:pointer;color:#B8A99A;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;position:relative;transition:all 0.25s;}`;
+if (fixed.includes(oldNi)) {
+  fixed = fixed.replace(oldNi, newNi);
+  console.log('✅ Fix 1f: nav items centered when collapsed');
+}
+
+// Add label class — hidden when collapsed
+const oldNiIc = `.ni-ic{font-size:1.1rem;width:20px;text-align:center;}`;
+const newNiIc = `.ni-ic{font-size:1.2rem;width:24px;text-align:center;flex-shrink:0;}
+.sb-label{opacity:0;width:0;max-width:0;overflow:hidden;transition:opacity 0.2s,max-width 0.25s;white-space:nowrap;}
+.nb{display:none;}`;
+if (fixed.includes(oldNiIc)) {
+  fixed = fixed.replace(oldNiIc, newNiIc);
+  console.log('✅ Fix 1g: label class added');
+}
+
+// Update sb-bot
+const oldSbBot = `.sb-bot{padding:20px 25px;border-top:1px solid rgba(212,160,23,0.15);}`;
+const newSbBot = `.sb-bot{padding:15px 0;border-top:1px solid rgba(212,160,23,0.15);display:flex;justify-content:center;}
+.btn-out{opacity:0;transition:opacity 0.2s;white-space:nowrap;}`;
+if (fixed.includes(oldSbBot)) {
+  fixed = fixed.replace(oldSbBot, newSbBot);
+  console.log('✅ Fix 1h: sb-bot updated');
+}
+
+// Update main margin — smaller now sidebar is 68px
+const oldMain = `.main{margin-left:240px;padding:30px;min-height:100vh;}`;
+const newMain = `.main{margin-left:68px;padding:30px;min-height:100vh;transition:margin-left 0.25s;}`;
+if (fixed.includes(oldMain)) {
+  fixed = fixed.replace(oldMain, newMain);
+  console.log('✅ Fix 1i: main content margin updated to 68px');
+}
+
+// Update tablet breakpoint
+const oldTablet = `.sb{width:180px;}`;
+const newTablet = `.sb{width:68px;}`;
+if (fixed.includes(oldTablet)) {
+  fixed = fixed.replace(oldTablet, newTablet);
+}
+const oldTabletMain = `.main{margin-left:180px;padding:16px;}`;
+const newTabletMain = `.main{margin-left:68px;padding:16px;}`;
+if (fixed.includes(oldTabletMain)) {
+  fixed = fixed.replace(oldTabletMain, newTabletMain);
+  console.log('✅ Fix 1j: tablet breakpoint updated');
+}
+
+// ============================================
+// FIX 2 — UPDATE SIDEBAR HTML
+// Add sb-label spans to nav items
+// Add taco icon when collapsed
+// ============================================
+
+const oldSbNav = `<div class="sb">
+    <div class="sb-top"><div class="sb-n">LETS TACO</div><div class="sb-s">Admin Dashboard</div></div>
+    <div class="sb-clk" id="clk">00:00:00</div>
+    <nav class="sb-nav">
+      <div class="ni active" data-pg="home"><span class="ni-ic">🏠</span><span>Home</span><span class="nb" id="nb">0</span></div>
+      <div class="ni" data-pg="dinein"><span class="ni-ic">🍽️</span><span>Dine In</span></div>
+      <div class="ni" data-pg="orders"><span class="ni-ic">📋</span><span>Orders</span></div>
+      <div class="ni owner-only" data-pg="customers"><span class="ni-ic">👥</span><span>Customers</span></div>
+      <div class="ni owner-only" data-pg="revenue"><span class="ni-ic">💰</span><span>Revenue</span></div>
+      <div class="ni" data-pg="menu"><span class="ni-ic">🌮</span><span>Menu</span></div>
+      <div class="ni owner-only" data-pg="settings"><span class="ni-ic">⚙️</span><span>Settings</span></div>
+      <div class="ni" data-pg="help"><span class="ni-ic">📖</span><span>Guide</span></div>
+      <a href="/kitchen" target="_blank" class="ni" style="text-decoration:none;border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">👨‍🍳</span><span>Kitchen</span></a>
+      <div class="ni owner-only" onclick="checkPin()" style="border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">🔐</span><span>Owner</span></div>
+    </nav>
+    <div class="sb-bot"><button class="btn-out" id="lout">Logout</button></div>`;
+
+const newSbNav = `<div class="sb">
+    <div class="sb-top">
+      <div style="font-size:1.5rem;text-align:center;margin-bottom:4px;">🌮</div>
+      <div class="sb-n">LETS TACO</div>
+      <div class="sb-s">Admin Dashboard</div>
+    </div>
+    <div class="sb-clk" id="clk">00:00:00</div>
+    <nav class="sb-nav">
+      <div class="ni active" data-pg="home"><span class="ni-ic">🏠</span><span class="sb-label">Home</span><span class="nb" id="nb">0</span></div>
+      <div class="ni" data-pg="dinein"><span class="ni-ic">🍽️</span><span class="sb-label">Dine In</span></div>
+      <div class="ni" data-pg="orders"><span class="ni-ic">📋</span><span class="sb-label">Orders</span></div>
+      <div class="ni owner-only" data-pg="customers"><span class="ni-ic">👥</span><span class="sb-label">Customers</span></div>
+      <div class="ni owner-only" data-pg="revenue"><span class="ni-ic">💰</span><span class="sb-label">Revenue</span></div>
+      <div class="ni" data-pg="menu"><span class="ni-ic">🌮</span><span class="sb-label">Menu</span></div>
+      <div class="ni owner-only" data-pg="settings"><span class="ni-ic">⚙️</span><span class="sb-label">Settings</span></div>
+      <div class="ni" data-pg="help"><span class="ni-ic">📖</span><span class="sb-label">Guide</span></div>
+      <a href="/kitchen" target="_blank" class="ni" style="text-decoration:none;border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">👨‍🍳</span><span class="sb-label">Kitchen</span></a>
+      <div class="ni owner-only" onclick="checkPin()" style="border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">🔐</span><span class="sb-label">Owner</span></div>
+    </nav>
+    <div class="sb-bot"><button class="btn-out" id="lout">Logout</button></div>`;
+
+if (fixed.includes(oldSbNav)) {
+  fixed = fixed.replace(oldSbNav, newSbNav);
+  console.log('✅ Fix 2: Sidebar HTML updated with sb-label spans');
+} else {
+  console.log('⚠️  Fix 2: sidebar HTML pattern not found');
+}
+
+// ============================================
+// FIX 3 — ADD MARK PAID BUTTON TO ORDERS
+// Find the renderOrder function and add
+// MARK PAID button for takeout/delivery
+// when payment_status is not paid
+// ============================================
+
+// Find where order action buttons are rendered in admin
+// Look for the WhatsApp button pattern in order cards
+const oldOActs = `function mkWA(o){var ph=(o.customer_phone||'').replace(/\\D/g,'');`;
+
+// If that exact pattern not found try alternative
+if (!fixed.includes(oldOActs)) {
+  // Inject a markPaid function before the closing script
+  const markPaidFn = `
+// MARK PAID function for takeout/delivery orders
+function markPaid(orderId, btnEl) {
+  if(!orderId) return;
+  btnEl.textContent = 'SAVING...';
+  btnEl.disabled = true;
+  btnEl.style.opacity = '0.6';
+  sbC('/rest/v1/orders?id=eq.'+orderId, {
+    method: 'PATCH',
+    headers: {'Prefer': 'return=minimal'},
+    body: JSON.stringify({payment_status: 'paid'})
+  }).then(function() {
+    showToast('✅ Payment Confirmed', 'Order marked as paid — kitchen will start cooking');
+    // Remove the unpaid banner from this card
+    var card = btnEl.closest('.oc');
+    if(card) {
+      var banner = card.querySelector('.unpaid-admin-banner');
+      if(banner) banner.remove();
+    }
+    btnEl.textContent = '✅ PAID';
+    btnEl.style.background = 'linear-gradient(135deg,#27AE60,#2ECC71)';
+    btnEl.style.color = 'white';
+    btnEl.style.opacity = '1';
+    btnEl.disabled = true;
+    // Refresh orders after 1 second
+    setTimeout(function(){loadOrders();loadHome();}, 1000);
+  }).catch(function() {
+    btnEl.textContent = '💳 MARK PAID';
+    btnEl.disabled = false;
+    btnEl.style.opacity = '1';
+    showToast('Error', 'Could not update payment. Try again.');
+  });
+}
+`;
+  const lastScript = fixed.lastIndexOf('</script>');
+  if (lastScript !== -1) {
+    fixed = fixed.substring(0, lastScript) + markPaidFn + '</script>' + fixed.substring(lastScript + 9);
+    console.log('✅ Fix 3: markPaid function injected');
+  }
+}
+
+// ============================================
+// FIX 4 — ADD MARK PAID BUTTON CSS
+// ============================================
+
+const oldStyleClose = '</style>';
+const paidBtnCSS = `
+.abtn-paid{background:linear-gradient(135deg,#C0392B,#E67E22);color:white;border:none;}
+.abtn-paid:hover{opacity:0.9;}
+.unpaid-admin-banner{background:rgba(192,57,43,0.12);border:1px solid rgba(192,57,43,0.4);border-radius:6px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.unpaid-admin-label{font-family:Bebas Neue,sans-serif;font-size:0.9rem;color:#E74C3C;letter-spacing:2px;}
+`;
+
+// Only add once
+if (!fixed.includes('.unpaid-admin-banner')) {
+  fixed = fixed.replace(oldStyleClose, paidBtnCSS + oldStyleClose);
+  console.log('✅ Fix 4: MARK PAID CSS added');
+} else {
+  console.log('✅ Fix 4: CSS already exists');
+}
+
+// ============================================
+// FIX 5 — INJECT MARK PAID BUTTON INTO
+// ORDER CARD RENDERING
+// Find where oacts/action buttons are built
+// and add MARK PAID for unpaid orders
+// ============================================
+
+// Find the pattern where order HTML is built
+// Look for the total and actions div
+const oldOfoot = `var ofoot='<div class="ofoot"><div class="ototal">'+fV(o.total)+'</div><div class="oacts">'+acts+'</div></div>';`;
+const newOfoot = `// Add MARK PAID button for unpaid takeout/delivery
+var payBtn='';
+if(o.order_type!=='dinein'&&o.payment_status!=='paid'){
+  payBtn='<div class="unpaid-admin-banner"><span class="unpaid-admin-label">⛔ AWAITING PAYMENT</span>'
+    +'<button class="abtn abtn-paid" onclick="markPaid(\\''+o.id+'\\',this)" style="padding:8px 16px;font-size:0.8rem;border-radius:4px;cursor:pointer;font-family:Jost,sans-serif;font-weight:700;letter-spacing:1px;">💳 MARK PAID</button>'
+    +'</div>';
+} else if(o.order_type!=='dinein'&&o.payment_status==='paid'){
+  payBtn='<div style="background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.3);border-radius:6px;padding:8px 14px;margin-bottom:10px;font-family:Bebas Neue,sans-serif;font-size:0.85rem;color:#27AE60;letter-spacing:2px;">✅ PAYMENT CONFIRMED</div>';
+}
+var ofoot='<div class="ofoot">'+payBtn+'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"><div class="ototal">'+fV(o.total)+'</div><div class="oacts">'+acts+'</div></div></div>';`;
+
+if (fixed.includes(oldOfoot)) {
+  fixed = fixed.replace(oldOfoot, newOfoot);
+  console.log('✅ Fix 5: MARK PAID button injected into order cards');
+} else {
+  console.log('⚠️  Fix 5: ofoot pattern not found — searching for alternative');
+  // Try alternative pattern
+  const alt = `'<div class="ofoot"><div class="ototal">'+fV(o.total)+'</div><div class="oacts">'+acts+'</div></div>'`;
+  if (fixed.includes(alt)) {
+    fixed = fixed.replace(alt,
+      `(function(){var pb='';if(o.order_type!=='dinein'&&o.payment_status!=='paid'){pb='<div class="unpaid-admin-banner"><span class="unpaid-admin-label">⛔ AWAITING PAYMENT</span><button class="abtn abtn-paid" onclick="markPaid(\\''+o.id+'\\',this)" style="padding:8px 16px;font-size:0.8rem;border-radius:4px;cursor:pointer;font-family:Jost,sans-serif;font-weight:700;">💳 MARK PAID</button></div>';}else if(o.order_type!=='dinein'){pb='<div style="background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.3);border-radius:6px;padding:8px 14px;margin-bottom:10px;font-family:Bebas Neue,sans-serif;font-size:0.85rem;color:#27AE60;letter-spacing:2px;">✅ PAYMENT CONFIRMED</div>';}return'<div class="ofoot">'+pb+'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"><div class="ototal">'+fV(o.total)+'</div><div class="oacts">'+acts+'</div></div></div>';})()`
+    );
+    console.log('✅ Fix 5: Alternative pattern applied');
+  } else {
+    console.log('⚠️  Fix 5: Could not find ofoot — markPaid function exists but button not auto-injected');
+    console.log('   The markPaid function is ready — order cards may need manual template update');
+  }
+}
+
+// JS Validation
 const scripts = [];
 let pos = 0;
 while (true) {
-  const s = kitchen.indexOf('<script>', pos);
+  const s = fixed.indexOf('<script>', pos);
   if (s === -1) break;
-  const e = kitchen.indexOf('<\/script>', s);
+  const e = fixed.indexOf('<\/script>', s);
   if (e === -1) break;
-  scripts.push(kitchen.substring(s + 8, e));
+  scripts.push(fixed.substring(s + 8, e));
   pos = e + 9;
 }
 let ok = true;
@@ -277,5 +304,5 @@ if (!ok) {
   process.exit(1);
 }
 console.log('✅ JS validation passed');
-fs.writeFileSync('kitchen.html', kitchen, 'utf8');
-console.log('✅ kitchen.html saved — payment logic live');
+fs.writeFileSync('admin.html', fixed, 'utf8');
+console.log('✅ admin.html saved — collapsible sidebar + MARK PAID live');

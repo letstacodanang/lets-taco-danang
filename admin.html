@@ -21,21 +21,34 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 .btn-l{width:100%;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;border:none;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;border-radius:4px;cursor:pointer;margin-top:10px;}
 .err{color:#C0392B;font-size:0.85rem;text-align:center;margin-top:15px;display:none;}
 .app{display:none;min-height:100vh;}
-.sb{position:fixed;left:0;top:0;bottom:0;width:240px;background:#1A0800;border-right:1px solid rgba(212,160,23,0.15);display:flex;flex-direction:column;z-index:100;}
-.sb-top{padding:30px 25px 20px;border-bottom:1px solid rgba(212,160,23,0.15);}
-.sb-n{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#D4A017;letter-spacing:3px;}
-.sb-s{font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;}
-.sb-clk{padding:15px 25px;border-bottom:1px solid rgba(212,160,23,0.15);font-size:1.1rem;color:#D4A017;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;}
+.sb{position:fixed;left:0;top:0;bottom:0;width:68px;background:#1A0800;border-right:1px solid rgba(212,160,23,0.15);display:flex;flex-direction:column;z-index:100;transition:width 0.25s cubic-bezier(0.4,0,0.2,1);overflow:hidden;}
+.sb:hover{width:240px;}
+.sb:hover .sb-label{opacity:1;width:auto;max-width:160px;}
+.sb:hover .sb-top{padding:30px 25px 20px;}
+.sb:hover .sb-n{opacity:1;}
+.sb:hover .sb-s{opacity:1;}
+.sb:hover .sb-clk{opacity:1;padding:15px 25px;}
+.sb:hover .sb-bot{padding:20px 25px;}
+.sb:hover .btn-out{opacity:1;}
+.sb:hover .ni{padding:12px 25px;justify-content:flex-start;}
+.sb:hover .nb{display:flex;}
+.sb-top{padding:15px 0 10px;border-bottom:1px solid rgba(212,160,23,0.15);transition:padding 0.25s;overflow:hidden;display:flex;flex-direction:column;align-items:center;}
+.sb-n{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#D4A017;letter-spacing:3px;opacity:0;transition:opacity 0.2s;white-space:nowrap;}
+.sb-s{font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;opacity:0;transition:opacity 0.2s;white-space:nowrap;}
+.sb-clk{padding:10px 0;border-bottom:1px solid rgba(212,160,23,0.15);font-size:1rem;color:#D4A017;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;text-align:center;opacity:0;transition:opacity 0.2s,padding 0.25s;white-space:nowrap;overflow:hidden;}
 .sb-nav{flex:1;padding:20px 0;}
-.ni{display:flex;align-items:center;gap:12px;padding:12px 25px;cursor:pointer;color:#B8A99A;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;position:relative;transition:all 0.2s;}
+.ni{display:flex;align-items:center;gap:12px;padding:12px 0;justify-content:center;cursor:pointer;color:#B8A99A;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;position:relative;transition:all 0.25s;}
 .ni:hover{background:rgba(212,160,23,0.05);color:#FAF0E6;}
 .ni.active{background:rgba(212,160,23,0.08);color:#D4A017;border-right:2px solid #D4A017;}
-.ni-ic{font-size:1.1rem;width:20px;text-align:center;}
+.ni-ic{font-size:1.2rem;width:24px;text-align:center;flex-shrink:0;}
+.sb-label{opacity:0;width:0;max-width:0;overflow:hidden;transition:opacity 0.2s,max-width 0.25s;white-space:nowrap;}
+.nb{display:none;}
 .nb{position:absolute;right:20px;background:#C0392B;color:white;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:10px;display:none;}
-.sb-bot{padding:20px 25px;border-top:1px solid rgba(212,160,23,0.15);}
+.sb-bot{padding:15px 0;border-top:1px solid rgba(212,160,23,0.15);display:flex;justify-content:center;}
+.btn-out{opacity:0;transition:opacity 0.2s;white-space:nowrap;}
 .btn-out{width:100%;background:transparent;border:1px solid rgba(212,160,23,0.15);color:#B8A99A;padding:10px;font-family:'Jost',sans-serif;font-size:0.8rem;letter-spacing:1px;text-transform:uppercase;border-radius:4px;cursor:pointer;}
 .btn-out:hover{border-color:#C0392B;color:#C0392B;}
-.main{margin-left:240px;padding:30px;min-height:100vh;}
+.main{margin-left:68px;padding:30px;min-height:100vh;transition:margin-left 0.25s;}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;}
 .pt{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:#D4A017;letter-spacing:3px;}
 .rtog{display:flex;align-items:center;gap:10px;background:#1A0800;border:1px solid rgba(212,160,23,0.15);border-radius:30px;padding:8px 20px;cursor:pointer;}
@@ -159,8 +172,8 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 .empty{color:#B8A99A;text-align:center;padding:40px;font-size:0.9rem;}
 
 @media(max-width:1024px) and (min-width:769px){
-  .sb{width:180px;}
-  .main{margin-left:180px;padding:16px;}
+  .sb{width:68px;}
+  .main{margin-left:68px;padding:16px;}
   .ni{padding:10px 18px;font-size:0.75rem;}
   .sg{grid-template-columns:repeat(2,1fr);}
   .rg,.setg{grid-template-columns:1fr;}
@@ -216,19 +229,23 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 <div id="ready-alert" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9000;background:linear-gradient(135deg,#27AE60,#2ECC71);color:white;padding:14px 24px;text-align:center;cursor:pointer;animation:alertPulse 1s infinite;box-shadow:0 4px 20px rgba(39,174,96,0.6);" onclick="handleReadyAlert()"><span style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;" id="ready-alert-text">ORDER READY FOR PICKUP</span><span style="margin-left:20px;font-size:0.8rem;letter-spacing:2px;opacity:0.9;">TAP TO VIEW</span></div>
 <div id="pay-alert" style="display:none;position:fixed;top:0;left:0;right:0;z-index:8999;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;padding:14px 24px;text-align:center;cursor:pointer;box-shadow:0 4px 20px rgba(212,160,23,0.5);" onclick="handlePayAlert()"><span style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;" id="pay-alert-text">TABLE ? — READY TO PAY</span><span style="margin-left:20px;font-size:0.8rem;letter-spacing:2px;opacity:0.8;">TAP TO VIEW</span></div>
   <div class="sb">
-    <div class="sb-top"><div class="sb-n">LETS TACO</div><div class="sb-s">Admin Dashboard</div></div>
+    <div class="sb-top">
+      <div style="font-size:1.5rem;text-align:center;margin-bottom:4px;">🌮</div>
+      <div class="sb-n">LETS TACO</div>
+      <div class="sb-s">Admin Dashboard</div>
+    </div>
     <div class="sb-clk" id="clk">00:00:00</div>
     <nav class="sb-nav">
-      <div class="ni active" data-pg="home"><span class="ni-ic">🏠</span><span>Home</span><span class="nb" id="nb">0</span></div>
-      <div class="ni" data-pg="dinein"><span class="ni-ic">🍽️</span><span>Dine In</span></div>
-      <div class="ni" data-pg="orders"><span class="ni-ic">📋</span><span>Orders</span></div>
-      <div class="ni owner-only" data-pg="customers"><span class="ni-ic">👥</span><span>Customers</span></div>
-      <div class="ni owner-only" data-pg="revenue"><span class="ni-ic">💰</span><span>Revenue</span></div>
-      <div class="ni" data-pg="menu"><span class="ni-ic">🌮</span><span>Menu</span></div>
-      <div class="ni owner-only" data-pg="settings"><span class="ni-ic">⚙️</span><span>Settings</span></div>
-      <div class="ni" data-pg="help"><span class="ni-ic">📖</span><span>Guide</span></div>
-      <a href="/kitchen" target="_blank" class="ni" style="text-decoration:none;border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">👨‍🍳</span><span>Kitchen</span></a>
-      <div class="ni owner-only" onclick="checkPin()" style="border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">🔐</span><span>Owner</span></div>
+      <div class="ni active" data-pg="home"><span class="ni-ic">🏠</span><span class="sb-label">Home</span><span class="nb" id="nb">0</span></div>
+      <div class="ni" data-pg="dinein"><span class="ni-ic">🍽️</span><span class="sb-label">Dine In</span></div>
+      <div class="ni" data-pg="orders"><span class="ni-ic">📋</span><span class="sb-label">Orders</span></div>
+      <div class="ni owner-only" data-pg="customers"><span class="ni-ic">👥</span><span class="sb-label">Customers</span></div>
+      <div class="ni owner-only" data-pg="revenue"><span class="ni-ic">💰</span><span class="sb-label">Revenue</span></div>
+      <div class="ni" data-pg="menu"><span class="ni-ic">🌮</span><span class="sb-label">Menu</span></div>
+      <div class="ni owner-only" data-pg="settings"><span class="ni-ic">⚙️</span><span class="sb-label">Settings</span></div>
+      <div class="ni" data-pg="help"><span class="ni-ic">📖</span><span class="sb-label">Guide</span></div>
+      <a href="/kitchen" target="_blank" class="ni" style="text-decoration:none;border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">👨‍🍳</span><span class="sb-label">Kitchen</span></a>
+      <div class="ni owner-only" onclick="checkPin()" style="border-top:1px solid rgba(212,160,23,0.1);margin-top:4px"><span class="ni-ic">🔐</span><span class="sb-label">Owner</span></div>
     </nav>
     <div class="sb-bot"><button class="btn-out" id="lout">Logout</button></div>
   </div>
@@ -1115,6 +1132,39 @@ function viewT(t){
   }
   document.getElementById('tdlist').innerHTML=h;
   document.getElementById('tdetail').style.display='block';
+}
+
+// MARK PAID function for takeout/delivery orders
+function markPaid(orderId, btnEl) {
+  if(!orderId) return;
+  btnEl.textContent = 'SAVING...';
+  btnEl.disabled = true;
+  btnEl.style.opacity = '0.6';
+  sbC('/rest/v1/orders?id=eq.'+orderId, {
+    method: 'PATCH',
+    headers: {'Prefer': 'return=minimal'},
+    body: JSON.stringify({payment_status: 'paid'})
+  }).then(function() {
+    showToast('✅ Payment Confirmed', 'Order marked as paid — kitchen will start cooking');
+    // Remove the unpaid banner from this card
+    var card = btnEl.closest('.oc');
+    if(card) {
+      var banner = card.querySelector('.unpaid-admin-banner');
+      if(banner) banner.remove();
+    }
+    btnEl.textContent = '✅ PAID';
+    btnEl.style.background = 'linear-gradient(135deg,#27AE60,#2ECC71)';
+    btnEl.style.color = 'white';
+    btnEl.style.opacity = '1';
+    btnEl.disabled = true;
+    // Refresh orders after 1 second
+    setTimeout(function(){loadOrders();loadHome();}, 1000);
+  }).catch(function() {
+    btnEl.textContent = '💳 MARK PAID';
+    btnEl.disabled = false;
+    btnEl.style.opacity = '1';
+    showToast('Error', 'Could not update payment. Try again.');
+  });
 }
 </script>
 </html>
