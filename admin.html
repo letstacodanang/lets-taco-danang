@@ -794,6 +794,11 @@ function showPg(pg){
   if(pg==='customers')renderCL();
   if(pg==='revenue')loadRev();
   if(pg==='dinein')renderTG();
+  // Sync mobile bottom nav active state
+  document.querySelectorAll('.mn-tab').forEach(function(t){
+    t.classList.remove('active');
+    if(t.getAttribute('data-pg')===pg)t.classList.add('active');
+  });
 }
 function initApp(){
   loadO();loadC();renderMenu();
@@ -1367,12 +1372,10 @@ function renderMenu(){
 function isMobile(){return window.innerWidth<=768;}
 
 function mNav(el,pg){
-  // Update active tab
   document.querySelectorAll('.mn-tab').forEach(function(t){t.classList.remove('active');});
   if(el)el.classList.add('active');
-  // Navigate to page
-  showPage(pg);
-  // Update mobile topbar title
+  // Use the correct function name
+  showPg(pg);
   var titles={home:'Dashboard',dinein:'Tables',orders:'Orders',menu:'Menu',customers:'Customers',revenue:'Revenue',settings:'Settings',help:'Guide'};
   var tb=document.querySelector('.mobile-topbar-title');
   if(tb)tb.textContent=titles[pg]||'LETS TACO';
