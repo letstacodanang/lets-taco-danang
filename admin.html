@@ -505,8 +505,8 @@ input:focus{outline:none;}
   </div>
 </div>
 <div class="app" id="app">
-<div id="ready-alert" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9000;background:linear-gradient(135deg,#27AE60,#2ECC71);color:white;padding:14px 24px;text-align:center;cursor:pointer;animation:alertPulse 1s infinite;box-shadow:0 4px 20px rgba(39,174,96,0.6);" onclick="handleReadyAlert()"><span style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;" id="ready-alert-text">ORDER READY FOR PICKUP</span><span style="margin-left:20px;font-size:0.8rem;letter-spacing:2px;opacity:0.9;">TAP TO VIEW</span></div>
-<div id="pay-alert" style="display:none;position:fixed;top:0;left:0;right:0;z-index:8999;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;padding:14px 24px;text-align:center;cursor:pointer;box-shadow:0 4px 20px rgba(212,160,23,0.5);" onclick="handlePayAlert()"><span style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;" id="pay-alert-text">TABLE ? — READY TO PAY</span><span style="margin-left:20px;font-size:0.8rem;letter-spacing:2px;opacity:0.8;">TAP TO VIEW</span></div>
+<div id="ready-alert" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9000;background:linear-gradient(135deg,#27AE60,#2ECC71);color:white;padding:14px 24px;text-align:center;cursor:pointer;animation:alertPulse 1s infinite;box-shadow:0 4px 20px rgba(39,174,96,0.6);" onclick="notifyOrderReady();handleReadyAlert()"><span style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;" id="ready-alert-text">ORDER READY FOR PICKUP</span><span style="margin-left:20px;font-size:0.8rem;letter-spacing:2px;opacity:0.9;">TAP TO VIEW</span></div>
+<div id="pay-alert" style="display:none;position:fixed;top:0;left:0;right:0;z-index:8999;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;padding:14px 24px;text-align:center;cursor:pointer;box-shadow:0 4px 20px rgba(212,160,23,0.5);" onclick="notifyPaymentRequested();handlePayAlert()"><span style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;" id="pay-alert-text">TABLE ? — READY TO PAY</span><span style="margin-left:20px;font-size:0.8rem;letter-spacing:2px;opacity:0.8;">TAP TO VIEW</span></div>
   <!-- MOBILE TOP BAR -->
 <div class="mobile-topbar" style="display:none;">
   <div style="display:flex;align-items:center;gap:10px;">
@@ -855,6 +855,10 @@ function showPg(pg){
   });
 }
 function initApp(){
+  // Request notification permission for background alerts
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
   loadO();loadC();renderMenu();
   setInterval(loadO,30000);
   setInterval(checkReadyAlert,8000);
@@ -1520,6 +1524,184 @@ function mobileFilterChange(val){
   if(btn)btn.click();
 }
 </script>
+<script>
+// ===== LETS TACO STAFF NOTIFICATION SYSTEM =====
+
+var _ac = null;
+function getAC(){
+  if(!_ac){
+    try{ _ac = new(window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+  }
+  // Resume if suspended (browser autoplay policy)
+  if(_ac && _ac.state === 'suspended') _ac.resume();
+  return _ac;
+}
+
+// Unlock audio on first touch (iOS requirement)
+document.addEventListener('touchstart', function(){
+  var ac = getAC();
+  if(ac && ac.state === 'suspended') ac.resume();
+}, {once: true});
+document.addEventListener('click', function(){
+  var ac = getAC();
+  if(ac && ac.state === 'suspended') ac.resume();
+}, {once: true});
+
+function playTone(freq, start, dur, vol){
+  var ac = getAC();
+  if(!ac) return;
+  try{
+    var o = ac.createOscillator();
+    var g = ac.createGain();
+    o.connect(g);
+    g.connect(ac.destination);
+    o.frequency.value = freq;
+    o.type = 'sine';
+    g.gain.setValueAtTime(vol||0.3, start);
+    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    o.start(start);
+    o.stop(start + dur + 0.05);
+  } catch(e){}
+}
+
+function vib(pattern){
+  try{
+    if(navigator.vibrate) navigator.vibrate(pattern);
+  } catch(e){}
+}
+
+// NEW ORDER — 3 ascending beeps + buzz
+// Staff attention: something needs action
+function notifyNewOrder(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  playTone(440, t,       0.12, 0.4);
+  playTone(550, t+0.15,  0.12, 0.4);
+  playTone(660, t+0.30,  0.18, 0.5);
+  vib([100, 50, 100, 50, 200]);
+}
+
+// ORDER READY — 4 happy ascending tones + long buzz
+// Food is ready — staff must pick up NOW
+function notifyOrderReady(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  playTone(523, t,       0.15, 0.5); // C5
+  playTone(659, t+0.18,  0.15, 0.5); // E5
+  playTone(784, t+0.36,  0.15, 0.5); // G5
+  playTone(1047,t+0.54,  0.25, 0.6); // C6
+  vib([200, 100, 200, 100, 400]);
+}
+
+// PAYMENT REQUESTED — 2 soft chimes + short buzz
+// Customer wants to pay — go to table
+function notifyPaymentRequested(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  playTone(800, t,      0.12, 0.35);
+  playTone(1000,t+0.20, 0.20, 0.4);
+  vib([150, 100, 150]);
+}
+
+// PAYMENT CONFIRMED — success jingle
+// Order paid — kitchen can cook
+function notifyPaymentConfirmed(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  playTone(523, t,       0.1, 0.3);
+  playTone(784, t+0.12,  0.1, 0.3);
+  playTone(1047,t+0.24,  0.2, 0.4);
+  vib([100, 50, 300]);
+}
+
+// URGENT — rapid beeps for anything critical
+function notifyUrgent(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  for(var i=0; i<4; i++){
+    playTone(880, t + i*0.15, 0.1, 0.5);
+  }
+  vib([100,50,100,50,100,50,100]);
+}
+
+// ===== HOOK INTO EXISTING ALERT SYSTEM =====
+
+// Override the ready alert handler to add sound+vib
+var _origHandleReady = typeof handleReadyAlert !== 'undefined' ? handleReadyAlert : null;
+function handleReadyAlertWithSound(){
+  notifyOrderReady();
+  if(_origHandleReady) _origHandleReady();
+  else handleReadyAlert_orig && handleReadyAlert_orig();
+}
+
+// Override pay alert
+var _origHandlePay = typeof handlePayAlert !== 'undefined' ? handlePayAlert : null;
+function handlePayAlertWithSound(){
+  notifyPaymentRequested();
+  if(_origHandlePay) _origHandlePay();
+}
+
+// Patch checkReadyAlert to play sound when banner appears
+var _lastReadyAlertVisible = false;
+var _origCheckReady = typeof checkReadyAlert !== 'undefined' ? checkReadyAlert : null;
+
+// Patch checkPayAlert to play sound when banner appears
+var _lastPayAlertVisible = false;
+
+// Monitor alerts and play sounds when they appear
+setInterval(function(){
+  var readyAlert = document.getElementById('ready-alert');
+  var payAlert = document.getElementById('pay-alert');
+
+  if(readyAlert){
+    var isVisible = readyAlert.style.display !== 'none' && readyAlert.style.display !== '';
+    if(isVisible && !_lastReadyAlertVisible){
+      notifyOrderReady();
+    }
+    _lastReadyAlertVisible = isVisible;
+  }
+
+  if(payAlert){
+    var isPayVisible = payAlert.style.display !== 'none' && payAlert.style.display !== '';
+    if(isPayVisible && !_lastPayAlertVisible){
+      notifyPaymentRequested();
+    }
+    _lastPayAlertVisible = isPayVisible;
+  }
+}, 1000);
+
+// Also monitor for new orders appearing in the list
+var _lastOrderCount = 0;
+setInterval(function(){
+  var orderCards = document.querySelectorAll('.oc');
+  var count = orderCards.length;
+  if(count > _lastOrderCount && _lastOrderCount > 0){
+    notifyNewOrder();
+  }
+  _lastOrderCount = count;
+}, 2000);
+
+console.log('✅ Lets Taco notification system loaded');
+</script>
+<script>
+function sendBrowserNotif(title, body, icon){
+  if('Notification' in window && Notification.permission === 'granted'){
+    try{
+      new Notification(title, {
+        body: body,
+        icon: icon || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ctext y=\'.9em\' font-size=\'90\'%3E🌮%3C/text%3E%3C/svg%3E',
+        badge: 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ctext y=\'.9em\' font-size=\'90\'%3E🌮%3C/text%3E%3C/svg%3E',
+        vibrate: [200, 100, 200]
+      });
+    }catch(e){}
+  }
+}
+</script>
 </body>
 <script>
 var chatOId=null;
@@ -1680,6 +1862,7 @@ function markPaid(orderId, btnEl) {
     body:JSON.stringify({payment_status:'paid'})
   }).then(function(){
     showToast('Payment Confirmed','Kitchen notified — cooking starts now');
+    notifyPaymentConfirmed();
     btnEl.textContent='PAID';
     btnEl.style.background='#10B981';
     btnEl.style.color='white';

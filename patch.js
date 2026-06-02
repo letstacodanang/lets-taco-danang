@@ -7,207 +7,275 @@ console.log('✅ File confirmed — Lets Taco Da Nang');
 let fixed = html;
 
 // ============================================
-// FIX 1 — SAVE SESSION ON OWNER LOGIN
-// Store role + timestamp in localStorage
+// FULL NOTIFICATION SYSTEM
+// Different chime for each event type
+// Vibration patterns for mobile staff
+// Works on iOS and Android
 // ============================================
 
-const oldOwnerLogin = `    document.getElementById('lw').style.display='none';
-    document.getElementById('app').style.display='flex';
-    err.style.display='none';
-    attempts=0;
-    isOwner=true;currentStaff='Owner';
-    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
-    initApp();
-    return;`;
+const notificationJS = `
+// ===== LETS TACO STAFF NOTIFICATION SYSTEM =====
 
-const newOwnerLogin = `    document.getElementById('lw').style.display='none';
-    document.getElementById('app').style.display='flex';
-    err.style.display='none';
-    attempts=0;
-    isOwner=true;currentStaff='Owner';
-    // Save session to localStorage
-    localStorage.setItem('lt_role','owner');
-    localStorage.setItem('lt_ts',Date.now().toString());
-    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
-    initApp();
-    return;`;
-
-if (fixed.includes(oldOwnerLogin)) {
-  fixed = fixed.replace(oldOwnerLogin, newOwnerLogin);
-  console.log('✅ Fix 1: Owner session saved to localStorage');
-} else {
-  console.log('⚠️  Fix 1: owner login pattern not found');
-}
-
-// ============================================
-// FIX 2 — SAVE SESSION ON STAFF LOGIN
-// startSS() is called after staff logs in
-// Find it and save role there
-// ============================================
-
-const startSSIdx = fixed.indexOf('function startSS(');
-if (startSSIdx !== -1) {
-  const startSSEnd = fixed.indexOf('\n}', startSSIdx) + 2;
-  const oldStartSS = fixed.substring(startSSIdx, startSSEnd);
-  const newStartSS = oldStartSS.replace(
-    'function startSS(){',
-    `function startSS(){
-  // Save staff session to localStorage
-  localStorage.setItem('lt_role','staff');
-  localStorage.setItem('lt_staff',currentStaff||'');
-  localStorage.setItem('lt_ts',Date.now().toString());`
-  );
-  if (oldStartSS !== newStartSS) {
-    fixed = fixed.substring(0, startSSIdx) + newStartSS + fixed.substring(startSSEnd);
-    console.log('✅ Fix 2: Staff session saved in startSS()');
-  } else {
-    console.log('⚠️  Fix 2: startSS replace did not match');
+var _ac = null;
+function getAC(){
+  if(!_ac){
+    try{ _ac = new(window.AudioContext||window.webkitAudioContext)(); }catch(e){}
   }
-} else {
-  console.log('⚠️  Fix 2: startSS function not found');
+  // Resume if suspended (browser autoplay policy)
+  if(_ac && _ac.state === 'suspended') _ac.resume();
+  return _ac;
 }
 
-// ============================================
-// FIX 3 — RESTORE SESSION ON PAGE LOAD
-// Check localStorage on load
-// If valid session exists — skip login screen
-// Session expires after 12 hours
-// ============================================
+// Unlock audio on first touch (iOS requirement)
+document.addEventListener('touchstart', function(){
+  var ac = getAC();
+  if(ac && ac.state === 'suspended') ac.resume();
+}, {once: true});
+document.addEventListener('click', function(){
+  var ac = getAC();
+  if(ac && ac.state === 'suspended') ac.resume();
+}, {once: true});
 
-const oldWindowLoad = `window.addEventListener('load',function(){
-  if(isMobile()){
-    updateMobileNav();
-    setInterval(updateMobileNav,2000);
+function playTone(freq, start, dur, vol){
+  var ac = getAC();
+  if(!ac) return;
+  try{
+    var o = ac.createOscillator();
+    var g = ac.createGain();
+    o.connect(g);
+    g.connect(ac.destination);
+    o.frequency.value = freq;
+    o.type = 'sine';
+    g.gain.setValueAtTime(vol||0.3, start);
+    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    o.start(start);
+    o.stop(start + dur + 0.05);
+  } catch(e){}
+}
+
+function vib(pattern){
+  try{
+    if(navigator.vibrate) navigator.vibrate(pattern);
+  } catch(e){}
+}
+
+// NEW ORDER — 3 ascending beeps + buzz
+// Staff attention: something needs action
+function notifyNewOrder(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  playTone(440, t,       0.12, 0.4);
+  playTone(550, t+0.15,  0.12, 0.4);
+  playTone(660, t+0.30,  0.18, 0.5);
+  vib([100, 50, 100, 50, 200]);
+}
+
+// ORDER READY — 4 happy ascending tones + long buzz
+// Food is ready — staff must pick up NOW
+function notifyOrderReady(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  playTone(523, t,       0.15, 0.5); // C5
+  playTone(659, t+0.18,  0.15, 0.5); // E5
+  playTone(784, t+0.36,  0.15, 0.5); // G5
+  playTone(1047,t+0.54,  0.25, 0.6); // C6
+  vib([200, 100, 200, 100, 400]);
+}
+
+// PAYMENT REQUESTED — 2 soft chimes + short buzz
+// Customer wants to pay — go to table
+function notifyPaymentRequested(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  playTone(800, t,      0.12, 0.35);
+  playTone(1000,t+0.20, 0.20, 0.4);
+  vib([150, 100, 150]);
+}
+
+// PAYMENT CONFIRMED — success jingle
+// Order paid — kitchen can cook
+function notifyPaymentConfirmed(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  playTone(523, t,       0.1, 0.3);
+  playTone(784, t+0.12,  0.1, 0.3);
+  playTone(1047,t+0.24,  0.2, 0.4);
+  vib([100, 50, 300]);
+}
+
+// URGENT — rapid beeps for anything critical
+function notifyUrgent(){
+  var ac = getAC();
+  if(!ac) return;
+  var t = ac.currentTime;
+  for(var i=0; i<4; i++){
+    playTone(880, t + i*0.15, 0.1, 0.5);
   }
-});`;
+  vib([100,50,100,50,100,50,100]);
+}
 
-const newWindowLoad = `window.addEventListener('load',function(){
-  if(isMobile()){
-    updateMobileNav();
-    setInterval(updateMobileNav,2000);
+// ===== HOOK INTO EXISTING ALERT SYSTEM =====
+
+// Override the ready alert handler to add sound+vib
+var _origHandleReady = typeof handleReadyAlert !== 'undefined' ? handleReadyAlert : null;
+function handleReadyAlertWithSound(){
+  notifyOrderReady();
+  if(_origHandleReady) _origHandleReady();
+  else handleReadyAlert_orig && handleReadyAlert_orig();
+}
+
+// Override pay alert
+var _origHandlePay = typeof handlePayAlert !== 'undefined' ? handlePayAlert : null;
+function handlePayAlertWithSound(){
+  notifyPaymentRequested();
+  if(_origHandlePay) _origHandlePay();
+}
+
+// Patch checkReadyAlert to play sound when banner appears
+var _lastReadyAlertVisible = false;
+var _origCheckReady = typeof checkReadyAlert !== 'undefined' ? checkReadyAlert : null;
+
+// Patch checkPayAlert to play sound when banner appears
+var _lastPayAlertVisible = false;
+
+// Monitor alerts and play sounds when they appear
+setInterval(function(){
+  var readyAlert = document.getElementById('ready-alert');
+  var payAlert = document.getElementById('pay-alert');
+
+  if(readyAlert){
+    var isVisible = readyAlert.style.display !== 'none' && readyAlert.style.display !== '';
+    if(isVisible && !_lastReadyAlertVisible){
+      notifyOrderReady();
+    }
+    _lastReadyAlertVisible = isVisible;
   }
-  // Restore session on page load/refresh
-  restoreSession();
-});
 
-function restoreSession(){
-  var role=localStorage.getItem('lt_role');
-  var ts=parseInt(localStorage.getItem('lt_ts')||'0');
-  var now=Date.now();
-  var maxAge=12*60*60*1000; // 12 hours
-  // Clear expired sessions
-  if(!role||!ts||(now-ts)>maxAge){
-    localStorage.removeItem('lt_role');
-    localStorage.removeItem('lt_staff');
-    localStorage.removeItem('lt_ts');
-    return; // Show login screen
+  if(payAlert){
+    var isPayVisible = payAlert.style.display !== 'none' && payAlert.style.display !== '';
+    if(isPayVisible && !_lastPayAlertVisible){
+      notifyPaymentRequested();
+    }
+    _lastPayAlertVisible = isPayVisible;
   }
-  // Valid session — restore it
-  if(role==='owner'){
-    isOwner=true;
-    currentStaff='Owner';
-    document.getElementById('lw').style.display='none';
-    document.getElementById('app').style.display='flex';
-    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
-    initApp();
-    console.log('Session restored: Owner');
-  } else if(role==='staff'){
-    var name=localStorage.getItem('lt_staff')||'Staff';
-    currentStaff=name;
-    isOwner=false;
-    document.getElementById('lw').style.display='none';
-    document.getElementById('app').style.display='flex';
-    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});
-    // Restore shift tracking without creating new shift
-    initApp();
-    console.log('Session restored: Staff —',name);
+}, 1000);
+
+// Also monitor for new orders appearing in the list
+var _lastOrderCount = 0;
+setInterval(function(){
+  var orderCards = document.querySelectorAll('.oc');
+  var count = orderCards.length;
+  if(count > _lastOrderCount && _lastOrderCount > 0){
+    notifyNewOrder();
   }
-}`;
+  _lastOrderCount = count;
+}, 2000);
 
-if (fixed.includes(oldWindowLoad)) {
-  fixed = fixed.replace(oldWindowLoad, newWindowLoad);
-  console.log('✅ Fix 3: Session restore on page load added');
+console.log('✅ Lets Taco notification system loaded');
+`;
+
+// Inject before closing body
+fixed = fixed.replace(
+  `</body>`,
+  `<script>${notificationJS}</script>\n</body>`
+);
+console.log('✅ Fix 1: Full notification system injected');
+
+// ============================================
+// FIX 2 — UPDATE READY ALERT TO USE NEW SOUND
+// The ready alert banner onclick should
+// call the sound version
+// ============================================
+
+const oldReadyAlert = `onclick="handleReadyAlert()"`;
+const newReadyAlert = `onclick="notifyOrderReady();handleReadyAlert()"`;
+
+// Replace in ready alert div
+const readyAlertIdx = fixed.indexOf('id="ready-alert"');
+if (readyAlertIdx !== -1) {
+  const readyAlertEnd = fixed.indexOf('>', readyAlertIdx) + 1;
+  const readyAlertTag = fixed.substring(readyAlertIdx - 5, readyAlertEnd);
+  if (readyAlertTag.includes('handleReadyAlert')) {
+    // Already has handler - add sound
+    const fixed2 = fixed.replace(
+      `onclick="handleReadyAlert()"`,
+      `onclick="notifyOrderReady();handleReadyAlert()"`
+    );
+    if (fixed2 !== fixed) {
+      fixed = fixed2;
+      console.log('✅ Fix 2a: Ready alert plays sound on tap');
+    }
+  }
+}
+
+// Fix pay alert
+fixed = fixed.replace(
+  `onclick="handlePayAlert()"`,
+  `onclick="notifyPaymentRequested();handlePayAlert()"`
+);
+console.log('✅ Fix 2b: Pay alert plays sound on tap');
+
+// ============================================
+// FIX 3 — MARK PAID PLAYS SUCCESS SOUND
+// When staff confirms payment — play success
+// ============================================
+
+const oldMarkPaidSuccess = `showToast('Payment Confirmed','Kitchen notified — cooking starts now');`;
+const newMarkPaidSuccess = `showToast('Payment Confirmed','Kitchen notified — cooking starts now');
+    notifyPaymentConfirmed();`;
+
+if (fixed.includes(oldMarkPaidSuccess)) {
+  fixed = fixed.replace(oldMarkPaidSuccess, newMarkPaidSuccess);
+  console.log('✅ Fix 3: MARK PAID plays success sound');
 } else {
-  console.log('⚠️  Fix 3: window load pattern not found — injecting before body close');
-  fixed = fixed.replace(
-    `</body>`,
-    `<script>
-function restoreSession(){
-  var role=localStorage.getItem('lt_role');
-  var ts=parseInt(localStorage.getItem('lt_ts')||'0');
-  var now=Date.now();
-  var maxAge=12*60*60*1000;
-  if(!role||!ts||(now-ts)>maxAge){localStorage.removeItem('lt_role');localStorage.removeItem('lt_staff');localStorage.removeItem('lt_ts');return;}
-  if(role==='owner'){isOwner=true;currentStaff='Owner';document.getElementById('lw').style.display='none';document.getElementById('app').style.display='flex';document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});initApp();}
-  else if(role==='staff'){var name=localStorage.getItem('lt_staff')||'Staff';currentStaff=name;isOwner=false;document.getElementById('lw').style.display='none';document.getElementById('app').style.display='flex';document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});initApp();}
-}
-window.addEventListener('load',function(){restoreSession();});
-</script>
-</body>`
-  );
-  console.log('✅ Fix 3: restoreSession injected before body close');
+  console.log('⚠️  Fix 3: markPaid success pattern not found');
 }
 
 // ============================================
-// FIX 4 — CLEAR SESSION ON LOGOUT
-// Find the logout handler and clear localStorage
+// FIX 4 — ADD NOTIFICATION PERMISSION REQUEST
+// Ask for browser notifications on login
+// So alerts work even when screen is off
 // ============================================
 
-const oldLogout = `document.getElementById('lout').addEventListener('click',function(){
-  if(shiftId){sbF('/rest/v1/staff_shifts?id=eq.'+shiftId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({logout_time:new Date().toISOString()})});shiftId=null;}
-  document.getElementById('app').style.display='none';`;
+const oldInitApp = `function initApp(){`;
+const newInitApp = `function initApp(){
+  // Request notification permission for background alerts
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }`;
 
-const newLogout = `document.getElementById('lout').addEventListener('click',function(){
-  if(shiftId){sbF('/rest/v1/staff_shifts?id=eq.'+shiftId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({logout_time:new Date().toISOString()})});shiftId=null;}
-  // Clear session on explicit logout
-  localStorage.removeItem('lt_role');
-  localStorage.removeItem('lt_staff');
-  localStorage.removeItem('lt_ts');
-  isOwner=false;currentStaff=null;
-  document.getElementById('app').style.display='none';`;
-
-if (fixed.includes(oldLogout)) {
-  fixed = fixed.replace(oldLogout, newLogout);
-  console.log('✅ Fix 4: Session cleared on logout');
+if (fixed.includes(oldInitApp)) {
+  fixed = fixed.replace(oldInitApp, newInitApp);
+  console.log('✅ Fix 4: Notification permission requested on login');
 } else {
-  console.log('⚠️  Fix 4: logout handler not found — trying partial');
-  fixed = fixed.replace(
-    `shiftId=null;}
-  document.getElementById('app').style.display='none';`,
-    `shiftId=null;}
-  localStorage.removeItem('lt_role');
-  localStorage.removeItem('lt_staff');
-  localStorage.removeItem('lt_ts');
-  isOwner=false;currentStaff=null;
-  document.getElementById('app').style.display='none';`
-  );
-  console.log('✅ Fix 4: Partial logout clear applied');
+  console.log('⚠️  Fix 4: initApp not found');
 }
 
-// ============================================
-// FIX 5 — ADD MOBILE LOGOUT BUTTON
-// Mobile nav has no logout button visible
-// Add a small logout option accessible
-// ============================================
-
-// Add logout to mobile topbar
-const oldMobileTopbar = `  <div class="mobile-topbar-right">
-    <div id="mobile-clock" class="mobile-clock">00:00</div>
-    <div id="mobile-open-pill" class="mobile-open-pill">OPEN</div>
-  </div>`;
-
-const newMobileTopbar = `  <div class="mobile-topbar-right">
-    <div id="mobile-clock" class="mobile-clock">00:00</div>
-    <div id="mobile-open-pill" class="mobile-open-pill">OPEN</div>
-    <button onclick="document.getElementById('lout').click()" style="background:transparent;border:1px solid #E5E7EB;color:#9CA3AF;padding:5px 10px;border-radius:6px;font-size:0.68rem;font-family:Jost,sans-serif;cursor:pointer;letter-spacing:1px;">EXIT</button>
-  </div>`;
-
-if (fixed.includes(oldMobileTopbar)) {
-  fixed = fixed.replace(oldMobileTopbar, newMobileTopbar);
-  console.log('✅ Fix 5: Mobile EXIT button added to topbar');
-} else {
-  console.log('⚠️  Fix 5: mobile topbar pattern not found');
+// Add browser notification for order ready
+const sendBrowserNotif = `
+function sendBrowserNotif(title, body, icon){
+  if('Notification' in window && Notification.permission === 'granted'){
+    try{
+      new Notification(title, {
+        body: body,
+        icon: icon || 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ctext y=\\'.9em\\' font-size=\\'90\\'%3E🌮%3C/text%3E%3C/svg%3E',
+        badge: 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ctext y=\\'.9em\\' font-size=\\'90\\'%3E🌮%3C/text%3E%3C/svg%3E',
+        vibrate: [200, 100, 200]
+      });
+    }catch(e){}
+  }
 }
+`;
+
+fixed = fixed.replace(
+  `</body>`,
+  `<script>${sendBrowserNotif}</script>\n</body>`
+);
+console.log('✅ Fix 4b: Browser notification function added');
 
 // JS Validation
 const scripts = [];
@@ -231,4 +299,4 @@ if (!ok) {
 }
 console.log('✅ JS validation passed');
 fs.writeFileSync('admin.html', fixed, 'utf8');
-console.log('✅ admin.html saved — persistent session live');
+console.log('✅ admin.html saved — full notification system live');
