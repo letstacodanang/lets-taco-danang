@@ -183,7 +183,7 @@ function render(orders){
         if(r.ok||r.status===204){
           if(ns==="delivered"){
             var card=_btn.closest(".card");
-            if(card){card.style.transition="opacity 0.4s,transform 0.4s";card.style.opacity="0";card.style.transform="scale(0.95)";setTimeout(function(){poll();},400);}
+            if(card){card.style.transition="opacity 0.4s,transform 0.4s";card.style.opacity="0";card.style.transform="scale(0.95)";setTimeout(function(){poll();},200);}
             else poll();
           } else poll();
         } else {
@@ -239,7 +239,7 @@ setInterval(function(){
 },1000);
 
 poll();
-setInterval(poll,8000);
+setInterval(poll,2000);
 </script>
 </body>
 </html>
