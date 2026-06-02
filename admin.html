@@ -516,6 +516,7 @@ input:focus{outline:none;}
   <div class="mobile-topbar-right">
     <div id="mobile-clock" class="mobile-clock">00:00</div>
     <div id="mobile-open-pill" class="mobile-open-pill">OPEN</div>
+    <button onclick="document.getElementById('lout').click()" style="background:transparent;border:1px solid #E5E7EB;color:#9CA3AF;padding:5px 10px;border-radius:6px;font-size:0.68rem;font-family:Jost,sans-serif;cursor:pointer;letter-spacing:1px;">EXIT</button>
   </div>
 </div>
 
@@ -762,6 +763,11 @@ document.getElementById('lbtn').addEventListener('click',doLogin);
 document.getElementById('lp').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 document.getElementById('lout').addEventListener('click',function(){
   if(shiftId){sbF('/rest/v1/staff_shifts?id=eq.'+shiftId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({logout_time:new Date().toISOString()})});shiftId=null;}
+  // Clear session on explicit logout
+  localStorage.removeItem('lt_role');
+  localStorage.removeItem('lt_staff');
+  localStorage.removeItem('lt_ts');
+  isOwner=false;currentStaff=null;
   document.getElementById('app').style.display='none';
   document.getElementById('lw').style.display='flex';
   document.getElementById('lp').value='';
@@ -806,6 +812,9 @@ function doLogin(){
     err.style.display='none';
     attempts=0;
     isOwner=true;currentStaff='Owner';
+    // Save session to localStorage
+    localStorage.setItem('lt_role','owner');
+    localStorage.setItem('lt_ts',Date.now().toString());
     document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
     initApp();
     return;
@@ -1457,7 +1466,43 @@ window.addEventListener('load',function(){
     updateMobileNav();
     setInterval(updateMobileNav,2000);
   }
+  // Restore session on page load/refresh
+  restoreSession();
 });
+
+function restoreSession(){
+  var role=localStorage.getItem('lt_role');
+  var ts=parseInt(localStorage.getItem('lt_ts')||'0');
+  var now=Date.now();
+  var maxAge=12*60*60*1000; // 12 hours
+  // Clear expired sessions
+  if(!role||!ts||(now-ts)>maxAge){
+    localStorage.removeItem('lt_role');
+    localStorage.removeItem('lt_staff');
+    localStorage.removeItem('lt_ts');
+    return; // Show login screen
+  }
+  // Valid session — restore it
+  if(role==='owner'){
+    isOwner=true;
+    currentStaff='Owner';
+    document.getElementById('lw').style.display='none';
+    document.getElementById('app').style.display='flex';
+    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
+    initApp();
+    console.log('Session restored: Owner');
+  } else if(role==='staff'){
+    var name=localStorage.getItem('lt_staff')||'Staff';
+    currentStaff=name;
+    isOwner=false;
+    document.getElementById('lw').style.display='none';
+    document.getElementById('app').style.display='flex';
+    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});
+    // Restore shift tracking without creating new shift
+    initApp();
+    console.log('Session restored: Staff —',name);
+  }
+}
 
 window.addEventListener('resize',function(){
   if(isMobile()){updateMobileNav();}
@@ -1507,6 +1552,10 @@ function doSL(){
   localStorage.setItem('lt_sn',nm);currentStaff=nm;startSS();
 }
 function startSS(){
+  // Save staff session to localStorage
+  localStorage.setItem('lt_role','staff');
+  localStorage.setItem('lt_staff',currentStaff||'');
+  localStorage.setItem('lt_ts',Date.now().toString());
   isOwner=false;
   sbF('/rest/v1/staff_shifts',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({staff_name:currentStaff,login_time:new Date().toISOString()})}).then(function(d){if(d&&d.length>0)shiftId=d[0].id;});
   document.getElementById('lw').style.display='none';
