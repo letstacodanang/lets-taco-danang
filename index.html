@@ -519,7 +519,7 @@ geoWelcome();
 <div style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:#5DADE2;letter-spacing:2px;margin-bottom:6px;">🏃 PICKUP ORDER</div>
 <div style="font-size:0.85rem;color:#FAF0E6;line-height:1.6;">Pay when you arrive at the restaurant. We will have your order ready!</div>
 </div>
-<button onclick="newOrder()" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.2);color:#D4A017;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;border-radius:6px;cursor:pointer;margin-top:5px;">+ ORDER MORE TACOS</button>
+<button onclick="newOrder()" style="width:100%;background:linear-gradient(135deg,rgba(212,160,23,0.12),rgba(212,160,23,0.06));border:1px solid rgba(212,160,23,0.4);color:#D4A017;padding:18px;font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:4px;border-radius:6px;cursor:pointer;margin-top:10px;transition:all 0.2s;" onmouseover="this.style.background='rgba(212,160,23,0.2)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(212,160,23,0.12),rgba(212,160,23,0.06))'">+ ORDER MORE TACOS</button>
 </div>
 </div>
 <style>
@@ -714,7 +714,21 @@ function setCM(m){
   if(m==='whatsapp'){wa.style.background='linear-gradient(135deg,#25D366,#128C7E)';wa.style.color='white';wa.style.border='none';zl.style.background='rgba(255,255,255,0.04)';zl.style.color='#B8A99A';zl.style.border='2px solid rgba(255,255,255,0.1)';}
   else{zl.style.background='linear-gradient(135deg,#0068FF,#0052CC)';zl.style.color='white';zl.style.border='none';wa.style.background='rgba(255,255,255,0.04)';wa.style.color='#B8A99A';wa.style.border='2px solid rgba(255,255,255,0.1)';}
 }
-async function placeOrder(){var btn=document.getElementById('place-btn');var err=document.getElementById('co-err');err.style.display='none';var d=gCI();if(!d.items.length){err.style.display='block';err.textContent='Your cart is empty! Add some tacos first.';return;}var name=document.getElementById('c-name').value.trim();var email=document.getElementById('c-email').value.trim().toLowerCase();var phone=document.getElementById('c-phone').value.trim();if(!name){err.style.display='block';err.textContent='Please enter your name.';return;}if(oType==='dinein'){var tbl=document.getElementById('c-table').value;if(!tbl){err.style.display='block';err.textContent='Please select your table number.';return;}}else{if(!email||!phone){err.style.display='block';err.textContent='Please fill in your email and phone number.';return;}}if(oType==='delivery'&&!document.getElementById('c-address').value.trim()){err.style.display='block';err.textContent='Please enter your delivery address.';return;}btn.textContent='PLACING YOUR ORDER...';btn.disabled=true;try{var ex=await sbC('/rest/v1/customers?email=eq.'+encodeURIComponent(email)+'&select=*');var cId=null;cust=null;if(ex&&ex.length>0){cId=ex[0].id;cust=ex[0];}else{var nc=await sbC('/rest/v1/customers',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({name:name,email:email,phone:phone,total_orders:0,total_points:0,total_spent:0})});if(nc&&nc.length>0){cId=nc[0].id;cust=nc[0];}}var ref=gR();var tblNum=oType==='dinein'?document.getElementById('c-table').value:null;var od={order_ref:ref,customer_id:cId,customer_name:name,customer_email:oType==='dinein'?'dinein@letstaco.vn':email,customer_phone:oType==='dinein'?'':phone,delivery_address:oType==='delivery'?document.getElementById('c-address').value.trim():null,order_type:oType,table_number:tblNum,payment_method:oType==='delivery'?'prepay':'cash',payment_status:'pending',items:d.items,subtotal:d.total,total:d.total,points_earned:d.points,status:'placed',special_instructions:document.getElementById('cart-notes').value||null,contact_method:oType==='dinein'?'dinein':contactMethod};var ord=await sbC('/rest/v1/orders',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(od)});if(ord&&ord.length>0){oId=ord[0].id;if(cId){var np=(cust&&cust.total_points||0)+d.points;await sbC('/rest/v1/customers?id=eq.'+cId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({total_points:np,total_spent:((cust&&cust.total_spent)||0)+d.total})});}showTracker(ref,d);}else throw new Error('x');}catch(e){btn.textContent='PLACE ORDER 🌮';btn.disabled=false;err.style.display='block';err.textContent='Something went wrong. Please WhatsApp us directly at 0909 923 941.';}}
+async function placeOrder(){var btn=document.getElementById('place-btn');var err=document.getElementById('co-err');err.style.display='none';var d=gCI();if(!d.items.length){err.style.display='block';err.textContent='Your cart is empty! Add some tacos first.';return;}var name=document.getElementById('c-name').value.trim();var email=document.getElementById('c-email').value.trim().toLowerCase();var phone=document.getElementById('c-phone').value.trim();if(!name){err.style.display='block';err.textContent='Please enter your name.';return;}if(oType==='dinein'){var tbl=document.getElementById('c-table').value;if(!tbl){err.style.display='block';err.textContent='Please select your table number.';return;}}else{if(!email||!phone){err.style.display='block';err.textContent='Please fill in your email and phone number.';return;}}if(oType==='delivery'&&!document.getElementById('c-address').value.trim()){err.style.display='block';err.textContent='Please enter your delivery address.';return;}btn.textContent='PLACING YOUR ORDER...';btn.disabled=true;try{var ex=await sbC('/rest/v1/customers?email=eq.'+encodeURIComponent(email)+'&select=*');var cId=null;cust=null;if(ex&&ex.length>0){cId=ex[0].id;cust=ex[0];}else{var nc=await sbC('/rest/v1/customers',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({name:name,email:email,phone:phone,total_orders:0,total_points:0,total_spent:0})});if(nc&&nc.length>0){cId=nc[0].id;cust=nc[0];}}var ref=gR();var tblNum=oType==='dinein'?document.getElementById('c-table').value:null;var od={order_ref:ref,customer_id:cId,customer_name:name,customer_email:oType==='dinein'?'dinein@letstaco.vn':email,customer_phone:oType==='dinein'?'':phone,delivery_address:oType==='delivery'?document.getElementById('c-address').value.trim():null,order_type:oType,table_number:tblNum,payment_method:oType==='delivery'?'prepay':'cash',payment_status:'pending',items:d.items,subtotal:d.total,total:d.total,points_earned:d.points,status:'placed',special_instructions:document.getElementById('cart-notes').value||null,contact_method:oType==='dinein'?'dinein':contactMethod};var ord=await sbC('/rest/v1/orders',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(od)});if(ord&&ord.length>0){oId=ord[0].id;if(cId){var np=(cust&&cust.total_points||0)+d.points;await sbC('/rest/v1/customers?id=eq.'+cId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({total_points:np,total_spent:((cust&&cust.total_spent)||0)+d.total})});}showTracker(ref,d);
+  // Save session so ORDER MORE is instant — no re-entry needed
+  try{
+    var sess={
+      name:document.getElementById('c-name').value.trim(),
+      table:document.getElementById('c-table')?document.getElementById('c-table').value:'',
+      phone:document.getElementById('c-phone')?document.getElementById('c-phone').value.trim():'',
+      code:document.getElementById('c-code')?document.getElementById('c-code').value:'+84',
+      email:document.getElementById('c-email')?document.getElementById('c-email').value.trim():'',
+      address:document.getElementById('c-address')?document.getElementById('c-address').value.trim():'',
+      otype:oType,
+      cm:contactMethod
+    };
+    sessionStorage.setItem('lt_sess',JSON.stringify(sess));
+  }catch(e){}}else throw new Error('x');}catch(e){btn.textContent='PLACE ORDER 🌮';btn.disabled=false;err.style.display='block';err.textContent='Something went wrong. Please WhatsApp us directly at 0909 923 941.';}}
 function showTracker(ref,d){document.getElementById('cart-view-checkout').style.display='none';document.getElementById('cart-view-tracker').style.display='flex';document.getElementById('tracker-ref').textContent=ref;
   renderStory(ref);var wm=encodeURIComponent('Hi! I just placed order '+ref+'. Total: '+fV(d.total)+'. Confirming payment now!');var waLink=document.getElementById('pay-wa-link');if(waLink)waLink.href='https://wa.me/84909923941?text='+wm;// Show correct payment reminder based on order type
   var rd=document.getElementById('payment-reminder-delivery');
@@ -727,7 +741,49 @@ function showTracker(ref,d){document.getElementById('cart-view-checkout').style.
   rTR('placed');if(oId)tInt=setInterval(pollS,10000);cart={};document.getElementById('cart-count').style.display='none';}
 function rTR(status){var ss=['placed','accepted','prepping','cooking','dispatched','delivered'];var sl=['Placed','Accepted','Prepping','Cooking','On Way','Done'];var si2=['📥','✅','🔪','🔥','🛵','🎉'];var ix=ss.indexOf(status);var h='';for(var i=0;i<6;i++){var dn=i<ix;var cu=i===ix;h+='<div class="tsm"><div class="tdm'+(dn?' done':cu?' curr':'')+'">'+( dn?'✓':si2[i])+'</div><div class="tlm'+(dn?' done':cu?' curr':'')+'">'+sl[i]+'</div></div>';if(i<5)h+='<div class="tlnm'+(dn?' done':'')+'"></div>';}document.getElementById('order-tracker-steps').innerHTML=h;}
 function pollS(){if(!oId)return;sbC('/rest/v1/orders?id=eq.'+oId+'&select=status,driver_name,driver_phone').then(function(d){if(d&&d.length>0){rTR(d[0].status);if(d[0].status==='dispatched'&&d[0].driver_name){document.getElementById('payment-reminder').innerHTML='<div style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:#27AE60;letter-spacing:2px;margin-bottom:8px;">🛵 ON THE WAY!</div><div style="font-size:0.85rem;color:#FAF0E6;line-height:1.6;">Driver <strong>'+d[0].driver_name+'</strong> is heading to you!<br>Contact: <strong style="color:#D4A017;">'+d[0].driver_phone+'</strong></div>';}if(d[0].status==='delivered'){clearInterval(tInt);document.getElementById('payment-reminder').style.display='none';}}});}
-function newOrder(){clearInterval(tInt);oId=null;document.getElementById('cart-view-tracker').style.display='none';document.getElementById('cart-view-menu').style.display='flex';document.getElementById('cart-view-checkout').style.display='none';['c-name','c-email','c-phone','c-address','cart-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});document.getElementById('place-btn').textContent='PLACE ORDER 🌮';document.getElementById('place-btn').disabled=false;renderCM();}
+function newOrder(){
+  clearInterval(tInt);oId=null;
+  document.getElementById('cart-view-tracker').style.display='none';
+  document.getElementById('cart-view-menu').style.display='flex';
+  document.getElementById('cart-view-checkout').style.display='none';
+  document.getElementById('place-btn').textContent='PLACE ORDER 🌮';
+  document.getElementById('place-btn').disabled=false;
+  // Restore session — customer should not re-enter anything
+  try{
+    var raw=sessionStorage.getItem('lt_sess');
+    if(raw){
+      var sess=JSON.parse(raw);
+      // Restore order type first so fields show/hide correctly
+      if(sess.otype){setOT(sess.otype);}
+      // Restore contact method
+      if(sess.cm){setCM(sess.cm);contactMethod=sess.cm;}
+      // Restore fields
+      var fields={
+        'c-name':sess.name,
+        'c-phone':sess.phone,
+        'c-email':sess.email,
+        'c-address':sess.address
+      };
+      Object.keys(fields).forEach(function(id){
+        var el=document.getElementById(id);
+        if(el&&fields[id])el.value=fields[id];
+      });
+      // Restore country code
+      if(sess.code){var cd=document.getElementById('c-code');if(cd)cd.value=sess.code;}
+      // Restore table for dine-in
+      if(sess.table&&sess.otype==='dinein'){
+        pickTable(parseInt(sess.table));
+        // Re-lock QR mode if they came from QR scan
+        if(qrTable)lockQRMode(qrTable);
+      }
+      console.log('✅ Session restored — customer can order again instantly');
+    }
+  }catch(e){}
+  // Clear notes only — not customer info
+  var notes=document.getElementById('cart-notes');
+  if(notes)notes.value='';
+  renderCM();
+}
 window.addEventListener('load',function(){
   setTimeout(function(){var s=document.getElementById('pwa-splash');if(s){s.style.opacity='0';setTimeout(function(){s.style.display='none';},500);}},1800);
   if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){});}
@@ -736,6 +792,8 @@ window.addEventListener('load',function(){
   var tParam=urlP.get('table');
   if(tParam){
     qrTable=parseInt(tParam);
+    // Pre-save table to session immediately on QR scan
+    try{var s=JSON.parse(sessionStorage.getItem('lt_sess')||'{}');s.table=qrTable;s.otype='dinein';sessionStorage.setItem('lt_sess',JSON.stringify(s));}catch(e){}
     setTimeout(function(){
       toggleCart();
       setTimeout(function(){
