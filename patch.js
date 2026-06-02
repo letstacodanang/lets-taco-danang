@@ -1,35 +1,17 @@
 const fs = require('fs');
 const crypto = require('crypto');
 
-// ============================================
-// GENERATE HASHES FOR ALL PASSWORDS
-// SHA-256 — cannot be reversed
-// ============================================
-
-function sha256(str) {
+function sha256node(str) {
   return crypto.createHash('sha256').update(str).digest('hex');
 }
 
-// Current passwords
-const OWNER_PASS = 'LetsTaco2024!';
-const STAFF_PASS = 'LetsWork2024!';
-const OWNER_PIN  = '1011';
-const OWNER_EMAIL = 'letstacodanang@gmail.com';
-
-// Generate hashes
-const OWNER_HASH = sha256(OWNER_PASS);
-const STAFF_HASH = sha256(STAFF_PASS);
-const PIN_HASH   = sha256(OWNER_PIN);
+const OWNER_HASH = sha256node('LetsTaco2024!');
+const STAFF_HASH = sha256node('LetsWork2024!');
+const PIN_HASH   = sha256node('1011');
 
 console.log('Owner hash:', OWNER_HASH);
 console.log('Staff hash:', STAFF_HASH);
-console.log('PIN hash:', PIN_HASH);
-
-// ============================================
-// PATCH ADMIN.HTML
-// Replace plaintext passwords with hashes
-// Update comparison logic to hash input first
-// ============================================
+console.log('PIN hash:  ', PIN_HASH);
 
 const html = fs.readFileSync('admin.html', 'utf8');
 if (html.includes('Lam Tuyen')) { console.log('STOP'); process.exit(1); }
@@ -37,111 +19,55 @@ console.log('✅ File confirmed — Lets Taco Da Nang');
 
 let fixed = html;
 
-// ============================================
-// FIX 1 — REPLACE PASSWORD CONSTANTS
-// Find where APASS and SPASS are defined
-// ============================================
-
-// Find the constants
-const apIdx = fixed.indexOf('APASS');
-if (apIdx !== -1) {
-  console.log('Found APASS at:', apIdx);
-  console.log('Context:', fixed.substring(apIdx - 30, apIdx + 60));
-}
-
-// Replace password definitions with hashes
-// Pattern: var APASS='LetsTaco2024!' or similar
-fixed = fixed.replace(
-  /var APASS\s*=\s*['"][^'"]+['"]/,
-  'var APASS="' + OWNER_HASH + '"'
-);
-fixed = fixed.replace(
-  /var SPASS\s*=\s*['"][^'"]+['"]/,
-  'var SPASS="' + STAFF_HASH + '"'
-);
-fixed = fixed.replace(
-  /var APIN\s*=\s*['"][^'"]+['"]/,
-  'var APIN="' + PIN_HASH + '"'
-);
-
-// Also handle if they are defined differently
-fixed = fixed.replace(
-  /APASS\s*=\s*['"]LetsTaco2024[^'"]*['"]/g,
-  'APASS="' + OWNER_HASH + '"'
-);
-fixed = fixed.replace(
-  /SPASS\s*=\s*['"]LetsWork2024[^'"]*['"]/g,
-  'SPASS="' + STAFF_HASH + '"'
-);
-
-console.log('✅ Fix 1: Password constants replaced with SHA-256 hashes');
+// Check current state
+console.log('Has plaintext owner pass:', fixed.includes('LetsTaco2024'));
+console.log('Has plaintext staff pass:', fixed.includes('LetsWork2024'));
+console.log('Has SHA256 function:', fixed.includes('crypto.subtle.digest'));
+console.log('Has hashed APASS:', fixed.includes(OWNER_HASH));
 
 // ============================================
-// FIX 2 — ADD HASH FUNCTION TO ADMIN
-// Staff/owner input must be hashed before
-// comparison against stored hash
+// STEP 1 — Replace password constants with hashes
 // ============================================
+fixed = fixed.replace(/var APASS\s*=\s*['"][^'"]+['"]/g, 'var APASS="'+OWNER_HASH+'"');
+fixed = fixed.replace(/var SPASS\s*=\s*['"][^'"]+['"]/g, 'var SPASS="'+STAFF_HASH+'"');
+fixed = fixed.replace(/var APIN\s*=\s*['"][^'"]+['"]/g,  'var APIN="'+PIN_HASH+'"');
+fixed = fixed.replace(/var OPIN\s*=\s*['"][^'"]+['"]/g,  'var OPIN="'+PIN_HASH+'"');
 
-// Find the doLogin function and add hashing
-const oldDoLogin = 'function doLogin(){';
-const newDoLogin = 'function doLogin(){';
+// Remove any remaining plaintext
+fixed = fixed.replace(/['"]LetsTaco2024[^'"]*['"]/g, '"[PROTECTED]"');
+fixed = fixed.replace(/['"]LetsWork2024[^'"]*['"]/g, '"[PROTECTED]"');
+console.log('✅ Step 1: Password constants replaced with hashes');
 
-// Add sha256 function before login functions
-const sha256JS = 'function sha256(s){var h=0;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h=((h<<5)-h)+c;h|=0;}return Math.abs(h).toString(16);}';
-
-// Actually use SubtleCrypto for real SHA-256 in browser
-const realSHA256 = `
+// ============================================
+// STEP 2 — Add SHA-256 browser function
+// Only add if not already present
+// ============================================
+if (!fixed.includes('crypto.subtle.digest')) {
+  const sha256fn = `
 async function sha256(message){
   var msgBuffer=new TextEncoder().encode(message);
   var hashBuffer=await crypto.subtle.digest('SHA-256',msgBuffer);
   var hashArray=Array.from(new Uint8Array(hashBuffer));
-  var hashHex=hashArray.map(function(b){return b.toString(16).padStart(2,'0');}).join('');
-  return hashHex;
+  return hashArray.map(function(b){return b.toString(16).padStart(2,'0');}).join('');
 }
 `;
-
-// Find where login functions start and inject sha256
-const loginFnIdx = fixed.indexOf('function doLogin()');
-if (loginFnIdx !== -1) {
-  fixed = fixed.substring(0, loginFnIdx) + realSHA256 + '\n' + fixed.substring(loginFnIdx);
-  console.log('✅ Fix 2a: SHA-256 function added');
-}
-
-// ============================================
-// FIX 3 — UPDATE LOGIN COMPARISONS
-// doLogin and doSL must hash input before compare
-// ============================================
-
-// Update owner login comparison
-const oldOwnerCompare = 'if(e===AEMAIL.toLowerCase()&&p===APASS){';
-const newOwnerCompare = 'sha256(p).then(function(ph){if(e===AEMAIL.toLowerCase()&&ph===APASS){';
-
-if (fixed.includes(oldOwnerCompare)) {
-  // Need to also close the then() properly
-  // Find the return; after initApp() and close the then
-  fixed = fixed.replace(
-    oldOwnerCompare,
-    newOwnerCompare
-  );
-  // Close the promise chain after the login block
-  fixed = fixed.replace(
-    'initApp();\n    return;\n  }\n  attempts++;',
-    'initApp();\n    return;\n    }else{attempts++;var err2=document.getElementById(\'lerr\');err2.style.display=\'block\';err2.textContent=\'Incorrect email or password (\'+attempts+\'/5)\';if(attempts>=5){locked=true;}}\n  });\n  return;\n  attempts++;'
-  );
-  console.log('✅ Fix 3a: Owner login now hashes password before compare');
+  const loginIdx = fixed.indexOf('function doLogin()');
+  if (loginIdx !== -1) {
+    fixed = fixed.substring(0, loginIdx) + sha256fn + fixed.substring(loginIdx);
+    console.log('✅ Step 2: SHA-256 function added');
+  }
 } else {
-  console.log('⚠️  Fix 3a: owner compare pattern not found');
+  console.log('✅ Step 2: SHA-256 already present');
 }
 
-// Simpler approach — rewrite the entire login check
-// to use async hashing properly
-// Find doLogin and replace its core logic
-
+// ============================================
+// STEP 3 — Rewrite doLogin with async hash
+// ============================================
 const doLoginStart = fixed.indexOf('function doLogin(){');
+if (doLoginStart === -1) { console.log('❌ doLogin not found'); process.exit(1); }
 const doLoginEnd = fixed.indexOf('\n}', doLoginStart) + 2;
-const currentDoLogin = fixed.substring(doLoginStart, doLoginEnd);
 
-const newDoLoginFn = `function doLogin(){
+const newDoLogin = `function doLogin(){
   if(locked)return;
   var e=document.getElementById('le').value.trim().toLowerCase();
   var p=document.getElementById('lp').value;
@@ -152,41 +78,34 @@ const newDoLoginFn = `function doLogin(){
       document.getElementById('lw').style.display='none';
       document.getElementById('app').style.display='flex';
       err.style.display='none';
-      attempts=0;
-      isOwner=true;currentStaff='Owner';
+      attempts=0;isOwner=true;currentStaff='Owner';
       localStorage.setItem('lt_role','owner');
       localStorage.setItem('lt_ts',Date.now().toString());
       document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
-      initApp();
-      return;
+      initApp();return;
     }
     attempts++;
     err.style.display='block';
     err.textContent='Incorrect email or password ('+attempts+'/5)';
     if(attempts>=5){
-      locked=true;
-      var secs=600;
-      err.style.display='none';
-      var lk=document.getElementById('llock');
-      lk.style.display='block';
-      var t=setInterval(function(){
-        secs--;
-        lk.textContent='Too many attempts. Try again in '+Math.floor(secs/60)+'m '+(secs%60)+'s';
-        if(secs<=0){clearInterval(t);locked=false;attempts=0;lk.style.display='none';}
-      },1000);
+      locked=true;var secs=600;err.style.display='none';
+      var lk=document.getElementById('llock');lk.style.display='block';
+      var t=setInterval(function(){secs--;lk.textContent='Too many attempts. Try again in '+Math.floor(secs/60)+'m '+(secs%60)+'s';if(secs<=0){clearInterval(t);locked=false;attempts=0;lk.style.display='none';}},1000);
     }
   });
 }`;
 
-fixed = fixed.substring(0, doLoginStart) + newDoLoginFn + fixed.substring(doLoginEnd);
-console.log('✅ Fix 3b: doLogin rewritten with async SHA-256');
+fixed = fixed.substring(0, doLoginStart) + newDoLogin + fixed.substring(doLoginEnd);
+console.log('✅ Step 3: doLogin rewritten with async SHA-256');
 
-// Update staff login to use hashing
+// ============================================
+// STEP 4 — Rewrite doSL with async hash
+// ============================================
 const doSLStart = fixed.indexOf('function doSL(){');
+if (doSLStart === -1) { console.log('❌ doSL not found'); process.exit(1); }
 const doSLEnd = fixed.indexOf('\n}', doSLStart) + 2;
-const currentDoSL = fixed.substring(doSLStart, doSLEnd);
 
-const newDoSLFn = `function doSL(){
+const newDoSL = `function doSL(){
   var p=document.getElementById('lps').value;
   var err=document.getElementById('lerr');
   err.style.display='none';
@@ -206,44 +125,49 @@ const newDoSLFn = `function doSL(){
   });
 }`;
 
-fixed = fixed.substring(0, doSLStart) + newDoSLFn + fixed.substring(doSLEnd);
-console.log('✅ Fix 3c: doSL rewritten with async SHA-256');
+fixed = fixed.substring(0, doSLStart) + newDoSL + fixed.substring(doSLEnd);
+console.log('✅ Step 4: doSL rewritten with async SHA-256');
 
-// Update PIN check to use hashing
-const checkPinIdx = fixed.indexOf('function checkPin(');
-if (checkPinIdx !== -1) {
-  const checkPinEnd = fixed.indexOf('\n}', checkPinIdx) + 2;
-  const currentCheckPin = fixed.substring(checkPinIdx, checkPinEnd);
-  const newCheckPin = currentCheckPin
-    .replace(/if\(p===APIN\)/, 'sha256(p).then(function(ph){if(ph===APIN)')
-    .replace(/else\{/, '});/*else{')
-    .replace(/}\s*$/, '}*/}');
-  if (currentCheckPin !== newCheckPin) {
-    fixed = fixed.substring(0, checkPinIdx) + newCheckPin + fixed.substring(checkPinEnd);
-    console.log('✅ Fix 3d: PIN check uses SHA-256');
-  } else {
-    console.log('⚠️  Fix 3d: PIN check pattern complex — keeping as is for now');
-  }
+// ============================================
+// STEP 5 — Rewrite checkPin with async hash
+// Find the function and replace cleanly
+// ============================================
+const cpStart = fixed.indexOf('function checkPin(');
+if (cpStart !== -1) {
+  const cpEnd = fixed.indexOf('\n}', cpStart) + 2;
+  const currentCP = fixed.substring(cpStart, cpEnd);
+  console.log('Current checkPin length:', currentCP.length);
+
+  // Build new checkPin
+  const newCheckPin = `function checkPin(){
+  var p=prompt('Enter owner PIN:');
+  if(!p)return;
+  sha256(p).then(function(ph){
+    if(ph===APIN||ph===OPIN){
+      isOwner=true;
+      document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
+      showToast('Owner Access','PIN accepted');
+      pinTimer&&clearTimeout(pinTimer);
+      pinTimer=setTimeout(function(){isOwner=false;document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});showToast('Locked','Owner access expired');},30*60*1000);
+    } else {
+      showToast('Wrong PIN','Incorrect PIN entered');
+    }
+  });
+}`;
+
+  fixed = fixed.substring(0, cpStart) + newCheckPin + fixed.substring(cpEnd);
+  console.log('✅ Step 5: checkPin rewritten with async SHA-256');
+} else {
+  console.log('⚠️  Step 5: checkPin not found');
 }
 
 // ============================================
-// FIX 4 — REMOVE RAW PASSWORDS FROM CODE
-// Double check no plaintext remains
+// STEP 6 — Final check no plaintext remains
 // ============================================
-
-if (fixed.includes('LetsTaco2024')) {
-  fixed = fixed.replace(/LetsTaco2024[^'"]*/g, '[PROTECTED]');
-  console.log('⚠️  Fix 4: Found and removed remaining plaintext owner password');
-} else {
-  console.log('✅ Fix 4: No plaintext owner password in code');
-}
-
-if (fixed.includes('LetsWork2024')) {
-  fixed = fixed.replace(/LetsWork2024[^'"]*/g, '[PROTECTED]');
-  console.log('⚠️  Fix 4: Found and removed remaining plaintext staff password');
-} else {
-  console.log('✅ Fix 4: No plaintext staff password in code');
-}
+const hasOwner = fixed.includes('LetsTaco2024');
+const hasStaff = fixed.includes('LetsWork2024');
+console.log('Plaintext owner password remaining:', hasOwner ? '⚠️  YES' : '✅ No');
+console.log('Plaintext staff password remaining:', hasStaff ? '⚠️  YES' : '✅ No');
 
 // JS Validation
 const scripts = [];
@@ -259,61 +183,26 @@ while (true) {
 let ok = true;
 scripts.forEach(function(sc, i) {
   try { new Function(sc); }
-  catch(e) { console.log('❌ JS Error block', i, ':', e.message); ok = false; }
+  catch(e) {
+    console.log('❌ JS Error block', i, ':', e.message);
+    // Show context
+    var lines = sc.split('\n');
+    var mid = Math.floor(lines.length/2);
+    lines.slice(Math.max(0,mid-3),mid+3).forEach(function(l,li){
+      console.log(' ', mid-3+li, ':', l.substring(0,100));
+    });
+    ok = false;
+  }
 });
 if (!ok) {
   console.log('❌ JS validation failed — file NOT saved.');
   process.exit(1);
 }
-console.log('✅ JS validation passed — ' + scripts.length + ' blocks');
+console.log('✅ All JS validated —', scripts.length, 'blocks');
 fs.writeFileSync('admin.html', fixed, 'utf8');
-console.log('✅ admin.html saved — passwords hashed');
-
-// ============================================
-// FIX 5 — UPGRADE VERCEL.JSON SECURITY HEADERS
-// Content Security Policy
-// Prevent clickjacking, XSS, sniffing
-// ============================================
-
-const newVercel = {
-  "cleanUrls": true,
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {"key": "X-Content-Type-Options", "value": "nosniff"},
-        {"key": "X-XSS-Protection", "value": "1; mode=block"},
-        {"key": "Referrer-Policy", "value": "strict-origin-when-cross-origin"},
-        {"key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()"},
-        {"key": "X-Frame-Options", "value": "SAMEORIGIN"}
-      ]
-    },
-    {
-      "source": "/admin",
-      "headers": [
-        {"key": "X-Robots-Tag", "value": "noindex, nofollow"},
-        {"key": "X-Frame-Options", "value": "DENY"},
-        {"key": "Cache-Control", "value": "no-store, no-cache, must-revalidate"},
-        {"key": "Pragma", "value": "no-cache"}
-      ]
-    },
-    {
-      "source": "/kitchen",
-      "headers": [
-        {"key": "X-Robots-Tag", "value": "noindex, nofollow"},
-        {"key": "X-Frame-Options", "value": "DENY"},
-        {"key": "Cache-Control", "value": "no-store, no-cache, must-revalidate"}
-      ]
-    }
-  ]
-};
-
-fs.writeFileSync('vercel.json', JSON.stringify(newVercel, null, 2), 'utf8');
-console.log('✅ Fix 5: vercel.json security headers upgraded');
-
+console.log('✅ admin.html saved — passwords hashed with SHA-256');
 console.log('');
-console.log('=== SECURITY SUMMARY ===');
-console.log('Owner password hash:', OWNER_HASH);
-console.log('Staff password hash:', STAFF_HASH);
-console.log('PIN hash:', PIN_HASH);
-console.log('Save these hashes — you need them if you change passwords');
+console.log('SAVE THESE HASHES:');
+console.log('Owner:', OWNER_HASH);
+console.log('Staff:', STAFF_HASH);
+console.log('PIN:  ', PIN_HASH);

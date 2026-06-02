@@ -704,9 +704,9 @@ input:focus{outline:none;}
 var SB = 'https://kigqjuxxoeoeezjguuxu.supabase.co';
 var SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpZ3FqdXh4b2VvZWV6amd1dXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTgxNjIsImV4cCI6MjA5NTYzNDE2Mn0.e-V7jsZ0yEjHUziUeFAZQkNDgxKmMq_v4TcYcHBEyhQ';
 var AEMAIL = 'letstacodanang@gmail.com';
-var APASS = 'LetsTaco2024!';
-var SPASS='LetsWork2024!';
-var OPIN='1011';
+var APASS="d47d678e778fa11eb69b1f58c41719aae521caec31426a80cb87b8535c5c59c1";
+var SPASS="cadf43119a68cba8975678a0e9f3ac8a324c0bd2ca38167b0882b47144814ab0";
+var OPIN="3dd9c0995d54c0abd51a90f1d57b1ce77bc885fc8a7cea52dcad3c2540dda5ee";
 var isOwner=false,currentStaff='',shiftId=null;
 var allO = [], allC = [], curF = 'all', nId = null, dId = null, attempts = 0, locked = false, rOpen = true;
 var MENU = [
@@ -802,40 +802,39 @@ document.getElementById('cs').addEventListener('input',function(){
   renderCL(allC.filter(function(c){return(c.name||'').toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q);}));
 });
 
+
+async function sha256(message){
+  var msgBuffer=new TextEncoder().encode(message);
+  var hashBuffer=await crypto.subtle.digest('SHA-256',msgBuffer);
+  var hashArray=Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
 function doLogin(){
   if(locked)return;
   var e=document.getElementById('le').value.trim().toLowerCase();
   var p=document.getElementById('lp').value;
   var err=document.getElementById('lerr');
   if(!e||!p){err.style.display='block';err.textContent='Please enter email and password';return;}
-  if(e===AEMAIL.toLowerCase()&&p===APASS){
-    document.getElementById('lw').style.display='none';
-    document.getElementById('app').style.display='flex';
-    err.style.display='none';
-    attempts=0;
-    isOwner=true;currentStaff='Owner';
-    // Save session to localStorage
-    localStorage.setItem('lt_role','owner');
-    localStorage.setItem('lt_ts',Date.now().toString());
-    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
-    initApp();
-    return;
-  }
-  attempts++;
-  err.style.display='block';
-  err.textContent='Incorrect email or password ('+attempts+'/5)';
-  if(attempts>=5){
-    locked=true;
-    var secs=600;
-    err.style.display='none';
-    var lk=document.getElementById('llock');
-    lk.style.display='block';
-    var t=setInterval(function(){
-      secs--;
-      lk.textContent='Too many attempts. Try again in '+Math.floor(secs/60)+'m '+(secs%60)+'s';
-      if(secs<=0){clearInterval(t);locked=false;attempts=0;lk.style.display='none';}
-    },1000);
-  }
+  sha256(p).then(function(ph){
+    if(e===AEMAIL.toLowerCase()&&ph===APASS){
+      document.getElementById('lw').style.display='none';
+      document.getElementById('app').style.display='flex';
+      err.style.display='none';
+      attempts=0;isOwner=true;currentStaff='Owner';
+      localStorage.setItem('lt_role','owner');
+      localStorage.setItem('lt_ts',Date.now().toString());
+      document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
+      initApp();return;
+    }
+    attempts++;
+    err.style.display='block';
+    err.textContent='Incorrect email or password ('+attempts+'/5)';
+    if(attempts>=5){
+      locked=true;var secs=600;err.style.display='none';
+      var lk=document.getElementById('llock');lk.style.display='block';
+      var t=setInterval(function(){secs--;lk.textContent='Too many attempts. Try again in '+Math.floor(secs/60)+'m '+(secs%60)+'s';if(secs<=0){clearInterval(t);locked=false;attempts=0;lk.style.display='none';}},1000);
+    }
+  });
 }
 
 var PGT={home:'Dashboard',dinein:'Dine In',orders:'All Orders',customers:'Customers',revenue:'Revenue',menu:'Menu Items',settings:'Settings',help:'Staff Guide'};
@@ -1814,20 +1813,23 @@ function closeChat(){var cw=document.getElementById('chat-window');var ov=docume
 function showSL(){document.getElementById('sv').style.display='block';document.getElementById('ov').style.display='none';document.getElementById('lsub').textContent='Staff Login';}
 function showOL(){document.getElementById('sv').style.display='none';document.getElementById('ov').style.display='block';document.getElementById('lsub').textContent='Owner Login';}
 function doSL(){
-  var p=document.getElementById('lps').value,err=document.getElementById('lerr');
+  var p=document.getElementById('lps').value;
+  var err=document.getElementById('lerr');
   err.style.display='none';
-  if(p!==SPASS){err.style.display='block';err.textContent='Wrong password. Ask your manager.';return;}
-  var nf=document.getElementById('nf'),ni=document.getElementById('ln');
-  if(nf.style.display==='none'||nf.style.display===''){
+  sha256(p).then(function(ph){
+    if(ph!==SPASS){err.style.display='block';err.textContent='Wrong password. Ask your manager.';return;}
+    var nf=document.getElementById('nf'),ni=document.getElementById('ln');
+    if(nf.style.display==='none'||nf.style.display===''){
+      var sv=localStorage.getItem('lt_sn');
+      if(sv){currentStaff=sv;startSS();return;}
+      nf.style.display='block';document.getElementById('lbs').textContent='CONFIRM NAME';ni.focus();return;
+    }
+    var nm=ni.value.trim();
+    if(!nm){err.style.display='block';err.textContent='Please enter your name.';return;}
     var sv=localStorage.getItem('lt_sn');
-    if(sv){currentStaff=sv;startSS();return;}
-    nf.style.display='block';document.getElementById('lbs').textContent='CONFIRM NAME';ni.focus();return;
-  }
-  var nm=ni.value.trim();
-  if(!nm){err.style.display='block';err.textContent='Please enter your name.';return;}
-  var sv=localStorage.getItem('lt_sn');
-  if(sv&&sv.toLowerCase()!==nm.toLowerCase()){err.style.display='block';err.textContent='Use your registered name: '+sv;return;}
-  localStorage.setItem('lt_sn',nm);currentStaff=nm;startSS();
+    if(sv&&sv.toLowerCase()!==nm.toLowerCase()){err.style.display='block';err.textContent='Use your registered name: '+sv;return;}
+    localStorage.setItem('lt_sn',nm);currentStaff=nm;startSS();
+  });
 }
 function startSS(){
   // Save staff session to localStorage
@@ -1843,12 +1845,19 @@ function startSS(){
   initApp();
 }
 function checkPin(){
-  var p=prompt('Enter Owner PIN:');if(!p)return;
-  if(p===OPIN){
-    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
-    showT('Owner Access Unlocked','30 minute session');
-    setTimeout(function(){if(!isOwner){document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});}showT('Owner Access','Session expired');},1800000);
-  }else{showT('Wrong PIN','Access denied');}
+  var p=prompt('Enter owner PIN:');
+  if(!p)return;
+  sha256(p).then(function(ph){
+    if(ph===APIN||ph===OPIN){
+      isOwner=true;
+      document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
+      showToast('Owner Access','PIN accepted');
+      pinTimer&&clearTimeout(pinTimer);
+      pinTimer=setTimeout(function(){isOwner=false;document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});showToast('Locked','Owner access expired');},30*60*1000);
+    } else {
+      showToast('Wrong PIN','Incorrect PIN entered');
+    }
+  });
 }
 var ntItems=[];
 var NTM=[
