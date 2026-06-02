@@ -11,151 +11,70 @@ console.log('✅ File confirmed — Lets Taco Da Nang');
 let fixed = html;
 
 // ============================================
-// FIX 1 — CLOSE THE main-wrap DIV PROPERLY
-// Find the app div closing and add wrap close
+// FIX — CLARIFY THE TWO TABLE ACTION BUTTONS
+// Make them visually different and clearly
+// labeled so staff never confuses them
 // ============================================
 
-// Check if main-wrap exists and if it's closed
-const hasWrap = fixed.includes('class="main-wrap"');
-const wrapCloseCount = (fixed.match(/<\/div>\s*<!-- end main-wrap -->/g) || []).length;
+// Fix the ADD MORE ITEMS button — this is inside tdlist
+// It's rendered by the JS that builds the table detail
+// Find it in the JS
 
-console.log('main-wrap exists:', hasWrap);
-console.log('main-wrap properly closed:', wrapCloseCount > 0);
+const oldAddMore = `'+ ADD MORE ITEMS'`;
+const newAddMore = `'+ ADD TO EXISTING ORDER'`;
 
-if (hasWrap) {
-  // Find where .main div closes — it's the large div containing all pages
-  // The app structure is: .app > .sb + .main-wrap > .main > [pages]
-  // We need to close .main-wrap after .main closes
+if (fixed.includes(oldAddMore)) {
+  fixed = fixed.replace(oldAddMore, newAddMore);
+  console.log('✅ Fix 1: ADD MORE ITEMS renamed to ADD TO EXISTING ORDER');
+} else {
+  console.log('⚠️  Fix 1: ADD MORE ITEMS not found in JS — trying HTML');
+  fixed = fixed.replace(
+    '+ ADD MORE ITEMS',
+    '+ ADD TO EXISTING ORDER'
+  );
+  console.log('✅ Fix 1: Renamed via HTML replace');
+}
 
-  // Find the main div open
-  const appDiv = fixed.indexOf('<div class="app"');
-  const mainWrapDiv = fixed.indexOf('<div class="main-wrap">', appDiv);
-  const mainDiv = fixed.indexOf('<div class="main">', mainWrapDiv);
+// Fix the ADD ITEMS FOR THIS TABLE button — staff order button
+// Find and replace with clearer label + sub-description
+const oldStaffBtn = `<button onclick="openNTO(window._currentTable||0)" style="background:linear-gradient(135deg,#D4A017,#E67E22);color:white;border:none;padding:11px 20px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;cursor:pointer;flex:1;">+ ADD ITEMS FOR THIS TABLE</button>`;
 
-  console.log('app at:', appDiv);
-  console.log('main-wrap at:', mainWrapDiv);
-  console.log('main at:', mainDiv);
+const newStaffBtn = `<div style="border-top:1px solid #E5E7EB;padding-top:14px;margin-top:4px;">
+  <div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:#9CA3AF;margin-bottom:8px;font-weight:600;">Staff Order — Customer not using the app</div>
+  <button onclick="openNTO(window._currentTable||0)" style="width:100%;background:linear-gradient(135deg,#1A0800,#2A1200);color:#D4A017;border:2px solid #D4A017;padding:13px 20px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;cursor:pointer;">👨‍🍳 STAFF: PLACE NEW ORDER FOR TABLE</button>
+</div>`;
 
-  // Check if already properly nested
-  if (mainWrapDiv !== -1 && mainDiv !== -1) {
-    // The main-wrap needs to close after the last page div
-    // Find the app closing — it should be the last </div> before toast
-    const toastIdx = fixed.indexOf('<div class="toast"');
-    if (toastIdx !== -1) {
-      // Look at what's just before toast
-      const beforeToast = fixed.substring(toastIdx - 200, toastIdx);
-      console.log('Before toast:', beforeToast);
+if (fixed.includes(oldStaffBtn)) {
+  fixed = fixed.replace(oldStaffBtn, newStaffBtn);
+  console.log('✅ Fix 2: Staff order button redesigned with clear label');
+} else {
+  console.log('⚠️  Fix 2: staff btn pattern not found — trying partial');
+  fixed = fixed.replace(
+    '+ ADD ITEMS FOR THIS TABLE',
+    '👨‍🍳 STAFF: PLACE NEW ORDER FOR TABLE'
+  );
+  console.log('✅ Fix 2: Staff button text updated via partial replace');
+}
 
-      // Count if we need an extra </div>
-      // main-wrap needs to be closed
-      if (!fixed.substring(mainWrapDiv, toastIdx).includes('</div>\n</div>\n</div>')) {
-        // Add the closing div before toast
-        fixed = fixed.substring(0, toastIdx) +
-          '</div><!-- end main -->\n</div><!-- end main-wrap -->\n' +
-          fixed.substring(toastIdx);
-        console.log('✅ Fix 1: main-wrap closed before toast');
-      } else {
-        console.log('✅ Fix 1: main-wrap already properly closed');
-      }
-    }
+// Also find the existing ADD TO EXISTING ORDER button style
+// and make it clearly secondary/outlined
+const oldExistingBtn = `style="background:rgba(212,160,23,0.08);border:2px dashed rgba(212,160,23,0.4);color:#D4A017;padding:12px;border-radius:6px;font-family:Bebas Neue,sans-serif;font-size:0.9rem;letter-spacing:2px;cursor:pointer;width:100%;margin-top:10px;"`;
+
+if (fixed.includes(oldExistingBtn)) {
+  fixed = fixed.replace(
+    oldExistingBtn,
+    `style="background:white;border:2px solid #D4A017;color:#D4A017;padding:12px;border-radius:6px;font-family:Bebas Neue,sans-serif;font-size:0.9rem;letter-spacing:2px;cursor:pointer;width:100%;margin-top:10px;"`
+  );
+  console.log('✅ Fix 3: ADD TO EXISTING ORDER styled as outlined secondary');
+} else {
+  console.log('⚠️  Fix 3: existing button style not found — checking JS render');
+  // Find in JS context
+  const addMoreIdx = fixed.indexOf('ADD TO EXISTING ORDER');
+  if (addMoreIdx !== -1) {
+    console.log('Found ADD TO EXISTING ORDER at:', addMoreIdx);
+    console.log('Context:', fixed.substring(addMoreIdx - 200, addMoreIdx + 100));
   }
-} else {
-  console.log('⚠️  main-wrap not found — skipping close fix');
 }
-
-// ============================================
-// FIX 2 — ENSURE TOPBAR IS VISIBLE
-// The topbar was getting hidden under alerts
-// Move it below any fixed position alerts
-// ============================================
-
-// Add top padding to main content to account for alert banners
-const oldMainPadding = `.main{padding:20px 24px;min-height:100vh;}`;
-const newMainPadding = `.main{padding:20px 24px;min-height:100vh;padding-top:20px;}
-.has-alert .main{padding-top:60px;}`;
-
-if (fixed.includes(oldMainPadding)) {
-  fixed = fixed.replace(oldMainPadding, newMainPadding);
-  console.log('✅ Fix 2: Main padding accounts for alerts');
-} else {
-  console.log('⚠️  Fix 2: main padding pattern not found');
-}
-
-// ============================================
-// FIX 3 — FORCE CONTENT VISIBLE FROM TOP
-// Remove any margin-top that pushes content down
-// Make sure stat cards show immediately
-// ============================================
-
-// The topbar div needs to be the first thing visible
-// Check if there is a large top margin
-const oldTopbar = `.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}`;
-const newTopbar = `.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-top:4px;}`;
-
-if (fixed.includes(oldTopbar)) {
-  fixed = fixed.replace(oldTopbar, newTopbar);
-  console.log('✅ Fix 3: Topbar starts from top');
-} else {
-  console.log('⚠️  Fix 3: topbar CSS not found');
-}
-
-// ============================================
-// FIX 4 — ADD JAVASCRIPT TO TRACK SIDEBAR
-// STATE AND UPDATE main-wrap MARGIN
-// CSS :hover doesn't work on touch screens
-// Need JS to handle tap-to-expand on mobile
-// ============================================
-
-const sidebarJS = `
-// Sidebar expand/collapse with JS for touch support
-(function(){
-  var sb = document.querySelector('.sb');
-  var mw = document.querySelector('.main-wrap');
-  if(!sb || !mw) return;
-  var expanded = false;
-
-  // Desktop: hover handles via CSS
-  // Mobile: tap the sidebar to toggle
-  sb.addEventListener('click', function(e) {
-    // Only toggle if clicking sidebar itself not a nav item
-    var isMobile = window.innerWidth <= 768;
-    if(!isMobile) return; // CSS hover handles desktop
-
-    // If clicking a nav item let it navigate
-    if(e.target.closest('.ni')) return;
-
-    expanded = !expanded;
-    if(expanded) {
-      sb.style.width = '220px';
-      mw.style.marginLeft = '220px';
-    } else {
-      sb.style.width = '60px';
-      mw.style.marginLeft = '60px';
-    }
-  });
-
-  // Close sidebar when nav item clicked on mobile
-  sb.querySelectorAll('.ni').forEach(function(ni) {
-    ni.addEventListener('click', function() {
-      var isMobile = window.innerWidth <= 768;
-      if(!isMobile) return;
-      if(expanded) {
-        expanded = false;
-        sb.style.width = '60px';
-        mw.style.marginLeft = '60px';
-      }
-    });
-  });
-})();
-`;
-
-// Inject before closing body tag
-const oldBodyClose = '</body>';
-fixed = fixed.replace(
-  oldBodyClose,
-  `<script>${sidebarJS}</script>\n</body>`
-);
-console.log('✅ Fix 4: Sidebar JS touch support added');
 
 // JS Validation
 const scripts = [];
@@ -179,4 +98,4 @@ if (!ok) {
 }
 console.log('✅ JS validation passed');
 fs.writeFileSync('admin.html', fixed, 'utf8');
-console.log('✅ admin.html saved — layout fully fixed');
+console.log('✅ admin.html saved — table action buttons clarified');
