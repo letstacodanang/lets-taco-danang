@@ -3,40 +3,48 @@ const fs = require('fs');
 const html = fs.readFileSync('index.html', 'utf8');
 
 if (html.includes('Lam Tuyen')) {
-  console.log('STOP — Wrong file. Contains Lam Tuyen.');
+  console.log('STOP — Wrong file detected.');
   process.exit(1);
 }
-console.log('✅ File identity confirmed — Lets Taco Da Nang');
+console.log('✅ File confirmed — Lets Taco Da Nang');
 
-// Fix duplicate photo on Grilled Chicken card
-// Currently using the same photo as Grilled Pork (419311.jpg)
-// Replace SECOND occurrence of 419311 with the chicken photo (418145)
+let fixed = html;
 
-const duplicatePhoto = 'IMG_1779730373155_1779730419311.jpg';
-const chickenPhoto = 'IMG_1779730373148_1779730418145.jpg';
-
-const base = 'https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/';
-
-const oldSrc = base + duplicatePhoto;
-const newSrc = base + chickenPhoto;
-
-// Count how many times the duplicate appears
-const count = (html.match(new RegExp(oldSrc.replace(/\./g,'\\.'),'g'))||[]).length;
-console.log('Found duplicate photo used', count, 'times');
-
-if (count < 2) {
-  console.log('⚠️  Expected 2 uses of duplicate photo, found', count);
-  console.log('Check index.html manually.');
-  process.exit(0);
+// FIX 1 — Remove blue filter from menu hero image
+// The map iframe has a filter applied but it is bleeding visually
+// The menu-photo-hero image should never have any filter on it
+// We ensure the menu hero img has explicit filter:none
+const oldMenuHero = '<div class="menu-photo-hero">';
+const newMenuHero = '<div class="menu-photo-hero" style="filter:none!important;">';
+if (fixed.includes(oldMenuHero)) {
+  fixed = fixed.replace(oldMenuHero, newMenuHero);
+  console.log('✅ Fix 1: menu hero image filter removed');
+} else {
+  console.log('⚠️  Fix 1: menu-photo-hero pattern not found — check manually');
 }
 
-// Replace only the SECOND occurrence (Grilled Chicken card)
-let fixed = html;
-const firstPos = fixed.indexOf(oldSrc);
-const secondPos = fixed.indexOf(oldSrc, firstPos + 1);
-fixed = fixed.substring(0, secondPos) + newSrc + fixed.substring(secondPos + oldSrc.length);
+// FIX 2 — Move floating taco button higher on mobile
+// Currently bottom:30px — move to bottom:90px so it clears phone nav bar
+const oldCartBtn = 'id="cart-btn" onclick="toggleCart()" style="position:fixed;bottom:30px;right:30px;';
+const newCartBtn = 'id="cart-btn" onclick="toggleCart()" style="position:fixed;bottom:90px;right:20px;';
+if (fixed.includes(oldCartBtn)) {
+  fixed = fixed.replace(oldCartBtn, newCartBtn);
+  console.log('✅ Fix 2: floating taco button moved higher');
+} else {
+  console.log('⚠️  Fix 2: cart-btn pattern not found — check manually');
+}
 
-console.log('✅ Replaced second occurrence with chicken photo');
+// FIX 3 — Grilled Steak card has wrong photo (people photo)
+// Current: IMG_1779730373040_1779730398556.jpg (people/exterior shot)
+// Replace with the birria on grill photo which shows actual meat/food
+const oldSteak = 'https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779730373040_1779730398556.jpg" alt="Grilled steak tacos"';
+const newSteak = 'https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779730373184_1779730422455.jpg" alt="Grilled steak tacos"';
+if (fixed.includes(oldSteak)) {
+  fixed = fixed.replace(oldSteak, newSteak);
+  console.log('✅ Fix 3: Grilled Steak photo updated to food photo');
+} else {
+  console.log('⚠️  Fix 3: Grilled Steak pattern not found — check manually');
+}
 
 // JS Validation
 const scripts = [];
@@ -49,18 +57,15 @@ while (true) {
   scripts.push(fixed.substring(s + 8, e));
   pos = e + 9;
 }
-
 let ok = true;
 scripts.forEach(function(sc, i) {
   try { new Function(sc); }
-  catch(e) { console.log('JS Error block', i, ':', e.message); ok = false; }
+  catch(e) { console.log('❌ JS Error block', i, ':', e.message); ok = false; }
 });
-
 if (!ok) {
   console.log('❌ JS validation failed — file NOT saved.');
   process.exit(1);
 }
-
 console.log('✅ JS validation passed');
 fs.writeFileSync('index.html', fixed, 'utf8');
-console.log('✅ index.html saved — Grilled Chicken now has correct photo');
+console.log('✅ index.html saved — 3 fixes applied');
