@@ -214,6 +214,7 @@ body{background:#0F0500;color:#FAF0E6;font-family:'Jost',sans-serif;min-height:1
 </div>
 <div class="app" id="app">
 <div id="ready-alert" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9000;background:linear-gradient(135deg,#27AE60,#2ECC71);color:white;padding:14px 24px;text-align:center;cursor:pointer;animation:alertPulse 1s infinite;box-shadow:0 4px 20px rgba(39,174,96,0.6);" onclick="handleReadyAlert()"><span style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;" id="ready-alert-text">ORDER READY FOR PICKUP</span><span style="margin-left:20px;font-size:0.8rem;letter-spacing:2px;opacity:0.9;">TAP TO VIEW</span></div>
+<div id="pay-alert" style="display:none;position:fixed;top:0;left:0;right:0;z-index:8999;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;padding:14px 24px;text-align:center;cursor:pointer;box-shadow:0 4px 20px rgba(212,160,23,0.5);" onclick="handlePayAlert()"><span style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;" id="pay-alert-text">TABLE ? — READY TO PAY</span><span style="margin-left:20px;font-size:0.8rem;letter-spacing:2px;opacity:0.8;">TAP TO VIEW</span></div>
   <div class="sb">
     <div class="sb-top"><div class="sb-n">LETS TACO</div><div class="sb-s">Admin Dashboard</div></div>
     <div class="sb-clk" id="clk">00:00:00</div>
@@ -497,6 +498,7 @@ function initApp(){
   loadO();loadC();renderMenu();
   setInterval(loadO,30000);
   setInterval(checkReadyAlert,8000);
+  setInterval(checkPayAlert,10000);
   setInterval(checkEOD,60000); // Check every minute for 2am report
 }
 var eodDone=false;
@@ -565,6 +567,35 @@ function handleReadyAlert(){
   document.getElementById('ready-alert').style.display='none';
   showPg('dinein');
 }
+var lastPayIds=[];
+function checkPayAlert(){
+  var payOrds=allO.filter(function(o){return o.payment_status==='requested'&&o.order_type==='dinein';});
+  var ids=payOrds.map(function(o){return o.id;});
+  var newPay=ids.filter(function(id){return lastPayIds.indexOf(id)===-1;});
+  if(newPay.length>0){
+    var o=payOrds.find(function(x){return x.id===newPay[0];});
+    var msg=o?'TABLE '+(o.table_number||'?')+' — READY TO PAY':'TABLE READY TO PAY';
+    document.getElementById('pay-alert-text').textContent=msg;
+    document.getElementById('pay-alert').style.display='block';
+    try{
+      var ac=new(window.AudioContext||window.webkitAudioContext)();
+      [0,0.2,0.4].forEach(function(t,i){
+        var os=ac.createOscillator();var gs=ac.createGain();
+        os.connect(gs);gs.connect(ac.destination);
+        os.frequency.value=600+i*150;
+        gs.gain.setValueAtTime(0.4,ac.currentTime+t);
+        gs.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+t+0.15);
+        os.start(ac.currentTime+t);os.stop(ac.currentTime+t+0.15);
+      });
+    }catch(e){}
+  }
+  if(ids.length===0)document.getElementById('pay-alert').style.display='none';
+  lastPayIds=ids;
+}
+function handlePayAlert(){
+  document.getElementById('pay-alert').style.display='none';
+  showPg('dinein');
+}
 
 function loadO(){
   return sbF('/rest/v1/orders?select=*&order=created_at.desc&limit=100').then(function(data){
@@ -626,6 +657,7 @@ function renderOL(orders,container){
   container.querySelectorAll('[data-drv]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();openDM(this.getAttribute('data-drv'));});});
   container.querySelectorAll('[data-nts]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();openNM(this.getAttribute('data-nts'));});});
   container.querySelectorAll('[data-cnc]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();if(!confirm('Cancel this order?'))return;sbF('/rest/v1/orders?id=eq.'+this.getAttribute('data-cnc'),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'cancelled'})}).then(function(){showT('Cancelled','');loadO();});});});
+  container.querySelectorAll('[data-paid]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();var id=this.getAttribute('data-paid');sbF('/rest/v1/orders?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({payment_status:'paid'})}).then(function(){showT('Paid','Payment recorded');loadO();});});});
   container.querySelectorAll('[data-msg]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();openChat(this.getAttribute('data-msg'));});});
 }
 function renderGroup(label,orders){
@@ -661,10 +693,11 @@ function renderCard(o){
   if(NL[o.status])acts+='<button class="abtn abtn-gold" data-adv="'+o.id+'" data-ns="'+NS[o.status]+'">'+NL[o.status]+'</button>';
   if(o.status==='ready'&&o.order_type!=='dinein')acts+='<button class="abtn abtn-gold" data-drv="'+o.id+'">Assign Driver</button>';
   if(cm!=='dinein')acts+='<button class="abtn" style="background:'+cmc+';color:white;" data-msg="'+o.id+'">'+cml+'</button>';
+    if(o.order_type==='dinein'&&o.payment_status==='requested')acts+='<button class="abtn" style="background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;font-weight:700;" data-paid="'+o.id+'">💳 Mark Paid</button>';
   acts+='<button class="abtn abtn-muted" data-nts="'+o.id+'">Notes</button>';
   if(o.status!=='delivered'&&o.status!=='cancelled')acts+='<button class="abtn abtn-red" data-cnc="'+o.id+'">Cancel</button>';
   var typeTag='';
-  if(o.order_type==='dinein')typeTag='<span style="background:rgba(212,160,23,0.15);color:#D4A017;border:1px solid rgba(212,160,23,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TABLE '+(o.table_number||'?')+'</span>';
+  if(o.order_type==='dinein'){typeTag='<span style="background:rgba(212,160,23,0.15);color:#D4A017;border:1px solid rgba(212,160,23,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TABLE '+(o.table_number||'?')+'</span>';if(o.payment_status==='requested')typeTag+='<span style="background:rgba(212,160,23,0.3);color:#0F0500;padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;font-weight:700;margin-left:4px;">💳 PAY</span>';}
   else if(o.order_type==='delivery')typeTag='<span style="background:rgba(142,68,173,0.15);color:#BB8FCE;border:1px solid rgba(142,68,173,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">DELIVERY</span>';
   else typeTag='<span style="background:rgba(41,128,185,0.15);color:#5DADE2;border:1px solid rgba(41,128,185,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TAKEOUT</span>';
   var isNew=o.status==='placed';
