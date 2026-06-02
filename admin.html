@@ -1085,8 +1085,8 @@ function renderMenu(){
           <div class="tdetail-body">
             <div id="tdlist"></div>
             <div class="tdetail-actions">
-              <div style="border-top:1px solid #E5E7EB;padding-top:14px;margin-top:4px;">
-  <div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:#9CA3AF;margin-bottom:8px;font-weight:600;">Staff Order — Customer not using the app</div>
+              <div style="border-top:2px solid #F3F4F6;padding-top:14px;margin-top:14px;">
+  <div style="font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;color:#9CA3AF;margin-bottom:8px;font-weight:600;">📵 Customer Not Using Phone — Staff Places Order</div>
   <button onclick="openNTO(window._currentTable||0)" style="width:100%;background:linear-gradient(135deg,#1A0800,#2A1200);color:#D4A017;border:2px solid #D4A017;padding:13px 20px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;cursor:pointer;">👨‍🍳 STAFF: PLACE NEW ORDER FOR TABLE</button>
 </div>
             </div>
@@ -1327,7 +1327,7 @@ function viewT(t){
       h+='<div style="font-size:0.82rem;color:#B8A99A;margin-bottom:5px">'+ih+'</div>';
       h+='<div style="font-family:Bebas Neue,sans-serif;color:#D4A017">'+fV(o.total||0)+'</div></div>';
     });
-    h+='<button onclick="openNTO('+t+')" style="width:100%;background:rgba(212,160,23,0.06);border:1px dashed rgba(212,160,23,0.25);color:#D4A017;padding:11px;border-radius:5px;font-family:Bebas Neue,sans-serif;font-size:0.9rem;letter-spacing:2px;cursor:pointer;margin-top:4px">+ ADD TO EXISTING ORDER</button>';
+    h+='<button onclick="openNTO('+t+')" style="width:100%;background:white;border:2px solid #D4A017;color:#D4A017;padding:11px;border-radius:5px;font-family:Bebas Neue,sans-serif;font-size:0.9rem;letter-spacing:2px;cursor:pointer;margin-top:4px;width:100%;"><span style=\"margin-right:6px;\">📋</span> ADD TO EXISTING ORDER — Same Bill</button>';
   }
   document.getElementById('tdlist').innerHTML=h;
   document.getElementById('tdetail').style.display='block';
