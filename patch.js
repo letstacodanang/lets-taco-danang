@@ -6,48 +6,44 @@ console.log('✅ File confirmed — Lets Taco Da Nang');
 
 let fixed = html;
 
-// Fix mobile top padding — increase to clear the topbar fully
-// Also add specific padding to the dinein page header
-const oldMainPadding = `  .main{
-    padding:8px;
-    padding-top:72px;
-    padding-bottom:80px;
-    min-height:100vh;
-  }`;
-
-const newMainPadding = `  .main{
-    padding:8px;
-    padding-top:80px;
-    padding-bottom:80px;
-    min-height:100vh;
-  }`;
-
-if (fixed.includes(oldMainPadding)) {
-  fixed = fixed.replace(oldMainPadding, newMainPadding);
-  console.log('✅ Fix 1: Top padding increased to 80px');
-} else {
-  // Try simple replace
-  fixed = fixed.replace('padding-top:72px;', 'padding-top:80px;');
-  console.log('✅ Fix 1: padding-top updated via simple replace');
-}
-
-// Also add explicit margin to the dine-in page header
-// so the TABLE STATUS title and NEW TABLE ORDER button
-// are never under the topbar
-const oldDineInHeader = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#D4A017;letter-spacing:2px">DINE IN - TABLE STATUS</div>
-        <button onclick="openNTO(0)"`;
-
-const newDineInHeader = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;padding-top:4px;">
+// Remove the NEW TABLE ORDER button entirely
+// Staff taps the table directly instead
+const oldDineInHeader = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;padding-top:4px;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#1A1A2E;letter-spacing:2px;">🍽️ TABLE STATUS</div>
         <button onclick="openNTO(0)"`;
 
 if (fixed.includes(oldDineInHeader)) {
-  fixed = fixed.replace(oldDineInHeader, newDineInHeader);
-  console.log('✅ Fix 2: Dine-in header styling improved');
+  // Find the full button tag and remove it
+  const btnStart = fixed.indexOf(oldDineInHeader);
+  const btnEnd = fixed.indexOf('</div>', fixed.indexOf('</button>', btnStart)) + 6;
+  const fullBlock = fixed.substring(btnStart, btnEnd);
+  console.log('Found block to clean:', fullBlock.substring(0, 100));
+
+  const newDineInHeader = `<div style="margin-bottom:16px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#1A1A2E;letter-spacing:2px;">🍽️ TABLE STATUS</div>
+        <div style="font-size:0.78rem;color:#6B7280;margin-top:4px;">Tap any table to view orders or place a new order for that table</div>
+      </div>`;
+
+  fixed = fixed.substring(0, btnStart) + newDineInHeader + fixed.substring(btnEnd);
+  console.log('✅ Fix 1: Redundant NEW TABLE ORDER button removed');
 } else {
-  console.log('⚠️  Fix 2: dine-in header pattern not found');
+  console.log('⚠️  Fix 1: header pattern not found — trying alternative');
+  // Try finding just the button
+  const btnIdx = fixed.indexOf('onclick="openNTO(0)"');
+  if (btnIdx !== -1) {
+    const btnStart = fixed.lastIndexOf('<button', btnIdx);
+    const btnEnd = fixed.indexOf('</button>', btnIdx) + 9;
+    fixed = fixed.substring(0, btnStart) + fixed.substring(btnEnd);
+    console.log('✅ Fix 1: Button removed via alternative pattern');
+  } else {
+    console.log('⚠️  Fix 1: openNTO(0) button not found');
+  }
 }
+
+// Also fix the top padding back to a reasonable amount
+// 80px was too much — bring it to 68px
+fixed = fixed.replace('padding-top:80px;', 'padding-top:68px;');
+console.log('✅ Fix 2: Top padding corrected to 68px');
 
 // JS Validation
 const scripts = [];
@@ -71,4 +67,4 @@ if (!ok) {
 }
 console.log('✅ JS validation passed');
 fs.writeFileSync('admin.html', fixed, 'utf8');
-console.log('✅ admin.html saved — tables topbar overlap fixed');
+console.log('✅ admin.html saved — redundant button removed, layout clean');
