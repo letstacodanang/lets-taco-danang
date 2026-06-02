@@ -671,6 +671,30 @@ function renderOL(orders,container){
     });
   });
   container.querySelectorAll('[data-adv]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();advO(this.getAttribute('data-adv'),this.getAttribute('data-ns'));});});
+  // MARK PAID handler for takeout/delivery orders
+  container.querySelectorAll('[data-payid]').forEach(function(b){
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var id=this.getAttribute('data-payid');
+      var btn=this;
+      btn.textContent='SAVING...';
+      btn.disabled=true;
+      btn.style.opacity='0.6';
+      sbC('/rest/v1/orders?id=eq.'+id,{
+        method:'PATCH',
+        headers:{'Prefer':'return=minimal'},
+        body:JSON.stringify({payment_status:'paid'})
+      }).then(function(){
+        showToast('✅ Payment Confirmed','Kitchen has been notified — cooking starts now');
+        setTimeout(function(){loadOrders();loadHome();},800);
+      }).catch(function(){
+        btn.textContent='💳 MARK PAID';
+        btn.disabled=false;
+        btn.style.opacity='1';
+        showToast('Error','Could not update. Try again.');
+      });
+    });
+  });
   container.querySelectorAll('[data-drv]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();openDM(this.getAttribute('data-drv'));});});
   container.querySelectorAll('[data-nts]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();openNM(this.getAttribute('data-nts'));});});
   container.querySelectorAll('[data-cnc]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();if(!confirm('Cancel this order?'))return;sbF('/rest/v1/orders?id=eq.'+this.getAttribute('data-cnc'),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'cancelled'})}).then(function(){showT('Cancelled','');loadO();});});});
