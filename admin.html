@@ -351,7 +351,7 @@ body{background:#F4F5F7;color:#1A1A2E;font-family:'Jost',sans-serif;min-height:1
   /* ===== MAIN CONTENT ===== */
   .main{
     padding:8px;
-    padding-top:64px;
+    padding-top:72px;
     padding-bottom:80px;
     min-height:100vh;
   }
@@ -438,6 +438,38 @@ body{background:#F4F5F7;color:#1A1A2E;font-family:'Jost',sans-serif;min-height:1
   .topbar{display:none;}
 }
 
+
+/* ===== MOBILE FILTER DROPDOWN ===== */
+.mobile-filter-select{
+  display:none;
+  width:100%;
+  background:white;
+  border:1.5px solid #E5E7EB;
+  color:#1A1A2E;
+  padding:11px 16px;
+  border-radius:8px;
+  font-family:'Jost',sans-serif;
+  font-size:0.9rem;
+  font-weight:600;
+  outline:none;
+  cursor:pointer;
+  margin-bottom:14px;
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D4A017' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  padding-right:36px;
+  border-color:#D4A017;
+  color:#D4A017;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+@media(max-width:768px){
+  .mobile-filter-select{display:block;}
+  .of{display:none!important;}
+}
 /* ===== TOUCH IMPROVEMENTS ===== */
 .abtn{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .ni{-webkit-tap-highlight-color:transparent;user-select:none;}
@@ -553,6 +585,19 @@ input:focus{outline:none;}
       <div class="ol" id="hol"><div class="empty">Loading orders...</div></div>
     </div>
     <div class="pg" id="pg-orders">
+      <!-- Mobile dropdown filter -->
+      <select class="mobile-filter-select" id="mobile-filter-select" onchange="mobileFilterChange(this.value)">
+        <option value="all">📋 All Orders</option>
+        <option value="placed">🆕 New — Needs Action</option>
+        <option value="accepted">✅ Accepted</option>
+        <option value="prepping">🔪 Prepping</option>
+        <option value="cooking">🔥 Cooking</option>
+        <option value="ready">🟢 Ready for Pickup</option>
+        <option value="dispatched">🛵 Out for Delivery</option>
+        <option value="delivered">✅ Delivered</option>
+        <option value="history">📦 History</option>
+      </select>
+      <!-- Desktop tab pills -->
       <div class="of">
         <button class="fc active" data-f="all">All</button>
         <button class="fc" data-f="placed">New</button>
@@ -1417,6 +1462,18 @@ window.addEventListener('load',function(){
 window.addEventListener('resize',function(){
   if(isMobile()){updateMobileNav();}
 });
+</script>
+<script>
+function mobileFilterChange(val){
+  // Update the desktop filter tabs to match
+  document.querySelectorAll('.fc').forEach(function(b){
+    b.classList.remove('active');
+    if(b.getAttribute('data-f')===val)b.classList.add('active');
+  });
+  // If all tabs have the filter function, call it
+  var btn=document.querySelector('.fc[data-f="'+val+'"]');
+  if(btn)btn.click();
+}
 </script>
 </body>
 <script>
