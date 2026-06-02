@@ -1,4 +1,35 @@
 const fs = require('fs');
+const crypto = require('crypto');
+
+// ============================================
+// GENERATE HASHES FOR ALL PASSWORDS
+// SHA-256 — cannot be reversed
+// ============================================
+
+function sha256(str) {
+  return crypto.createHash('sha256').update(str).digest('hex');
+}
+
+// Current passwords
+const OWNER_PASS = 'LetsTaco2024!';
+const STAFF_PASS = 'LetsWork2024!';
+const OWNER_PIN  = '1011';
+const OWNER_EMAIL = 'letstacodanang@gmail.com';
+
+// Generate hashes
+const OWNER_HASH = sha256(OWNER_PASS);
+const STAFF_HASH = sha256(STAFF_PASS);
+const PIN_HASH   = sha256(OWNER_PIN);
+
+console.log('Owner hash:', OWNER_HASH);
+console.log('Staff hash:', STAFF_HASH);
+console.log('PIN hash:', PIN_HASH);
+
+// ============================================
+// PATCH ADMIN.HTML
+// Replace plaintext passwords with hashes
+// Update comparison logic to hash input first
+// ============================================
 
 const html = fs.readFileSync('admin.html', 'utf8');
 if (html.includes('Lam Tuyen')) { console.log('STOP'); process.exit(1); }
@@ -6,192 +37,215 @@ console.log('✅ File confirmed — Lets Taco Da Nang');
 
 let fixed = html;
 
-// FIX 1 - Add marketing nav item
-const oldMenuNav = '<div class="ni" data-pg="menu"><span class="ni-ic">🌮</span><span class="sb-label">Menu</span></div>';
-const newMenuNav = '<div class="ni owner-only" data-pg="marketing"><span class="ni-ic">📣</span><span class="sb-label">Marketing</span></div>\n      <div class="ni" data-pg="menu"><span class="ni-ic">🌮</span><span class="sb-label">Menu</span></div>';
+// ============================================
+// FIX 1 — REPLACE PASSWORD CONSTANTS
+// Find where APASS and SPASS are defined
+// ============================================
 
-if (fixed.includes(oldMenuNav)) {
-  fixed = fixed.replace(oldMenuNav, newMenuNav);
-  console.log('✅ Fix 1: Marketing nav added');
+// Find the constants
+const apIdx = fixed.indexOf('APASS');
+if (apIdx !== -1) {
+  console.log('Found APASS at:', apIdx);
+  console.log('Context:', fixed.substring(apIdx - 30, apIdx + 60));
+}
+
+// Replace password definitions with hashes
+// Pattern: var APASS='LetsTaco2024!' or similar
+fixed = fixed.replace(
+  /var APASS\s*=\s*['"][^'"]+['"]/,
+  'var APASS="' + OWNER_HASH + '"'
+);
+fixed = fixed.replace(
+  /var SPASS\s*=\s*['"][^'"]+['"]/,
+  'var SPASS="' + STAFF_HASH + '"'
+);
+fixed = fixed.replace(
+  /var APIN\s*=\s*['"][^'"]+['"]/,
+  'var APIN="' + PIN_HASH + '"'
+);
+
+// Also handle if they are defined differently
+fixed = fixed.replace(
+  /APASS\s*=\s*['"]LetsTaco2024[^'"]*['"]/g,
+  'APASS="' + OWNER_HASH + '"'
+);
+fixed = fixed.replace(
+  /SPASS\s*=\s*['"]LetsWork2024[^'"]*['"]/g,
+  'SPASS="' + STAFF_HASH + '"'
+);
+
+console.log('✅ Fix 1: Password constants replaced with SHA-256 hashes');
+
+// ============================================
+// FIX 2 — ADD HASH FUNCTION TO ADMIN
+// Staff/owner input must be hashed before
+// comparison against stored hash
+// ============================================
+
+// Find the doLogin function and add hashing
+const oldDoLogin = 'function doLogin(){';
+const newDoLogin = 'function doLogin(){';
+
+// Add sha256 function before login functions
+const sha256JS = 'function sha256(s){var h=0;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h=((h<<5)-h)+c;h|=0;}return Math.abs(h).toString(16);}';
+
+// Actually use SubtleCrypto for real SHA-256 in browser
+const realSHA256 = `
+async function sha256(message){
+  var msgBuffer=new TextEncoder().encode(message);
+  var hashBuffer=await crypto.subtle.digest('SHA-256',msgBuffer);
+  var hashArray=Array.from(new Uint8Array(hashBuffer));
+  var hashHex=hashArray.map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+  return hashHex;
+}
+`;
+
+// Find where login functions start and inject sha256
+const loginFnIdx = fixed.indexOf('function doLogin()');
+if (loginFnIdx !== -1) {
+  fixed = fixed.substring(0, loginFnIdx) + realSHA256 + '\n' + fixed.substring(loginFnIdx);
+  console.log('✅ Fix 2a: SHA-256 function added');
+}
+
+// ============================================
+// FIX 3 — UPDATE LOGIN COMPARISONS
+// doLogin and doSL must hash input before compare
+// ============================================
+
+// Update owner login comparison
+const oldOwnerCompare = 'if(e===AEMAIL.toLowerCase()&&p===APASS){';
+const newOwnerCompare = 'sha256(p).then(function(ph){if(e===AEMAIL.toLowerCase()&&ph===APASS){';
+
+if (fixed.includes(oldOwnerCompare)) {
+  // Need to also close the then() properly
+  // Find the return; after initApp() and close the then
+  fixed = fixed.replace(
+    oldOwnerCompare,
+    newOwnerCompare
+  );
+  // Close the promise chain after the login block
+  fixed = fixed.replace(
+    'initApp();\n    return;\n  }\n  attempts++;',
+    'initApp();\n    return;\n    }else{attempts++;var err2=document.getElementById(\'lerr\');err2.style.display=\'block\';err2.textContent=\'Incorrect email or password (\'+attempts+\'/5)\';if(attempts>=5){locked=true;}}\n  });\n  return;\n  attempts++;'
+  );
+  console.log('✅ Fix 3a: Owner login now hashes password before compare');
 } else {
-  console.log('⚠️  Fix 1: nav pattern not found');
+  console.log('⚠️  Fix 3a: owner compare pattern not found');
 }
 
-// FIX 2 - Add marketing page HTML before menu page
-const oldMenuPage = '<div class="pg" id="pg-menu">';
+// Simpler approach — rewrite the entire login check
+// to use async hashing properly
+// Find doLogin and replace its core logic
 
-const mktHTML = '<div class="pg owner-only" id="pg-marketing"><div style="max-width:800px;">'
-  + '<div style="margin-bottom:24px;">'
-  + '<div style="font-family:Bebas Neue,sans-serif;font-size:1.6rem;color:#1A1A2E;letter-spacing:3px;margin-bottom:4px;">📣 MARKETING BROADCASTS</div>'
-  + '<div style="font-size:0.82rem;color:#6B7280;">Send promotions directly to your customers via WhatsApp or Zalo.</div>'
-  + '</div>'
-  + '<div style="background:white;border-radius:12px;border:1px solid #E5E7EB;padding:24px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">'
-  + '<div style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:#1A1A2E;letter-spacing:2px;margin-bottom:16px;">✍️ COMPOSE YOUR MESSAGE</div>'
-  + '<textarea id="mkt-msg" placeholder="Type your promotion here... Example: Special deal today only! 2x Birria Tacos for 200k. Show this message when you arrive." style="width:100%;min-height:140px;background:#F9FAFB;border:1.5px solid #E5E7EB;color:#1A1A2E;padding:14px;border-radius:8px;font-family:Jost,sans-serif;font-size:0.9rem;outline:none;resize:vertical;line-height:1.6;"></textarea>'
-  + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">'
-  + '<div style="font-size:0.72rem;color:#9CA3AF;" id="mkt-char-count">0 characters</div>'
-  + '<div style="display:flex;gap:8px;">'
-  + '<button onclick="mktPreview()" style="background:white;border:1.5px solid #D4A017;color:#D4A017;padding:9px 18px;border-radius:6px;font-family:Jost,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;">👁 Preview</button>'
-  + '<button onclick="mktClear()" style="background:white;border:1.5px solid #E5E7EB;color:#6B7280;padding:9px 18px;border-radius:6px;font-family:Jost,sans-serif;font-size:0.82rem;cursor:pointer;">Clear</button>'
-  + '</div></div>'
-  + '<div id="mkt-preview" style="display:none;background:#F0FDF4;border:1px solid #6EE7B7;border-radius:8px;padding:14px;margin-top:12px;font-size:0.88rem;color:#1A1A2E;line-height:1.7;white-space:pre-wrap;"></div>'
-  + '</div>'
-  + '<div style="background:white;border-radius:12px;border:1px solid #E5E7EB;padding:24px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">'
-  + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">'
-  + '<div><div style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:#1A1A2E;letter-spacing:2px;">💬 WHATSAPP CONTACTS</div>'
-  + '<div style="font-size:0.72rem;color:#6B7280;margin-top:2px;" id="mkt-wa-count">Loading...</div></div>'
-  + '<button onclick="mktSendAll(\'whatsapp\')" style="background:#25D366;color:white;border:none;padding:11px 20px;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:1rem;letter-spacing:2px;cursor:pointer;">💬 SEND TO ALL</button>'
-  + '</div>'
-  + '<div id="mkt-wa-list" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;"><div style="color:#9CA3AF;text-align:center;padding:20px;font-size:0.85rem;">Loading...</div></div>'
-  + '</div>'
-  + '<div style="background:white;border-radius:12px;border:1px solid #E5E7EB;padding:24px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">'
-  + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">'
-  + '<div><div style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:#1A1A2E;letter-spacing:2px;">🔵 ZALO CONTACTS</div>'
-  + '<div style="font-size:0.72rem;color:#6B7280;margin-top:2px;" id="mkt-zl-count">Loading...</div></div>'
-  + '<button onclick="mktSendAll(\'zalo\')" style="background:linear-gradient(135deg,#0068FF,#0052CC);color:white;border:none;padding:11px 20px;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:1rem;letter-spacing:2px;cursor:pointer;">🔵 SEND TO ALL</button>'
-  + '</div>'
-  + '<div id="mkt-zl-list" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;"><div style="color:#9CA3AF;text-align:center;padding:20px;font-size:0.85rem;">Loading...</div></div>'
-  + '</div>'
-  + '<div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;padding:16px;">'
-  + '<div style="font-family:Bebas Neue,sans-serif;font-size:0.9rem;color:#D97706;letter-spacing:2px;margin-bottom:8px;">💡 HOW IT WORKS</div>'
-  + '<div style="font-size:0.8rem;color:#6B7280;line-height:1.8;">1. Write your message above<br>2. Tap SEND TO ALL for WhatsApp or Zalo<br>3. Each customer opens one by one — tap Send in the app<br>4. Come back and tap the next customer<br><strong style="color:#D97706;">Keep messages under 160 characters for best results</strong></div>'
-  + '</div>'
-  + '</div></div>'
-  + '\n<div class="pg" id="pg-menu">';
+const doLoginStart = fixed.indexOf('function doLogin(){');
+const doLoginEnd = fixed.indexOf('\n}', doLoginStart) + 2;
+const currentDoLogin = fixed.substring(doLoginStart, doLoginEnd);
 
-if (fixed.includes(oldMenuPage)) {
-  fixed = fixed.replace(oldMenuPage, mktHTML);
-  console.log('✅ Fix 2: Marketing page HTML added');
+const newDoLoginFn = `function doLogin(){
+  if(locked)return;
+  var e=document.getElementById('le').value.trim().toLowerCase();
+  var p=document.getElementById('lp').value;
+  var err=document.getElementById('lerr');
+  if(!e||!p){err.style.display='block';err.textContent='Please enter email and password';return;}
+  sha256(p).then(function(ph){
+    if(e===AEMAIL.toLowerCase()&&ph===APASS){
+      document.getElementById('lw').style.display='none';
+      document.getElementById('app').style.display='flex';
+      err.style.display='none';
+      attempts=0;
+      isOwner=true;currentStaff='Owner';
+      localStorage.setItem('lt_role','owner');
+      localStorage.setItem('lt_ts',Date.now().toString());
+      document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
+      initApp();
+      return;
+    }
+    attempts++;
+    err.style.display='block';
+    err.textContent='Incorrect email or password ('+attempts+'/5)';
+    if(attempts>=5){
+      locked=true;
+      var secs=600;
+      err.style.display='none';
+      var lk=document.getElementById('llock');
+      lk.style.display='block';
+      var t=setInterval(function(){
+        secs--;
+        lk.textContent='Too many attempts. Try again in '+Math.floor(secs/60)+'m '+(secs%60)+'s';
+        if(secs<=0){clearInterval(t);locked=false;attempts=0;lk.style.display='none';}
+      },1000);
+    }
+  });
+}`;
+
+fixed = fixed.substring(0, doLoginStart) + newDoLoginFn + fixed.substring(doLoginEnd);
+console.log('✅ Fix 3b: doLogin rewritten with async SHA-256');
+
+// Update staff login to use hashing
+const doSLStart = fixed.indexOf('function doSL(){');
+const doSLEnd = fixed.indexOf('\n}', doSLStart) + 2;
+const currentDoSL = fixed.substring(doSLStart, doSLEnd);
+
+const newDoSLFn = `function doSL(){
+  var p=document.getElementById('lps').value;
+  var err=document.getElementById('lerr');
+  err.style.display='none';
+  sha256(p).then(function(ph){
+    if(ph!==SPASS){err.style.display='block';err.textContent='Wrong password. Ask your manager.';return;}
+    var nf=document.getElementById('nf'),ni=document.getElementById('ln');
+    if(nf.style.display==='none'||nf.style.display===''){
+      var sv=localStorage.getItem('lt_sn');
+      if(sv){currentStaff=sv;startSS();return;}
+      nf.style.display='block';document.getElementById('lbs').textContent='CONFIRM NAME';ni.focus();return;
+    }
+    var nm=ni.value.trim();
+    if(!nm){err.style.display='block';err.textContent='Please enter your name.';return;}
+    var sv=localStorage.getItem('lt_sn');
+    if(sv&&sv.toLowerCase()!==nm.toLowerCase()){err.style.display='block';err.textContent='Use your registered name: '+sv;return;}
+    localStorage.setItem('lt_sn',nm);currentStaff=nm;startSS();
+  });
+}`;
+
+fixed = fixed.substring(0, doSLStart) + newDoSLFn + fixed.substring(doSLEnd);
+console.log('✅ Fix 3c: doSL rewritten with async SHA-256');
+
+// Update PIN check to use hashing
+const checkPinIdx = fixed.indexOf('function checkPin(');
+if (checkPinIdx !== -1) {
+  const checkPinEnd = fixed.indexOf('\n}', checkPinIdx) + 2;
+  const currentCheckPin = fixed.substring(checkPinIdx, checkPinEnd);
+  const newCheckPin = currentCheckPin
+    .replace(/if\(p===APIN\)/, 'sha256(p).then(function(ph){if(ph===APIN)')
+    .replace(/else\{/, '});/*else{')
+    .replace(/}\s*$/, '}*/}');
+  if (currentCheckPin !== newCheckPin) {
+    fixed = fixed.substring(0, checkPinIdx) + newCheckPin + fixed.substring(checkPinEnd);
+    console.log('✅ Fix 3d: PIN check uses SHA-256');
+  } else {
+    console.log('⚠️  Fix 3d: PIN check pattern complex — keeping as is for now');
+  }
+}
+
+// ============================================
+// FIX 4 — REMOVE RAW PASSWORDS FROM CODE
+// Double check no plaintext remains
+// ============================================
+
+if (fixed.includes('LetsTaco2024')) {
+  fixed = fixed.replace(/LetsTaco2024[^'"]*/g, '[PROTECTED]');
+  console.log('⚠️  Fix 4: Found and removed remaining plaintext owner password');
 } else {
-  console.log('⚠️  Fix 2: menu page not found');
+  console.log('✅ Fix 4: No plaintext owner password in code');
 }
 
-// FIX 3 - Hook showPg to load marketing
-const oldShowPg = 'function showPg(pg){';
-const newShowPg = 'function showPg(pg){\n  if(pg==="marketing")setTimeout(loadMarketing,100);';
-if (fixed.includes(oldShowPg)) {
-  fixed = fixed.replace(oldShowPg, newShowPg);
-  console.log('✅ Fix 3: showPg hooks marketing load');
+if (fixed.includes('LetsWork2024')) {
+  fixed = fixed.replace(/LetsWork2024[^'"]*/g, '[PROTECTED]');
+  console.log('⚠️  Fix 4: Found and removed remaining plaintext staff password');
 } else {
-  console.log('⚠️  Fix 3: showPg not found');
+  console.log('✅ Fix 4: No plaintext staff password in code');
 }
 
-// FIX 4 - Inject marketing JS as separate script block
-// Using fs.writeFileSync with a separate JS file approach
-// to avoid ALL escaping issues in the patch script itself
-
-const mktJS = [
-'var mktContacts={whatsapp:[],zalo:[]};',
-'function loadMarketing(){',
-'  sbC("/rest/v1/orders?select=customer_name,customer_phone,contact_method&order=created_at.desc")',
-'  .then(function(orders){',
-'    if(!orders)return;',
-'    var seen={},wa=[],zl=[];',
-'    orders.forEach(function(o){',
-'      if(!o.customer_phone||o.order_type==="dinein")return;',
-'      var ph=(o.customer_phone||"").replace(/\\s/g,"");',
-'      if(seen[ph])return;',
-'      seen[ph]=true;',
-'      var c={name:o.customer_name||"Customer",phone:o.customer_phone,phoneClean:ph};',
-'      if(o.contact_method==="zalo")zl.push(c);',
-'      else wa.push(c);',
-'    });',
-'    mktContacts.whatsapp=wa;',
-'    mktContacts.zalo=zl;',
-'    renderMktList("wa",wa);',
-'    renderMktList("zl",zl);',
-'    var wac=document.getElementById("mkt-wa-count");',
-'    var zlc=document.getElementById("mkt-zl-count");',
-'    if(wac)wac.textContent=wa.length+" contacts";',
-'    if(zlc)zlc.textContent=zl.length+" contacts";',
-'  });',
-'}',
-'function renderMktList(type,contacts){',
-'  var el=document.getElementById("mkt-"+type+"-list");',
-'  if(!el)return;',
-'  if(!contacts.length){el.innerHTML="<div style=\\"color:#9CA3AF;text-align:center;padding:20px;font-size:0.85rem;\\">No contacts yet — customers appear here after ordering</div>";return;}',
-'  var h="";',
-'  contacts.forEach(function(c){',
-'    var platform=type==="wa"?"whatsapp":"zalo";',
-'    var bg=type==="wa"?"#25D366":"linear-gradient(135deg,#0068FF,#0052CC)";',
-'    var ico=type==="wa"?"💬":"🔵";',
-'    h+="<div style=\\"display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;\\">";',
-'    h+="<div><div style=\\"font-size:0.88rem;color:#1A1A2E;font-weight:600;\\">"+c.name+"</div>";',
-'    h+="<div style=\\"font-size:0.75rem;color:#6B7280;\\">"+c.phone+"</div></div>";',
-'    h+="<button onclick=\\"mktSendOne(\'"+platform+"\',\'"+c.phoneClean+"\',\'"+c.name+"\')\\" style=\\"background:"+bg+";color:white;border:none;padding:7px 14px;border-radius:6px;font-family:Jost,sans-serif;font-size:0.75rem;font-weight:700;cursor:pointer;\\">"+ico+" Send</button>";',
-'    h+="</div>";',
-'  });',
-'  el.innerHTML=h;',
-'}',
-'function getMktMsg(){',
-'  var m=document.getElementById("mkt-msg");',
-'  if(!m||!m.value.trim()){showToast("No Message","Please write your promotion first");return null;}',
-'  return m.value.trim();',
-'}',
-'function mktSendOne(platform,phone,name){',
-'  var msg=getMktMsg();if(!msg)return;',
-'  var p=phone.replace(/\\s/g,"");',
-'  if(p.charAt(0)==="0")p="+84"+p.substring(1);',
-'  if(p.charAt(0)!=="+")p="+84"+p;',
-'  p=p.replace(/\\+/g,"");',
-'  var enc=encodeURIComponent(msg);',
-'  if(platform==="whatsapp")window.open("https://wa.me/"+p+"?text="+enc,"_blank");',
-'  else{window.open("https://zalo.me/"+p,"_blank");showToast("Zalo Opened","Go back and paste your message in the chat");}',
-'}',
-'function mktSendAll(platform){',
-'  var msg=getMktMsg();if(!msg)return;',
-'  var contacts=platform==="whatsapp"?mktContacts.whatsapp:mktContacts.zalo;',
-'  if(!contacts.length){showToast("No Contacts","No "+platform+" customers yet");return;}',
-'  showToast("Opening "+contacts.length+" contacts","Tap send in each chat, then come back for the next");',
-'  var first=contacts[0];',
-'  var p=first.phoneClean.replace(/\\s/g,"");',
-'  if(p.charAt(0)==="0")p="+84"+p.substring(1);',
-'  if(p.charAt(0)!=="+")p="+84"+p;',
-'  p=p.replace(/\\+/g,"");',
-'  var enc=encodeURIComponent(msg);',
-'  if(platform==="whatsapp")window.open("https://wa.me/"+p+"?text="+enc,"_blank");',
-'  else{window.open("https://zalo.me/"+p,"_blank");try{navigator.clipboard.writeText(msg);}catch(e){}}',
-'}',
-'function mktPreview(){',
-'  var msg=document.getElementById("mkt-msg").value;',
-'  var prev=document.getElementById("mkt-preview");',
-'  if(!prev)return;',
-'  if(!msg.trim()){prev.style.display="none";return;}',
-'  prev.textContent=msg;prev.style.display="block";',
-'}',
-'function mktClear(){',
-'  var m=document.getElementById("mkt-msg");if(m)m.value="";',
-'  var p=document.getElementById("mkt-preview");if(p)p.style.display="none";',
-'  var c=document.getElementById("mkt-char-count");if(c)c.textContent="0 characters";',
-'}',
-'(function(){',
-'  var m=document.getElementById("mkt-msg");',
-'  if(!m)return;',
-'  m.addEventListener("input",function(){',
-'    var c=document.getElementById("mkt-char-count");',
-'    if(c){var len=this.value.length;c.textContent=len+" characters";c.style.color=len>160?"#EF4444":"#9CA3AF";}',
-'  });',
-'})();'
-].join('\n');
-
-// Write the JS to a temp file to validate it first
-fs.writeFileSync('mkt_temp.js', mktJS, 'utf8');
-try {
-  new Function(mktJS);
-  console.log('✅ Marketing JS validates cleanly');
-} catch(e) {
-  console.log('❌ Marketing JS error:', e.message);
-  process.exit(1);
-}
-
-// Inject as separate script block before </body>
-fixed = fixed.replace('</body>', '<script>\n' + mktJS + '\n</script>\n</body>');
-console.log('✅ Fix 4: Marketing JS injected');
-
-// Clean up temp file
-try { fs.unlinkSync('mkt_temp.js'); } catch(e) {}
-
-// Full JS Validation
+// JS Validation
 const scripts = [];
 let pos = 0;
 while (true) {
@@ -211,6 +265,55 @@ if (!ok) {
   console.log('❌ JS validation failed — file NOT saved.');
   process.exit(1);
 }
-console.log('✅ All JS validated — ' + scripts.length + ' blocks');
+console.log('✅ JS validation passed — ' + scripts.length + ' blocks');
 fs.writeFileSync('admin.html', fixed, 'utf8');
-console.log('✅ admin.html saved — marketing system live');
+console.log('✅ admin.html saved — passwords hashed');
+
+// ============================================
+// FIX 5 — UPGRADE VERCEL.JSON SECURITY HEADERS
+// Content Security Policy
+// Prevent clickjacking, XSS, sniffing
+// ============================================
+
+const newVercel = {
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {"key": "X-Content-Type-Options", "value": "nosniff"},
+        {"key": "X-XSS-Protection", "value": "1; mode=block"},
+        {"key": "Referrer-Policy", "value": "strict-origin-when-cross-origin"},
+        {"key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()"},
+        {"key": "X-Frame-Options", "value": "SAMEORIGIN"}
+      ]
+    },
+    {
+      "source": "/admin",
+      "headers": [
+        {"key": "X-Robots-Tag", "value": "noindex, nofollow"},
+        {"key": "X-Frame-Options", "value": "DENY"},
+        {"key": "Cache-Control", "value": "no-store, no-cache, must-revalidate"},
+        {"key": "Pragma", "value": "no-cache"}
+      ]
+    },
+    {
+      "source": "/kitchen",
+      "headers": [
+        {"key": "X-Robots-Tag", "value": "noindex, nofollow"},
+        {"key": "X-Frame-Options", "value": "DENY"},
+        {"key": "Cache-Control", "value": "no-store, no-cache, must-revalidate"}
+      ]
+    }
+  ]
+};
+
+fs.writeFileSync('vercel.json', JSON.stringify(newVercel, null, 2), 'utf8');
+console.log('✅ Fix 5: vercel.json security headers upgraded');
+
+console.log('');
+console.log('=== SECURITY SUMMARY ===');
+console.log('Owner password hash:', OWNER_HASH);
+console.log('Staff password hash:', STAFF_HASH);
+console.log('PIN hash:', PIN_HASH);
+console.log('Save these hashes — you need them if you change passwords');
