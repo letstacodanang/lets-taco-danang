@@ -543,7 +543,7 @@ geoWelcome();
 <script>
 var SBC='https://kigqjuxxoeoeezjguuxu.supabase.co';
 var SKC='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpZ3FqdXh4b2VvZWV6amd1dXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTgxNjIsImV4cCI6MjA5NTYzNDE2Mn0.e-V7jsZ0yEjHUziUeFAZQkNDgxKmMq_v4TcYcHBEyhQ';
-var cart={},cust=null,oType='delivery',oId=null,tInt=null;
+var cart={},cust=null,oType='delivery',oId=null,tInt=null,qrTable=null;
 var CM=[
   {id:'birria',name:'Birria Tacos',desc:'Slow Cooked Beef — rich, dippable, legendary',p2:125000,p3:180000,e:'🥩'},
   {id:'steak',name:'Grilled Steak',desc:'Marinated beef — chargrilled perfection',p2:115000,p3:165000,e:'🥩'},
@@ -563,7 +563,14 @@ var CM=[
 function sbC(p,o){o=o||{};return fetch(SBC+p,Object.assign({},o,{headers:Object.assign({'apikey':SKC,'Authorization':'Bearer '+SKC,'Content-Type':'application/json'},o.headers||{})})).then(function(r){return r.status===204?null:r.json();}).catch(function(){return null;});}
 function gR(){var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r='LTD-';for(var i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
 function fV(n){n=parseInt(n)||0;if(n>=1000000)return'\u20ab'+(n/1e6).toFixed(1)+'M';if(n>=1000)return'\u20ab'+(n/1000).toFixed(0)+'k';return'\u20ab'+n;}
-function toggleCart(){var sb=document.getElementById('cart-sidebar');var ov=document.getElementById('cart-overlay');var open=sb.style.right==='0px';if(open){sb.style.right='-460px';ov.style.display='none';ov.style.background='rgba(0,0,0,0)';}else{sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);renderCM();}}
+function toggleCart(){
+  if(qrTable){
+    setTimeout(function(){
+      setOT('dinein');
+      pickTable(qrTable);
+      lockQRMode(qrTable);
+    },100);
+  }var sb=document.getElementById('cart-sidebar');var ov=document.getElementById('cart-overlay');var open=sb.style.right==='0px';if(open){sb.style.right='-460px';ov.style.display='none';ov.style.background='rgba(0,0,0,0)';}else{sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);renderCM();}}
 function renderCM(){var h='';for(var i=0;i<CM.length;i++){var m=CM[i];var q=cart[m.id]||0;var pl=m.p2?'2 tacos: '+fV(m.p2)+' · 3 tacos: '+fV(m.p3):fV(m.p1);h+='<div class="cmi"><div style="flex:1;"><div style="font-family:Bebas Neue,sans-serif;font-size:1.15rem;color:#FAF0E6;letter-spacing:1px;">'+m.e+' '+m.name+'</div><div style="font-size:0.78rem;color:#B8A99A;margin-top:3px;">'+m.desc+'</div><div style="font-size:1rem;color:#D4A017;margin-top:5px;font-family:Bebas Neue,sans-serif;letter-spacing:1px;">'+pl+'</div></div><div class="qc"><button class="qb" onclick="cQ(\''+m.id+'\',-1)">−</button><span class="qn">'+q+'</span><button class="qb" onclick="cQ(\''+m.id+'\',1)">+</button></div></div>';}document.getElementById('cart-menu-items').innerHTML=h;
   // Render add-ons
   var ADDONS=[
@@ -647,6 +654,27 @@ function pickTable(n){
   document.getElementById('c-table').value=n;
   renderTablePicker();
 }
+function lockQRMode(tableNum){
+  // Hide delivery and pickup buttons - this is a table QR scan
+  var typeRow=document.querySelector('#type-delivery');
+  if(typeRow&&typeRow.parentElement){
+    var parent=typeRow.parentElement;
+    parent.style.display='none';
+    // Add a locked dine-in indicator instead
+    if(!document.getElementById('qr-lock-badge')){
+      var badge=document.createElement('div');
+      badge.id='qr-lock-badge';
+      badge.style.cssText='background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.3);border-radius:6px;padding:12px;text-align:center;margin-bottom:10px;';
+      badge.innerHTML='<span style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:#D4A017;letter-spacing:2px;">🍽️ DINE IN — TABLE '+tableNum+'</span><br><span style="font-size:0.72rem;color:#B8A99A;letter-spacing:1px;">ORDER DIRECT FROM YOUR TABLE</span>';
+      parent.parentElement.insertBefore(badge,parent);
+    }
+  }
+  // Hide email row for dine-in
+  var emailRow=document.getElementById('email-row');
+  if(emailRow)emailRow.style.display='none';
+  var cmRow=document.getElementById('cm-row');
+  if(cmRow)cmRow.style.display='none';
+}
 var contactMethod='whatsapp';
 function setCM(m){
   contactMethod=m;
@@ -664,20 +692,19 @@ function newOrder(){clearInterval(tInt);oId=null;document.getElementById('cart-v
 window.addEventListener('load',function(){
   setTimeout(function(){var s=document.getElementById('pwa-splash');if(s){s.style.opacity='0';setTimeout(function(){s.style.display='none';},500);}},1800);
   if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){});}
-  // Handle ?table=N — auto open cart in dine-in mode
+  // Handle ?table=N — auto open cart in dine-in mode (QR code scan)
   var urlP=new URLSearchParams(window.location.search);
   var tParam=urlP.get('table');
   if(tParam){
+    qrTable=parseInt(tParam);
     setTimeout(function(){
       toggleCart();
       setTimeout(function(){
         setOT('dinein');
-        pickTable(parseInt(tParam));
-        // Auto-scroll to checkout
-        var cv=document.getElementById('cart-view-menu');
-        if(cv)cv.scrollTop=cv.scrollHeight;
+        pickTable(qrTable);
+        lockQRMode(qrTable);
       },300);
-    },2000);
+    },1800);
   } else if(window.location.search.includes('action=order')){
     setTimeout(function(){toggleCart();},2000);
   }
