@@ -11,261 +11,208 @@ console.log('✅ File confirmed — Lets Taco Da Nang');
 let fixed = html;
 
 // ============================================
-// FIX 1 — ADD ORDER TYPE WELCOME SCREEN
-// First thing customer sees when cart opens
-// Choose how they want to eat BEFORE menu
+// FIX 1 — REPLACE CHECKOUT BUTTON TEXT
+// Dynamic label based on order type
 // ============================================
 
-// Find the cart sidebar opening div and inject welcome screen
-// We insert a new view BEFORE the cart-view-menu div
+// Find the checkout button in cart-checkout-row
+const oldCheckoutBtn = `<button onclick="goToCheckout()" style="width:100%;background:linear-gradient(135deg,#C0392B,#E67E22);color:white;border:none;padding:18px;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;border-radius:8px;cursor:pointer;">CHECKOUT 🌮</button>`;
 
-const oldCartMenuStart = `<div id="cart-view-menu" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">`;
+const newCheckoutBtn = `<button onclick="goToCheckout()" id="checkout-main-btn" style="width:100%;background:linear-gradient(135deg,#C0392B,#E67E22);color:white;border:none;padding:18px;font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;border-radius:8px;cursor:pointer;">SEND ORDER TO KITCHEN 🌮</button>`;
 
-const newCartMenuStart = `<div id="cart-view-welcome" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;padding:30px 25px;">
-  <div style="text-align:center;margin-bottom:35px;margin-top:20px;">
-    <div style="font-size:2.5rem;margin-bottom:12px;">🌮</div>
-    <div style="font-family:Bebas Neue,sans-serif;font-size:2rem;color:#D4A017;letter-spacing:4px;margin-bottom:8px;">LET'S TACO</div>
-    <div style="font-family:Playfair Display,serif;font-style:italic;color:#B8A99A;font-size:0.95rem;">First things first — how are you eating today?</div>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:30px;">
-    <button onclick="selectOrderType('dinein')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:22px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#D4A017';this.style.background='rgba(212,160,23,0.06)'" onmouseout="this.style.borderColor='rgba(212,160,23,0.2)';this.style.background='rgba(255,255,255,0.03)'">
-      <span style="font-size:2.2rem;flex-shrink:0;">🍽️</span>
-      <div>
-        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#FAF0E6;letter-spacing:2px;margin-bottom:3px;">DINE IN</div>
-        <div style="font-size:0.78rem;color:#B8A99A;line-height:1.5;">Sit down, scan QR, we bring the food to you. Pay when you are ready.</div>
-      </div>
-      <span style="margin-left:auto;color:#D4A017;font-size:1.2rem;flex-shrink:0;">›</span>
-    </button>
-    <button onclick="selectOrderType('pickup')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:22px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#D4A017';this.style.background='rgba(212,160,23,0.06)'" onmouseout="this.style.borderColor='rgba(212,160,23,0.2)';this.style.background='rgba(255,255,255,0.03)'">
-      <span style="font-size:2.2rem;flex-shrink:0;">🏃</span>
-      <div>
-        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#FAF0E6;letter-spacing:2px;margin-bottom:3px;">TAKEOUT</div>
-        <div style="font-size:0.78rem;color:#B8A99A;line-height:1.5;">Order now, pick up at 43 An Thuong 30. Pay when you collect.</div>
-      </div>
-      <span style="margin-left:auto;color:#D4A017;font-size:1.2rem;flex-shrink:0;">›</span>
-    </button>
-    <button onclick="selectOrderType('delivery')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:22px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#D4A017';this.style.background='rgba(212,160,23,0.06)'" onmouseout="this.style.borderColor='rgba(212,160,23,0.2)';this.style.background='rgba(255,255,255,0.03)'">
-      <span style="font-size:2.2rem;flex-shrink:0;">🛵</span>
-      <div>
-        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#FAF0E6;letter-spacing:2px;margin-bottom:3px;">DELIVERY</div>
-        <div style="font-size:0.78rem;color:#B8A99A;line-height:1.5;">We bring it to you. Da Nang area. Pay via WhatsApp or Zalo before cooking starts.</div>
-      </div>
-      <span style="margin-left:auto;color:#D4A017;font-size:1.2rem;flex-shrink:0;">›</span>
-    </button>
-  </div>
-  <div style="text-align:center;border-top:1px solid rgba(212,160,23,0.1);padding-top:20px;">
-    <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">Open Tue–Sun · 4:00 PM – 12:00 AM</div>
-    <div style="font-size:0.75rem;color:rgba(184,169,154,0.5);">43 An Thuong 30 · Ngu Hanh Son · Da Nang</div>
-  </div>
-</div>
-<div id="cart-view-menu" style="flex:1;overflow-y:auto;display:none;flex-direction:column;">`;
-
-if (fixed.includes(oldCartMenuStart)) {
-  fixed = fixed.replace(oldCartMenuStart, newCartMenuStart);
-  console.log('✅ Fix 1: Welcome screen injected before menu');
+if (fixed.includes(oldCheckoutBtn)) {
+  fixed = fixed.replace(oldCheckoutBtn, newCheckoutBtn);
+  console.log('✅ Fix 1: Checkout button replaced with dynamic label');
 } else {
-  console.log('⚠️  Fix 1: cart-view-menu pattern not found');
-}
-
-// ============================================
-// FIX 2 — ADD selectOrderType FUNCTION
-// Sets order type then shows menu
-// Skips welcome screen for QR scans
-// ============================================
-
-const oldToggleCart = `function toggleCart(){`;
-
-const newToggleCart = `function selectOrderType(type){
-  // Set the order type globally
-  oType=type;
-  setOT(type);
-  // Hide welcome, show menu
-  var w=document.getElementById('cart-view-welcome');
-  var m=document.getElementById('cart-view-menu');
-  if(w)w.style.display='none';
-  if(m){m.style.display='flex';}
-  renderCM();
-}
-function toggleCart(){`;
-
-if (fixed.includes(oldToggleCart)) {
-  fixed = fixed.replace(oldToggleCart, newToggleCart);
-  console.log('✅ Fix 2: selectOrderType function added');
-} else {
-  console.log('⚠️  Fix 2: toggleCart pattern not found');
-}
-
-// ============================================
-// FIX 3 — SHOW WELCOME SCREEN WHEN CART OPENS
-// Unless it is a QR scan (already dine-in)
-// ============================================
-
-const oldRenderCM = `function toggleCart(){
-  if(qrTable){
-    setTimeout(function(){
-      setOT('dinein');
-      pickTable(qrTable);
-      lockQRMode(qrTable);
-    },100);
-  }var sb=document.getElementById('cart-sidebar');var ov=document.getElementById('cart-overlay');var open=sb.style.right==='0px';if(open){sb.style.right='-460px';ov.style.display='none';ov.style.background='rgba(0,0,0,0)';}else{sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);renderCM();}`;
-
-const newRenderCM = `function toggleCart(){
-  if(qrTable){
-    setTimeout(function(){
-      setOT('dinein');
-      pickTable(qrTable);
-      lockQRMode(qrTable);
-    },100);
-  }
-  var sb=document.getElementById('cart-sidebar');
-  var ov=document.getElementById('cart-overlay');
-  var open=sb.style.right==='0px';
-  if(open){
-    sb.style.right='-460px';
-    ov.style.display='none';
-    ov.style.background='rgba(0,0,0,0)';
-  } else {
-    sb.style.right='0px';
-    ov.style.display='block';
-    setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);
-    // Show welcome screen unless QR scan (already knows order type)
-    if(!qrTable){
-      var w=document.getElementById('cart-view-welcome');
-      var m=document.getElementById('cart-view-menu');
-      var co=document.getElementById('cart-view-checkout');
-      var ct=document.getElementById('cart-view-tracker');
-      // Only show welcome if not mid-order
-      var hasItems=Object.keys(cart).length>0;
-      var inCheckout=co&&co.style.display==='flex';
-      var inTracker=ct&&ct.style.display==='flex';
-      if(!hasItems&&!inCheckout&&!inTracker&&w){
-        w.style.display='flex';
-        if(m)m.style.display='none';
-      } else {
-        if(w)w.style.display='none';
-        if(m)m.style.display='flex';
-        renderCM();
-      }
-    } else {
-      renderCM();
-    }
-  }`;
-
-if (fixed.includes(oldRenderCM)) {
-  fixed = fixed.replace(oldRenderCM, newRenderCM);
-  console.log('✅ Fix 3: Cart now shows welcome screen on open');
-} else {
-  console.log('⚠️  Fix 3: toggleCart full pattern not found — trying partial fix');
-  // Partial fallback
+  console.log('⚠️  Fix 1: checkout button pattern not found — trying partial');
   fixed = fixed.replace(
-    `sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);renderCM();}`,
-    `sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);
-    if(!qrTable&&Object.keys(cart).length===0){
-      var w=document.getElementById('cart-view-welcome');
-      var m=document.getElementById('cart-view-menu');
-      if(w)w.style.display='flex';
-      if(m)m.style.display='none';
-    } else {renderCM();}
-  }`
+    `CHECKOUT 🌮</button><div style="text-align:center;font-size:0.7rem;color:#B8A99A;margin-top:8px;letter-spacing:1px;">Earn loyalty points with every order</div>`,
+    `SEND ORDER TO KITCHEN 🌮</button><div style="text-align:center;font-size:0.7rem;color:#B8A99A;margin-top:8px;letter-spacing:1px;">Earn loyalty points with every order</div>`
+  );
+  console.log('✅ Fix 1: Partial fallback applied');
+}
+
+// ============================================
+// FIX 2 — UPDATE BUTTON LABEL WHEN ORDER
+// TYPE CHANGES
+// ============================================
+
+const oldUpdateBadge = `function updateOrderBadge(){
+  var b=document.getElementById('order-type-badge');
+  if(!b)return;
+  var labels={dinein:'🍽️ Dine In',pickup:'🏃 Takeout',delivery:'🛵 Delivery'};
+  b.textContent=labels[oType]||'';
+}`;
+
+const newUpdateBadge = `function updateOrderBadge(){
+  var b=document.getElementById('order-type-badge');
+  if(!b)return;
+  var labels={dinein:'🍽️ Dine In',pickup:'🏃 Takeout',delivery:'🛵 Delivery'};
+  b.textContent=labels[oType]||'';
+  // Update checkout button label based on order type
+  var cb=document.getElementById('checkout-main-btn');
+  if(!cb)return;
+  if(oType==='dinein'){
+    cb.textContent='SEND ORDER TO KITCHEN 🌮';
+    cb.style.background='linear-gradient(135deg,#C0392B,#E67E22)';
+  } else if(oType==='pickup'){
+    cb.textContent='PLACE MY ORDER 🌮';
+    cb.style.background='linear-gradient(135deg,#C0392B,#E67E22)';
+  } else if(oType==='delivery'){
+    cb.textContent='PLACE MY ORDER 🌮';
+    cb.style.background='linear-gradient(135deg,#C0392B,#E67E22)';
+  }
+}`;
+
+if (fixed.includes(oldUpdateBadge)) {
+  fixed = fixed.replace(oldUpdateBadge, newUpdateBadge);
+  console.log('✅ Fix 2: Checkout button updates with order type');
+} else {
+  console.log('⚠️  Fix 2: updateOrderBadge not found — injecting fresh');
+  // inject before selectOrderType
+  fixed = fixed.replace(
+    `function selectOrderType(type){`,
+    `function updateOrderBadge(){
+  var b=document.getElementById('order-type-badge');
+  if(!b)return;
+  var labels={dinein:'🍽️ Dine In',pickup:'🏃 Takeout',delivery:'🛵 Delivery'};
+  b.textContent=labels[oType]||'';
+  var cb=document.getElementById('checkout-main-btn');
+  if(!cb)return;
+  if(oType==='dinein'){cb.textContent='SEND ORDER TO KITCHEN 🌮';}
+  else{cb.textContent='PLACE MY ORDER 🌮';}
+}
+function selectOrderType(type){`
+  );
+  console.log('✅ Fix 2: updateOrderBadge injected fresh');
+}
+
+// ============================================
+// FIX 3 — REPLACE FINAL PLACE ORDER BUTTON
+// Different label per order type
+// ============================================
+
+const oldPlaceBtn = `<button onclick="placeOrder()" id="place-btn" style="width:100%;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;border:none;padding:18px;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;border-radius:8px;cursor:pointer;font-weight:700;">PLACE ORDER 🌮</button>
+<div style="text-align:center;font-size:0.75rem;color:#B8A99A;margin-top:10px;">You will earn loyalty points on this order</div>`;
+
+const newPlaceBtn = `<button onclick="placeOrder()" id="place-btn" style="width:100%;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;border:none;padding:18px;font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;border-radius:8px;cursor:pointer;font-weight:700;">SEND TO KITCHEN 🌮</button>
+<div style="text-align:center;font-size:0.75rem;color:#B8A99A;margin-top:10px;">You will earn loyalty points on this order</div>`;
+
+if (fixed.includes(oldPlaceBtn)) {
+  fixed = fixed.replace(oldPlaceBtn, newPlaceBtn);
+  console.log('✅ Fix 3: Final place order button updated');
+} else {
+  console.log('⚠️  Fix 3: place-btn pattern not found — trying partial');
+  fixed = fixed.replace(
+    `>PLACE ORDER 🌮</button>`,
+    `>SEND TO KITCHEN 🌮</button>`
   );
   console.log('✅ Fix 3: Partial fallback applied');
 }
 
 // ============================================
-// FIX 4 — HIDE WELCOME ON BACK TO MENU
-// When customer goes back from checkout
-// skip welcome screen — they already chose
+// FIX 4 — UPDATE place-btn LABEL DYNAMICALLY
+// In goToCheckout — set correct label
 // ============================================
 
-const oldBackToMenu = `function backToMenu(){document.getElementById('cart-view-menu').style.display='flex';document.getElementById('cart-view-checkout').style.display='none';}`;
+const oldGoCheckout = `function goToCheckout(){if(!gTI())return;
+  setTimeout(function(){var hpb=document.getElementById('how-to-pay-box');if(hpb)hpb.style.display=oType==='dinein'?'none':'block';},50);`;
 
-const newBackToMenu = `function backToMenu(){
-  var w=document.getElementById('cart-view-welcome');
-  if(w)w.style.display='none';
-  document.getElementById('cart-view-menu').style.display='flex';
-  document.getElementById('cart-view-checkout').style.display='none';
-}`;
+const newGoCheckout = `function goToCheckout(){if(!gTI())return;
+  setTimeout(function(){
+    var hpb=document.getElementById('how-to-pay-box');
+    if(hpb)hpb.style.display=oType==='dinein'?'none':'block';
+    // Set final button label by order type
+    var pb=document.getElementById('place-btn');
+    if(pb){
+      if(oType==='dinein'){
+        pb.textContent='SEND TO KITCHEN 🌮';
+      } else if(oType==='pickup'){
+        pb.textContent='CONFIRM TAKEOUT ORDER 🌮';
+      } else if(oType==='delivery'){
+        pb.textContent='CONFIRM DELIVERY ORDER 🌮';
+      }
+    }
+  },50);`;
 
-if (fixed.includes(oldBackToMenu)) {
-  fixed = fixed.replace(oldBackToMenu, newBackToMenu);
-  console.log('✅ Fix 4: Back to menu skips welcome screen');
+if (fixed.includes(oldGoCheckout)) {
+  fixed = fixed.replace(oldGoCheckout, newGoCheckout);
+  console.log('✅ Fix 4: Final button label set in goToCheckout');
 } else {
-  console.log('⚠️  Fix 4: backToMenu pattern not found');
+  console.log('⚠️  Fix 4: goToCheckout pattern not found — trying simple version');
+  fixed = fixed.replace(
+    `function goToCheckout(){if(!gTI())return;`,
+    `function goToCheckout(){if(!gTI())return;
+  setTimeout(function(){
+    var pb=document.getElementById('place-btn');
+    if(pb){
+      if(oType==='dinein')pb.textContent='SEND TO KITCHEN 🌮';
+      else if(oType==='pickup')pb.textContent='CONFIRM TAKEOUT ORDER 🌮';
+      else pb.textContent='CONFIRM DELIVERY ORDER 🌮';
+    }
+    var hpb=document.getElementById('how-to-pay-box');
+    if(hpb)hpb.style.display=oType==='dinein'?'none':'block';
+  },50);`
+  );
+  console.log('✅ Fix 4: Fallback applied');
 }
 
 // ============================================
-// FIX 5 — ADD BACK BUTTON ON MENU VIEW
-// So customer can change their order type
-// if they made the wrong choice
+// FIX 5 — UPGRADE TRACKER SCREEN MESSAGES
+// Per order type — no generic text
 // ============================================
 
-const oldMenuHeader = `<div style="padding:15px 15px 0;"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:12px;">Tap + to add items</div>`;
+const oldTrackerTitle = `<div style="font-family:Bebas Neue,sans-serif;font-size:2rem;color:#D4A017;letter-spacing:3px;" id="tracker-ref">LTD-XXXXXX</div></div>
+<div id="story-display" style="margin-bottom:30px;"></div>`;
 
-const newMenuHeader = `<div style="padding:15px 15px 0;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-    <button onclick="showWelcome()" style="background:transparent;border:none;color:#B8A99A;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;">‹ Change</button>
-    <div id="order-type-badge" style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#D4A017;background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.2);padding:4px 12px;border-radius:20px;"></div>
-  </div>
-  <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:12px;">Tap + to add items</div>`;
+const newTrackerTitle = `<div style="font-family:Bebas Neue,sans-serif;font-size:2rem;color:#D4A017;letter-spacing:3px;" id="tracker-ref">LTD-XXXXXX</div></div>
+<div id="tracker-headline" style="margin-bottom:20px;"></div>
+<div id="story-display" style="margin-bottom:30px;"></div>`;
 
-if (fixed.includes(oldMenuHeader)) {
-  fixed = fixed.replace(oldMenuHeader, newMenuHeader);
-  console.log('✅ Fix 5: Change button + order type badge added to menu');
+if (fixed.includes(oldTrackerTitle)) {
+  fixed = fixed.replace(oldTrackerTitle, newTrackerTitle);
+  console.log('✅ Fix 5: Tracker headline slot added');
 } else {
-  console.log('⚠️  Fix 5: menu header pattern not found');
+  console.log('⚠️  Fix 5: tracker title pattern not found');
 }
 
 // ============================================
-// FIX 6 — ADD showWelcome + badge update
+// FIX 6 — INJECT TRACKER HEADLINE BY TYPE
+// In showTracker function
 // ============================================
 
-const oldSelectFn = `function selectOrderType(type){`;
+const oldShowTracker = `document.getElementById('tracker-ref').textContent=ref;
+  renderStory(ref);`;
 
-const newSelectFn = `function showWelcome(){
-  var w=document.getElementById('cart-view-welcome');
-  var m=document.getElementById('cart-view-menu');
-  if(w)w.style.display='flex';
-  if(m)m.style.display='none';
-}
-function updateOrderBadge(){
-  var b=document.getElementById('order-type-badge');
-  if(!b)return;
-  var labels={dinein:'🍽️ Dine In',pickup:'🏃 Takeout',delivery:'🛵 Delivery'};
-  b.textContent=labels[oType]||'';
-}
-function selectOrderType(type){`;
+const newShowTracker = `document.getElementById('tracker-ref').textContent=ref;
+  // Set headline by order type
+  var th=document.getElementById('tracker-headline');
+  if(th){
+    if(oType==='dinein'){
+      th.innerHTML='<div style="background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.3);border-radius:8px;padding:16px 20px;text-align:center;">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#27AE60;letter-spacing:3px;margin-bottom:6px;">ORDER SENT TO KITCHEN 🍽️</div>'
+        +'<div style="font-size:0.82rem;color:#FAF0E6;line-height:1.6;">Relax. Your food is being prepared. When you are ready to pay, tap the button below and your server will come to you.</div>'
+        +'</div>';
+    } else if(oType==='pickup'){
+      th.innerHTML='<div style="background:rgba(41,128,185,0.1);border:1px solid rgba(41,128,185,0.3);border-radius:8px;padding:16px 20px;text-align:center;">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#5DADE2;letter-spacing:3px;margin-bottom:6px;">ORDER RECEIVED 🏃</div>'
+        +'<div style="font-size:0.82rem;color:#FAF0E6;line-height:1.6;">We are preparing your tacos now. Come to the counter at 43 An Thuong 30 to collect and pay when ready.</div>'
+        +'</div>';
+    } else {
+      th.innerHTML='<div style="background:rgba(230,126,34,0.1);border:1px solid rgba(230,126,34,0.3);border-radius:8px;padding:16px 20px;text-align:center;">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#E67E22;letter-spacing:3px;margin-bottom:6px;">ORDER RECEIVED 🛵</div>'
+        +'<div style="font-size:0.82rem;color:#FAF0E6;line-height:1.6;">Pay via WhatsApp or Zalo below to confirm your delivery. We start cooking the moment payment is received.</div>'
+        +'</div>';
+    }
+  }
+  renderStory(ref);`;
 
-if (fixed.includes(oldSelectFn)) {
-  fixed = fixed.replace(oldSelectFn, newSelectFn);
-  console.log('✅ Fix 6: showWelcome and badge functions added');
+if (fixed.includes(oldShowTracker)) {
+  fixed = fixed.replace(oldShowTracker, newShowTracker);
+  console.log('✅ Fix 6: Tracker headline set by order type');
 } else {
-  console.log('⚠️  Fix 6: selectOrderType not found for prepend');
+  console.log('⚠️  Fix 6: showTracker renderStory pattern not found');
 }
-
-// Update selectOrderType to call badge update
-fixed = fixed.replace(
-  `function selectOrderType(type){
-  // Set the order type globally
-  oType=type;
-  setOT(type);
-  // Hide welcome, show menu
-  var w=document.getElementById('cart-view-welcome');
-  var m=document.getElementById('cart-view-menu');
-  if(w)w.style.display='none';
-  if(m){m.style.display='flex';}
-  renderCM();
-}`,
-  `function selectOrderType(type){
-  oType=type;
-  setOT(type);
-  var w=document.getElementById('cart-view-welcome');
-  var m=document.getElementById('cart-view-menu');
-  if(w)w.style.display='none';
-  if(m)m.style.display='flex';
-  updateOrderBadge();
-  renderCM();
-}`
-);
 
 // JS Validation
 const scripts = [];
@@ -289,4 +236,4 @@ if (!ok) {
 }
 console.log('✅ JS validation passed');
 fs.writeFileSync('index.html', fixed, 'utf8');
-console.log('✅ index.html saved — order type welcome screen live');
+console.log('✅ index.html saved — smart button labels live for all order types');

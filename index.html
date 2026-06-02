@@ -624,7 +624,7 @@ geoWelcome();
 <div id="addon-items"></div>
 </div>
 <input id="cart-notes" placeholder="Any special requests? (no onion, extra spicy...)" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(212,160,23,0.15);color:#FAF0E6;padding:10px 14px;border-radius:4px;font-family:'Jost',sans-serif;font-size:0.85rem;outline:none;margin-top:10px;"><div id="cart-summary" style="margin-top:15px;border-top:1px solid rgba(212,160,23,0.1);padding-top:15px;"></div></div>
-<div id="cart-checkout-row" style="display:none;padding:15px;flex-shrink:0;border-top:1px solid rgba(212,160,23,0.15);"><button onclick="goToCheckout()" style="width:100%;background:linear-gradient(135deg,#C0392B,#E67E22);color:white;border:none;padding:18px;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;border-radius:8px;cursor:pointer;">CHECKOUT 🌮</button><div style="text-align:center;font-size:0.7rem;color:#B8A99A;margin-top:8px;letter-spacing:1px;">Earn loyalty points with every order</div></div>
+<div id="cart-checkout-row" style="display:none;padding:15px;flex-shrink:0;border-top:1px solid rgba(212,160,23,0.15);"><button onclick="goToCheckout()" id="checkout-main-btn" style="width:100%;background:linear-gradient(135deg,#C0392B,#E67E22);color:white;border:none;padding:18px;font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;border-radius:8px;cursor:pointer;">SEND ORDER TO KITCHEN 🌮</button><div style="text-align:center;font-size:0.7rem;color:#B8A99A;margin-top:8px;letter-spacing:1px;">Earn loyalty points with every order</div></div>
 </div>
 <div id="cart-view-checkout" style="flex:1;overflow-y:auto;display:none;flex-direction:column;">
 <div style="padding:20px;">
@@ -664,7 +664,7 @@ geoWelcome();
 <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.15);border-radius:8px;padding:15px;margin-bottom:15px;"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:10px;">Order Summary</div><div id="checkout-summary"></div></div>
 <div id="how-to-pay-box" style="background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.3);border-radius:8px;padding:15px;margin-bottom:20px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#D4A017;letter-spacing:2px;margin-bottom:8px;">💳 HOW TO PAY</div><div style="font-size:0.85rem;color:#FAF0E6;line-height:1.7;">Place your order first, then WhatsApp us to pay. We start cooking once payment is confirmed.</div><a href="https://wa.me/84909923941" target="_blank" style="display:block;margin-top:12px;text-align:center;background:#25D366;color:white;padding:12px;border-radius:6px;text-decoration:none;font-family:'Jost',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:1px;">💬 WhatsApp to Pay: 0909 923 941</a></div>
 <div id="co-err" style="display:none;color:#C0392B;font-size:0.85rem;text-align:center;margin-bottom:12px;padding:10px;background:rgba(192,57,43,0.1);border-radius:4px;"></div>
-<button onclick="placeOrder()" id="place-btn" style="width:100%;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;border:none;padding:18px;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;border-radius:8px;cursor:pointer;font-weight:700;">PLACE ORDER 🌮</button>
+<button onclick="placeOrder()" id="place-btn" style="width:100%;background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;border:none;padding:18px;font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:3px;border-radius:8px;cursor:pointer;font-weight:700;">SEND TO KITCHEN 🌮</button>
 <div style="text-align:center;font-size:0.75rem;color:#B8A99A;margin-top:10px;">You will earn loyalty points on this order</div>
 </div></div>
 <div id="cart-view-tracker" style="flex:1;overflow-y:auto;display:none;flex-direction:column;padding:30px 25px;text-align:center;">
@@ -765,6 +765,19 @@ function updateOrderBadge(){
   if(!b)return;
   var labels={dinein:'🍽️ Dine In',pickup:'🏃 Takeout',delivery:'🛵 Delivery'};
   b.textContent=labels[oType]||'';
+  // Update checkout button label based on order type
+  var cb=document.getElementById('checkout-main-btn');
+  if(!cb)return;
+  if(oType==='dinein'){
+    cb.textContent='SEND ORDER TO KITCHEN 🌮';
+    cb.style.background='linear-gradient(135deg,#C0392B,#E67E22)';
+  } else if(oType==='pickup'){
+    cb.textContent='PLACE MY ORDER 🌮';
+    cb.style.background='linear-gradient(135deg,#C0392B,#E67E22)';
+  } else if(oType==='delivery'){
+    cb.textContent='PLACE MY ORDER 🌮';
+    cb.style.background='linear-gradient(135deg,#C0392B,#E67E22)';
+  }
 }
 function selectOrderType(type){
   oType=type;
@@ -865,7 +878,21 @@ function gCI(){var its=[],tot=0,pts=0;for(var i=0;i<CM.length;i++){var m=CM[i];v
 function gTI(){var t=0;Object.values(cart).forEach(function(v){t+=v;});return t;}
 function uCS(){var d=gCI();var cc=document.getElementById('cart-count');var ti=gTI();cc.style.display=ti>0?'flex':'none';cc.textContent=ti;var is=document.getElementById('cart-items-section');var cr=document.getElementById('cart-checkout-row');if(d.items.length>0){is.style.display='block';cr.style.display='block';var lh='';d.items.forEach(function(it){lh+='<div class="cl"><span>'+it.qty+'x '+it.name+'</span><span>'+fV(it.price)+'</span></div>';});document.getElementById('cart-items-list').innerHTML=lh;var sh='<div class="cl"><span>Subtotal</span><span>'+fV(d.total)+'</span></div><div class="cl"><span>TOTAL</span><span>'+fV(d.total)+'</span></div><div style="font-size:0.78rem;color:#B8A99A;margin-top:8px;text-align:center;">You will earn <strong style="color:#D4A017;">+'+d.points+' loyalty points</strong></div>';document.getElementById('cart-summary').innerHTML=sh;}else{is.style.display='none';cr.style.display='none';}}
 function goToCheckout(){if(!gTI())return;
-  setTimeout(function(){var hpb=document.getElementById('how-to-pay-box');if(hpb)hpb.style.display=oType==='dinein'?'none':'block';},50);var d=gCI();document.getElementById('cart-view-menu').style.display='none';document.getElementById('cart-view-checkout').style.display='flex';var sh='';d.items.forEach(function(it){sh+='<div class="cl"><span>'+it.qty+'x '+it.name+'</span><span>'+fV(it.price)+'</span></div>';});sh+='<div class="cl"><span>TOTAL</span><span>'+fV(d.total)+'</span></div>';document.getElementById('checkout-summary').innerHTML=sh;}
+  setTimeout(function(){
+    var hpb=document.getElementById('how-to-pay-box');
+    if(hpb)hpb.style.display=oType==='dinein'?'none':'block';
+    // Set final button label by order type
+    var pb=document.getElementById('place-btn');
+    if(pb){
+      if(oType==='dinein'){
+        pb.textContent='SEND TO KITCHEN 🌮';
+      } else if(oType==='pickup'){
+        pb.textContent='CONFIRM TAKEOUT ORDER 🌮';
+      } else if(oType==='delivery'){
+        pb.textContent='CONFIRM DELIVERY ORDER 🌮';
+      }
+    }
+  },50);var d=gCI();document.getElementById('cart-view-menu').style.display='none';document.getElementById('cart-view-checkout').style.display='flex';var sh='';d.items.forEach(function(it){sh+='<div class="cl"><span>'+it.qty+'x '+it.name+'</span><span>'+fV(it.price)+'</span></div>';});sh+='<div class="cl"><span>TOTAL</span><span>'+fV(d.total)+'</span></div>';document.getElementById('checkout-summary').innerHTML=sh;}
 function backToMenu(){
   var w=document.getElementById('cart-view-welcome');
   if(w)w.style.display='none';
@@ -953,6 +980,26 @@ async function placeOrder(){var btn=document.getElementById('place-btn');var err
     sessionStorage.setItem('lt_sess',JSON.stringify(sess));
   }catch(e){}}else throw new Error('x');}catch(e){btn.textContent='PLACE ORDER 🌮';btn.disabled=false;err.style.display='block';err.textContent='Something went wrong. Please WhatsApp us directly at 0909 923 941.';}}
 function showTracker(ref,d){document.getElementById('cart-view-checkout').style.display='none';document.getElementById('cart-view-tracker').style.display='flex';document.getElementById('tracker-ref').textContent=ref;
+  // Set headline by order type
+  var th=document.getElementById('tracker-headline');
+  if(th){
+    if(oType==='dinein'){
+      th.innerHTML='<div style="background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.3);border-radius:8px;padding:16px 20px;text-align:center;">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#27AE60;letter-spacing:3px;margin-bottom:6px;">ORDER SENT TO KITCHEN 🍽️</div>'
+        +'<div style="font-size:0.82rem;color:#FAF0E6;line-height:1.6;">Relax. Your food is being prepared. When you are ready to pay, tap the button below and your server will come to you.</div>'
+        +'</div>';
+    } else if(oType==='pickup'){
+      th.innerHTML='<div style="background:rgba(41,128,185,0.1);border:1px solid rgba(41,128,185,0.3);border-radius:8px;padding:16px 20px;text-align:center;">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#5DADE2;letter-spacing:3px;margin-bottom:6px;">ORDER RECEIVED 🏃</div>'
+        +'<div style="font-size:0.82rem;color:#FAF0E6;line-height:1.6;">We are preparing your tacos now. Come to the counter at 43 An Thuong 30 to collect and pay when ready.</div>'
+        +'</div>';
+    } else {
+      th.innerHTML='<div style="background:rgba(230,126,34,0.1);border:1px solid rgba(230,126,34,0.3);border-radius:8px;padding:16px 20px;text-align:center;">'
+        +'<div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#E67E22;letter-spacing:3px;margin-bottom:6px;">ORDER RECEIVED 🛵</div>'
+        +'<div style="font-size:0.82rem;color:#FAF0E6;line-height:1.6;">Pay via WhatsApp or Zalo below to confirm your delivery. We start cooking the moment payment is received.</div>'
+        +'</div>';
+    }
+  }
   renderStory(ref);var wm=encodeURIComponent('Hi! I just placed order '+ref+'. Total: '+fV(d.total)+'. Confirming payment now!');var waLink=document.getElementById('pay-wa-link');if(waLink)waLink.href='https://wa.me/84909923941?text='+wm;// Show correct payment reminder based on order type
   var rd=document.getElementById('payment-reminder-delivery');
   var rp=document.getElementById('payment-reminder-pickup');
