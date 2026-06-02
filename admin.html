@@ -742,7 +742,20 @@ function renderCard(o){
   if(o.special_instructions)card+='<div class="oph" style="color:#F7DC6F;">📝 '+o.special_instructions+'</div>';
   card+=mkDiv('tracker',trk);
   card+=mkDiv('oitems',ihtml);
-  card+=mkDiv('ofoot',mkDiv('ototal',fV(o.total||0))+mkDiv('oacts',acts));
+  // Build payment banner for takeout/delivery
+var payBanner='';
+if(o.order_type!=='dinein'){
+  if(o.payment_status!=='paid'){
+    payBanner='<div class="unpaid-admin-banner">'
+      +'<span class="unpaid-admin-label">⛔ AWAITING PAYMENT</span>'
+      +'<button class="abtn abtn-paid" data-payid="'+o.id+'" style="padding:8px 16px;font-size:0.78rem;border-radius:4px;cursor:pointer;font-family:Jost,sans-serif;font-weight:700;letter-spacing:1px;background:linear-gradient(135deg,#C0392B,#E67E22);color:white;border:none;">💳 MARK PAID</button>'
+      +'</div>';
+  } else {
+    payBanner='<div style="background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.3);border-radius:6px;padding:8px 14px;margin-bottom:10px;font-family:Bebas Neue,sans-serif;font-size:0.85rem;color:#27AE60;letter-spacing:2px;">✅ PAYMENT CONFIRMED — KITCHEN NOTIFIED</div>';
+  }
+}
+card+=payBanner;
+card+=mkDiv('ofoot',mkDiv('ototal',fV(o.total||0))+mkDiv('oacts',acts));
   card+='</div>';
   card+='</div>';
   return card;
