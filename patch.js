@@ -11,241 +11,261 @@ console.log('✅ File confirmed — Lets Taco Da Nang');
 let fixed = html;
 
 // ============================================
-// FIX 1 — UPGRADE HERO SECTION
-// Speaks directly to tourists, hunger-first,
-// clear action, no thinking required
+// FIX 1 — ADD ORDER TYPE WELCOME SCREEN
+// First thing customer sees when cart opens
+// Choose how they want to eat BEFORE menu
 // ============================================
 
-const oldHero = `<section class="hero">
-  <img class="hero-img" src="https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779729761678_1779730053767.jpg" alt="Let's Taco Da Nang exterior at night">
-  <div class="hero-bg"></div>
-  <div class="hero-content">
-    <p class="hero-eyebrow">Da Nang's Highest Rated Mexican Restaurant</p>
-    <h1 class="hero-title"><span class="hl">LET'S</span><br><span class="gd">TACO</span></h1>
-    <p class="hero-sub">Real Mexican Grill &middot; Da Nang, Vietnam</p>
-    <div class="hero-rating"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span style="font-size:0.85rem">&nbsp;<strong style="color:var(--gold)">4.9</strong> &middot; 144 Google Reviews &middot; Da Nang's #1</span></div>
-    <div class="hero-cta">
-      <button onclick="toggleCart()" class="btn-primary" style="border:none;cursor:pointer">Order Now</button>
-      <a href="#menu" class="btn-secondary">View Menu</a>
-    </div>
-  </div>
-  <div class="hero-scroll"><div class="scroll-line"></div><span class="scroll-text">Scroll</span></div>
-</section>`;
+// Find the cart sidebar opening div and inject welcome screen
+// We insert a new view BEFORE the cart-view-menu div
 
-const newHero = `<section class="hero">
-  <img class="hero-img" src="https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779729761678_1779730053767.jpg" alt="Let's Taco Da Nang — Best Mexican Restaurant in Da Nang Vietnam — Authentic Birria Tacos">
-  <div class="hero-bg"></div>
-  <div class="hero-content">
-    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);border-radius:30px;padding:6px 16px;margin-bottom:18px;opacity:0;animation:fade-up 0.8s ease 0.2s forwards;">
-      <span id="hero-status-dot" style="width:8px;height:8px;border-radius:50%;background:#27AE60;display:inline-block;animation:pulse-dot 2s infinite;"></span>
-      <span id="hero-status-text" style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#27AE60;">Open Now — 43 An Thuong 30</span>
-    </div>
-    <p class="hero-eyebrow" style="opacity:0;animation:fade-up 0.8s ease 0.3s forwards;">Da Nang's #1 Mexican Restaurant · 30+ Countries · 4.9 Stars</p>
-    <h1 class="hero-title" style="opacity:0;animation:fade-up 0.8s ease 0.5s forwards;"><span class="hl">LET'S</span><br><span class="gd">TACO</span></h1>
-    <p class="hero-sub" style="opacity:0;animation:fade-up 0.8s ease 0.7s forwards;">Real Birria · Grilled Steak · Al Pastor · Da Nang, Vietnam</p>
-    <div class="hero-rating" style="opacity:0;animation:fade-up 0.8s ease 0.9s forwards;">
-      <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-      <span style="font-size:0.85rem;">&nbsp;<strong style="color:var(--gold)">4.9</strong> &middot; 144 Google Reviews &middot; Visitors from 30+ Countries</span>
-    </div>
-    <div class="hero-cta" style="opacity:0;animation:fade-up 0.8s ease 1.1s forwards;">
-      <button onclick="toggleCart()" class="btn-primary" style="border:none;cursor:pointer;font-size:1rem;padding:18px 45px;letter-spacing:3px;">🌮 ORDER NOW</button>
-      <a href="https://maps.google.com/?q=Lets+Taco+Da+Nang+43+An+Thuong+30" target="_blank" class="btn-secondary" style="display:inline-flex;align-items:center;gap:8px;"><span>📍</span> GET DIRECTIONS</a>
-    </div>
-    <p style="opacity:0;animation:fade-up 0.8s ease 1.3s forwards;font-size:0.72rem;letter-spacing:1px;color:rgba(250,240,230,0.5);margin-top:15px;">Dine In · Takeout · Delivery · Open Tue–Sun from 4PM</p>
-  </div>
-  <div class="hero-scroll"><div class="scroll-line"></div><span class="scroll-text">Scroll</span></div>
-</section>`;
+const oldCartMenuStart = `<div id="cart-view-menu" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">`;
 
-if (fixed.includes(oldHero)) {
-  fixed = fixed.replace(oldHero, newHero);
-  console.log('✅ Fix 1: Hero upgraded — tourist-first, hunger-first');
+const newCartMenuStart = `<div id="cart-view-welcome" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;padding:30px 25px;">
+  <div style="text-align:center;margin-bottom:35px;margin-top:20px;">
+    <div style="font-size:2.5rem;margin-bottom:12px;">🌮</div>
+    <div style="font-family:Bebas Neue,sans-serif;font-size:2rem;color:#D4A017;letter-spacing:4px;margin-bottom:8px;">LET'S TACO</div>
+    <div style="font-family:Playfair Display,serif;font-style:italic;color:#B8A99A;font-size:0.95rem;">First things first — how are you eating today?</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:30px;">
+    <button onclick="selectOrderType('dinein')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:22px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#D4A017';this.style.background='rgba(212,160,23,0.06)'" onmouseout="this.style.borderColor='rgba(212,160,23,0.2)';this.style.background='rgba(255,255,255,0.03)'">
+      <span style="font-size:2.2rem;flex-shrink:0;">🍽️</span>
+      <div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#FAF0E6;letter-spacing:2px;margin-bottom:3px;">DINE IN</div>
+        <div style="font-size:0.78rem;color:#B8A99A;line-height:1.5;">Sit down, scan QR, we bring the food to you. Pay when you are ready.</div>
+      </div>
+      <span style="margin-left:auto;color:#D4A017;font-size:1.2rem;flex-shrink:0;">›</span>
+    </button>
+    <button onclick="selectOrderType('pickup')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:22px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#D4A017';this.style.background='rgba(212,160,23,0.06)'" onmouseout="this.style.borderColor='rgba(212,160,23,0.2)';this.style.background='rgba(255,255,255,0.03)'">
+      <span style="font-size:2.2rem;flex-shrink:0;">🏃</span>
+      <div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#FAF0E6;letter-spacing:2px;margin-bottom:3px;">TAKEOUT</div>
+        <div style="font-size:0.78rem;color:#B8A99A;line-height:1.5;">Order now, pick up at 43 An Thuong 30. Pay when you collect.</div>
+      </div>
+      <span style="margin-left:auto;color:#D4A017;font-size:1.2rem;flex-shrink:0;">›</span>
+    </button>
+    <button onclick="selectOrderType('delivery')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:22px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#D4A017';this.style.background='rgba(212,160,23,0.06)'" onmouseout="this.style.borderColor='rgba(212,160,23,0.2)';this.style.background='rgba(255,255,255,0.03)'">
+      <span style="font-size:2.2rem;flex-shrink:0;">🛵</span>
+      <div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#FAF0E6;letter-spacing:2px;margin-bottom:3px;">DELIVERY</div>
+        <div style="font-size:0.78rem;color:#B8A99A;line-height:1.5;">We bring it to you. Da Nang area. Pay via WhatsApp or Zalo before cooking starts.</div>
+      </div>
+      <span style="margin-left:auto;color:#D4A017;font-size:1.2rem;flex-shrink:0;">›</span>
+    </button>
+  </div>
+  <div style="text-align:center;border-top:1px solid rgba(212,160,23,0.1);padding-top:20px;">
+    <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">Open Tue–Sun · 4:00 PM – 12:00 AM</div>
+    <div style="font-size:0.75rem;color:rgba(184,169,154,0.5);">43 An Thuong 30 · Ngu Hanh Son · Da Nang</div>
+  </div>
+</div>
+<div id="cart-view-menu" style="flex:1;overflow-y:auto;display:none;flex-direction:column;">`;
+
+if (fixed.includes(oldCartMenuStart)) {
+  fixed = fixed.replace(oldCartMenuStart, newCartMenuStart);
+  console.log('✅ Fix 1: Welcome screen injected before menu');
 } else {
-  console.log('⚠️  Fix 1: Hero pattern not found — check manually');
+  console.log('⚠️  Fix 1: cart-view-menu pattern not found');
 }
 
 // ============================================
-// FIX 2 — UPGRADE HERO STATUS TO SYNC WITH
-// REAL OPEN/CLOSED STATUS
+// FIX 2 — ADD selectOrderType FUNCTION
+// Sets order type then shows menu
+// Skips welcome screen for QR scans
 // ============================================
 
-const oldCheckOpen = `function checkOpen(){const now=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Ho_Chi_Minh"}));const day=now.getDay();const totalMins=now.getHours()*60+now.getMinutes();const isMonday=day===1;const isOpen=!isMonday&&totalMins>=960&&totalMins<1440;const dot=document.getElementById("statusDot");const txt=document.getElementById("statusText");`;
+const oldToggleCart = `function toggleCart(){`;
 
-const newCheckOpen = `function checkOpen(){const now=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Ho_Chi_Minh"}));const day=now.getDay();const totalMins=now.getHours()*60+now.getMinutes();const isMonday=day===1;const isOpen=!isMonday&&totalMins>=960&&totalMins<1440;
-  // Sync hero status pill
-  var hd=document.getElementById('hero-status-dot');
-  var ht=document.getElementById('hero-status-text');
-  if(hd&&ht){
-    if(isOpen){
-      hd.style.background='#27AE60';
-      hd.style.animation='pulse-dot 2s infinite';
-      ht.style.color='#27AE60';
-      ht.textContent='Open Now \u2014 43 An Thuong 30';
-      hd.parentElement.style.background='rgba(39,174,96,0.15)';
-      hd.parentElement.style.borderColor='rgba(39,174,96,0.4)';
-    } else {
-      hd.style.background='#C0392B';
-      hd.style.animation='none';
-      ht.style.color='#C0392B';
-      ht.textContent=isMonday?'Closed Monday \u2014 Open Tue\u2013Sun 4PM':'Opens at 4:00 PM \u2014 43 An Thuong 30';
-      hd.parentElement.style.background='rgba(192,57,43,0.1)';
-      hd.parentElement.style.borderColor='rgba(192,57,43,0.3)';
-    }
+const newToggleCart = `function selectOrderType(type){
+  // Set the order type globally
+  oType=type;
+  setOT(type);
+  // Hide welcome, show menu
+  var w=document.getElementById('cart-view-welcome');
+  var m=document.getElementById('cart-view-menu');
+  if(w)w.style.display='none';
+  if(m){m.style.display='flex';}
+  renderCM();
+}
+function toggleCart(){`;
+
+if (fixed.includes(oldToggleCart)) {
+  fixed = fixed.replace(oldToggleCart, newToggleCart);
+  console.log('✅ Fix 2: selectOrderType function added');
+} else {
+  console.log('⚠️  Fix 2: toggleCart pattern not found');
+}
+
+// ============================================
+// FIX 3 — SHOW WELCOME SCREEN WHEN CART OPENS
+// Unless it is a QR scan (already dine-in)
+// ============================================
+
+const oldRenderCM = `function toggleCart(){
+  if(qrTable){
+    setTimeout(function(){
+      setOT('dinein');
+      pickTable(qrTable);
+      lockQRMode(qrTable);
+    },100);
+  }var sb=document.getElementById('cart-sidebar');var ov=document.getElementById('cart-overlay');var open=sb.style.right==='0px';if(open){sb.style.right='-460px';ov.style.display='none';ov.style.background='rgba(0,0,0,0)';}else{sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);renderCM();}`;
+
+const newRenderCM = `function toggleCart(){
+  if(qrTable){
+    setTimeout(function(){
+      setOT('dinein');
+      pickTable(qrTable);
+      lockQRMode(qrTable);
+    },100);
   }
-  const dot=document.getElementById("statusDot");const txt=document.getElementById("statusText");`;
-
-if (fixed.includes(oldCheckOpen)) {
-  fixed = fixed.replace(oldCheckOpen, newCheckOpen);
-  console.log('✅ Fix 2: Hero status pill synced with real open/closed');
-} else {
-  console.log('⚠️  Fix 2: checkOpen pattern not found — hero pill will show default');
-}
-
-// ============================================
-// FIX 3 — SEO META TAGS UPGRADE
-// Target: Google top 10, AI referrals,
-// Google Maps top 3
-// ============================================
-
-const oldTitle = `<title>Let's Taco Da Nang - Real Mexican Grill | Best Tacos in Da Nang Vietnam</title>
-<meta name="description" content="Da Nang's highest-rated Mexican restaurant. Authentic birria, grilled steak, carnitas. 4.9 stars. 43 An Thuong 30. Open Tue-Sun 4PM-12AM.">`;
-
-const newTitle = `<title>Let's Taco Da Nang — Best Mexican Restaurant in Da Nang | Authentic Birria Tacos</title>
-<meta name="description" content="Da Nang's #1 Mexican restaurant. Authentic birria tacos, grilled steak, al pastor carnitas. 4.9 stars · 144 reviews · Visitors from 30+ countries. 43 An Thuong 30, Ngu Hanh Son. Open Tue–Sun 4PM–12AM. Order online for delivery, takeout or dine in.">
-<meta name="keywords" content="best mexican restaurant da nang, tacos da nang, birria da nang, mexican food da nang vietnam, lets taco da nang, an thuong restaurant, ngu hanh son food, da nang expat food, da nang delivery food, authentic tacos vietnam">
-<meta name="robots" content="index, follow">
-<meta name="author" content="Let's Taco Da Nang">
-<meta name="geo.region" content="VN-DN">
-<meta name="geo.placename" content="Da Nang, Vietnam">
-<meta name="geo.position" content="16.0194;108.2476">
-<meta name="ICBM" content="16.0194, 108.2476">
-<link rel="canonical" href="https://lets-taco-danang.vercel.app/">`;
-
-if (fixed.includes(oldTitle)) {
-  fixed = fixed.replace(oldTitle, newTitle);
-  console.log('✅ Fix 3: SEO meta tags upgraded');
-} else {
-  console.log('⚠️  Fix 3: title pattern not found — check manually');
-}
-
-// ============================================
-// FIX 4 — UPGRADE OG / SOCIAL SHARE TAGS
-// So when shared on Facebook, WhatsApp,
-// Line — it looks premium and clickable
-// ============================================
-
-const oldOG = `<meta property="og:title" content="Let's Taco Da Nang - Real Mexican Grill">
-<meta property="og:image" content="https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779729761678_1779730053767.jpg">`;
-
-const newOG = `<meta property="og:title" content="Let's Taco Da Nang — Da Nang's #1 Mexican Restaurant">
-<meta property="og:description" content="Authentic birria, grilled steak & al pastor tacos. 4.9 stars · 144 reviews · Open Tue–Sun from 4PM. Order online or visit us at 43 An Thuong 30.">
-<meta property="og:image" content="https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779729761678_1779730053767.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:url" content="https://lets-taco-danang.vercel.app/">
-<meta property="og:type" content="restaurant">
-<meta property="og:locale" content="en_US">
-<meta property="og:locale:alternate" content="vi_VN">
-<meta property="og:site_name" content="Let's Taco Da Nang">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Let's Taco Da Nang — Best Mexican in Vietnam">
-<meta name="twitter:description" content="Real birria tacos in Da Nang. 4.9 stars. Order online now.">
-<meta name="twitter:image" content="https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779729761678_1779730053767.jpg">`;
-
-if (fixed.includes(oldOG)) {
-  fixed = fixed.replace(oldOG, newOG);
-  console.log('✅ Fix 4: OG/social share tags upgraded');
-} else {
-  console.log('⚠️  Fix 4: OG pattern not found — check manually');
-}
-
-// ============================================
-// FIX 5 — UPGRADE SCHEMA.ORG STRUCTURED DATA
-// This is what Google Maps and AI crawlers
-// read to understand the business
-// ============================================
-
-const oldSchema = `{"@context":"https://schema.org","@type":"Restaurant","name":"Let's Taco Da Nang","telephone":"+84909923941","address":{"@type":"PostalAddress","streetAddress":"43 An Thuong 30","addressLocality":"Ngu Hanh Son","addressRegion":"Da Nang","postalCode":"550000","addressCountry":"VN"},"geo":{"@type":"GeoCoordinates","latitude":16.0194,"longitude":108.2476},"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],"opens":"16:00","closes":"00:00"}],"aggregateRating":{"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"144"},"servesCuisine":"Mexican","priceRange":"105000-180000 VND","image":"https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779729761678_1779730053767.jpg"}`;
-
-const newSchema = `{
-  "@context":"https://schema.org",
-  "@type":"Restaurant",
-  "@id":"https://lets-taco-danang.vercel.app/",
-  "name":"Let's Taco Da Nang",
-  "alternateName":["Lets Taco Da Nang","Let's Taco","Lets Taco"],
-  "description":"Da Nang's highest-rated Mexican restaurant. Authentic birria tacos, grilled steak, al pastor, carnitas. Hand-pressed tortillas. Slow-cooked meats. Loved by visitors from over 30 countries.",
-  "url":"https://lets-taco-danang.vercel.app/",
-  "telephone":"+84909923941",
-  "email":"letstacodanang@gmail.com",
-  "address":{
-    "@type":"PostalAddress",
-    "streetAddress":"43 An Thuong 30",
-    "addressLocality":"Ngu Hanh Son",
-    "addressRegion":"Da Nang",
-    "postalCode":"550000",
-    "addressCountry":"VN"
-  },
-  "geo":{
-    "@type":"GeoCoordinates",
-    "latitude":16.0194,
-    "longitude":108.2476
-  },
-  "hasMap":"https://maps.google.com/?q=Lets+Taco+Da+Nang",
-  "openingHoursSpecification":[
-    {
-      "@type":"OpeningHoursSpecification",
-      "dayOfWeek":["Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-      "opens":"16:00",
-      "closes":"23:59"
+  var sb=document.getElementById('cart-sidebar');
+  var ov=document.getElementById('cart-overlay');
+  var open=sb.style.right==='0px';
+  if(open){
+    sb.style.right='-460px';
+    ov.style.display='none';
+    ov.style.background='rgba(0,0,0,0)';
+  } else {
+    sb.style.right='0px';
+    ov.style.display='block';
+    setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);
+    // Show welcome screen unless QR scan (already knows order type)
+    if(!qrTable){
+      var w=document.getElementById('cart-view-welcome');
+      var m=document.getElementById('cart-view-menu');
+      var co=document.getElementById('cart-view-checkout');
+      var ct=document.getElementById('cart-view-tracker');
+      // Only show welcome if not mid-order
+      var hasItems=Object.keys(cart).length>0;
+      var inCheckout=co&&co.style.display==='flex';
+      var inTracker=ct&&ct.style.display==='flex';
+      if(!hasItems&&!inCheckout&&!inTracker&&w){
+        w.style.display='flex';
+        if(m)m.style.display='none';
+      } else {
+        if(w)w.style.display='none';
+        if(m)m.style.display='flex';
+        renderCM();
+      }
+    } else {
+      renderCM();
     }
-  ],
-  "aggregateRating":{
-    "@type":"AggregateRating",
-    "ratingValue":"4.9",
-    "reviewCount":"144",
-    "bestRating":"5"
-  },
-  "servesCuisine":["Mexican","Tacos","Birria","Street Food"],
-  "priceRange":"₫105,000–₫180,000",
-  "currenciesAccepted":"VND",
-  "paymentAccepted":"Cash, Bank Transfer",
-  "image":[
-    "https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779729761678_1779730053767.jpg",
-    "https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779730373163_1779730420010.jpg",
-    "https://kigqjuxxoeoeezjguuxu.supabase.co/storage/v1/object/public/photos/IMG_1779730373184_1779730422455.jpg"
-  ],
-  "menu":"https://lets-taco-danang.vercel.app/#menu",
-  "hasOfferCatalog":{
-    "@type":"OfferCatalog",
-    "name":"Let's Taco Menu",
-    "itemListElement":[
-      {"@type":"Offer","itemOffered":{"@type":"MenuItem","name":"Birria Tacos","description":"Slow-cooked beef, melted cheese, crispy golden tortilla, consomme for dipping","offers":{"@type":"Offer","price":"125000","priceCurrency":"VND"}}},
-      {"@type":"Offer","itemOffered":{"@type":"MenuItem","name":"Grilled Steak Tacos","description":"Marinated beef chargrilled to perfection, white onion, fresh cilantro, smoky salsa","offers":{"@type":"Offer","price":"115000","priceCurrency":"VND"}}},
-      {"@type":"Offer","itemOffered":{"@type":"MenuItem","name":"Al Pastor Grilled Pork Tacos","description":"Authentic al pastor seasoning, grilled until smoky and tender","offers":{"@type":"Offer","price":"110000","priceCurrency":"VND"}}},
-      {"@type":"Offer","itemOffered":{"@type":"MenuItem","name":"Grilled Chicken Tacos","description":"Mexican-spiced grilled chicken, white onion, cilantro, smoky house salsa","offers":{"@type":"Offer","price":"105000","priceCurrency":"VND"}}},
-      {"@type":"Offer","itemOffered":{"@type":"MenuItem","name":"Carnitas Tacos","description":"Slow-cooked pork braised for hours, crisped on the griddle","offers":{"@type":"Offer","price":"110000","priceCurrency":"VND"}}}
-    ]
-  },
-  "sameAs":[
-    "https://www.instagram.com/letstaco43",
-    "https://www.tiktok.com/@letstacodanang",
-    "https://maps.google.com/?q=Lets+Taco+Da+Nang"
-  ],
-  "amenityFeature":[
-    {"@type":"LocationFeatureSpecification","name":"Dine In","value":true},
-    {"@type":"LocationFeatureSpecification","name":"Takeout","value":true},
-    {"@type":"LocationFeatureSpecification","name":"Delivery","value":true},
-    {"@type":"LocationFeatureSpecification","name":"Online Ordering","value":true},
-    {"@type":"LocationFeatureSpecification","name":"QR Code Ordering","value":true}
-  ],
-  "keywords":"mexican restaurant da nang, tacos da nang, birria da nang, best tacos vietnam, mexican food hoi an nearby, an thuong food, ngu hanh son restaurant"
+  }`;
+
+if (fixed.includes(oldRenderCM)) {
+  fixed = fixed.replace(oldRenderCM, newRenderCM);
+  console.log('✅ Fix 3: Cart now shows welcome screen on open');
+} else {
+  console.log('⚠️  Fix 3: toggleCart full pattern not found — trying partial fix');
+  // Partial fallback
+  fixed = fixed.replace(
+    `sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);renderCM();}`,
+    `sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);
+    if(!qrTable&&Object.keys(cart).length===0){
+      var w=document.getElementById('cart-view-welcome');
+      var m=document.getElementById('cart-view-menu');
+      if(w)w.style.display='flex';
+      if(m)m.style.display='none';
+    } else {renderCM();}
+  }`
+  );
+  console.log('✅ Fix 3: Partial fallback applied');
+}
+
+// ============================================
+// FIX 4 — HIDE WELCOME ON BACK TO MENU
+// When customer goes back from checkout
+// skip welcome screen — they already chose
+// ============================================
+
+const oldBackToMenu = `function backToMenu(){document.getElementById('cart-view-menu').style.display='flex';document.getElementById('cart-view-checkout').style.display='none';}`;
+
+const newBackToMenu = `function backToMenu(){
+  var w=document.getElementById('cart-view-welcome');
+  if(w)w.style.display='none';
+  document.getElementById('cart-view-menu').style.display='flex';
+  document.getElementById('cart-view-checkout').style.display='none';
 }`;
 
-if (fixed.includes(oldSchema)) {
-  fixed = fixed.replace(oldSchema, newSchema);
-  console.log('✅ Fix 5: Schema.org structured data upgraded for Google Maps + AI');
+if (fixed.includes(oldBackToMenu)) {
+  fixed = fixed.replace(oldBackToMenu, newBackToMenu);
+  console.log('✅ Fix 4: Back to menu skips welcome screen');
 } else {
-  console.log('⚠️  Fix 5: Schema pattern not found — check manually');
+  console.log('⚠️  Fix 4: backToMenu pattern not found');
 }
+
+// ============================================
+// FIX 5 — ADD BACK BUTTON ON MENU VIEW
+// So customer can change their order type
+// if they made the wrong choice
+// ============================================
+
+const oldMenuHeader = `<div style="padding:15px 15px 0;"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:12px;">Tap + to add items</div>`;
+
+const newMenuHeader = `<div style="padding:15px 15px 0;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <button onclick="showWelcome()" style="background:transparent;border:none;color:#B8A99A;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;">‹ Change</button>
+    <div id="order-type-badge" style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#D4A017;background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.2);padding:4px 12px;border-radius:20px;"></div>
+  </div>
+  <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:12px;">Tap + to add items</div>`;
+
+if (fixed.includes(oldMenuHeader)) {
+  fixed = fixed.replace(oldMenuHeader, newMenuHeader);
+  console.log('✅ Fix 5: Change button + order type badge added to menu');
+} else {
+  console.log('⚠️  Fix 5: menu header pattern not found');
+}
+
+// ============================================
+// FIX 6 — ADD showWelcome + badge update
+// ============================================
+
+const oldSelectFn = `function selectOrderType(type){`;
+
+const newSelectFn = `function showWelcome(){
+  var w=document.getElementById('cart-view-welcome');
+  var m=document.getElementById('cart-view-menu');
+  if(w)w.style.display='flex';
+  if(m)m.style.display='none';
+}
+function updateOrderBadge(){
+  var b=document.getElementById('order-type-badge');
+  if(!b)return;
+  var labels={dinein:'🍽️ Dine In',pickup:'🏃 Takeout',delivery:'🛵 Delivery'};
+  b.textContent=labels[oType]||'';
+}
+function selectOrderType(type){`;
+
+if (fixed.includes(oldSelectFn)) {
+  fixed = fixed.replace(oldSelectFn, newSelectFn);
+  console.log('✅ Fix 6: showWelcome and badge functions added');
+} else {
+  console.log('⚠️  Fix 6: selectOrderType not found for prepend');
+}
+
+// Update selectOrderType to call badge update
+fixed = fixed.replace(
+  `function selectOrderType(type){
+  // Set the order type globally
+  oType=type;
+  setOT(type);
+  // Hide welcome, show menu
+  var w=document.getElementById('cart-view-welcome');
+  var m=document.getElementById('cart-view-menu');
+  if(w)w.style.display='none';
+  if(m){m.style.display='flex';}
+  renderCM();
+}`,
+  `function selectOrderType(type){
+  oType=type;
+  setOT(type);
+  var w=document.getElementById('cart-view-welcome');
+  var m=document.getElementById('cart-view-menu');
+  if(w)w.style.display='none';
+  if(m)m.style.display='flex';
+  updateOrderBadge();
+  renderCM();
+}`
+);
 
 // JS Validation
 const scripts = [];
@@ -269,4 +289,4 @@ if (!ok) {
 }
 console.log('✅ JS validation passed');
 fs.writeFileSync('index.html', fixed, 'utf8');
-console.log('✅ index.html saved — hero upgraded + full SEO layer added');
+console.log('✅ index.html saved — order type welcome screen live');

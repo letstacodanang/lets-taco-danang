@@ -575,8 +575,50 @@ geoWelcome();
 <div id="cart-overlay" onclick="toggleCart()" style="position:fixed;inset:0;background:rgba(0,0,0,0);z-index:2001;display:none;transition:background 0.3s;"></div>
 <div id="cart-sidebar" style="position:fixed;right:-460px;top:0;bottom:0;width:460px;max-width:100vw;background:#0F0500;border-left:1px solid rgba(212,160,23,0.2);z-index:2002;display:flex;flex-direction:column;transition:right 0.35s cubic-bezier(0.4,0,0.2,1);overflow:hidden;">
 <div style="padding:25px 25px 20px;border-bottom:1px solid rgba(212,160,23,0.15);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:linear-gradient(to bottom,#1A0800,#0F0500);"><div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:#D4A017;letter-spacing:3px;">YOUR ORDER</div><div style="font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;">Let's Taco Da Nang</div></div><button onclick="toggleCart()" style="background:transparent;border:1px solid rgba(212,160,23,0.2);color:#B8A99A;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.1rem;">✕</button></div>
-<div id="cart-view-menu" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">
-<div style="padding:15px 15px 0;"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:12px;">Tap + to add items</div><div id="cart-menu-items"></div></div>
+<div id="cart-view-welcome" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;padding:30px 25px;">
+  <div style="text-align:center;margin-bottom:35px;margin-top:20px;">
+    <div style="font-size:2.5rem;margin-bottom:12px;">🌮</div>
+    <div style="font-family:Bebas Neue,sans-serif;font-size:2rem;color:#D4A017;letter-spacing:4px;margin-bottom:8px;">LET'S TACO</div>
+    <div style="font-family:Playfair Display,serif;font-style:italic;color:#B8A99A;font-size:0.95rem;">First things first — how are you eating today?</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:30px;">
+    <button onclick="selectOrderType('dinein')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:22px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#D4A017';this.style.background='rgba(212,160,23,0.06)'" onmouseout="this.style.borderColor='rgba(212,160,23,0.2)';this.style.background='rgba(255,255,255,0.03)'">
+      <span style="font-size:2.2rem;flex-shrink:0;">🍽️</span>
+      <div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#FAF0E6;letter-spacing:2px;margin-bottom:3px;">DINE IN</div>
+        <div style="font-size:0.78rem;color:#B8A99A;line-height:1.5;">Sit down, scan QR, we bring the food to you. Pay when you are ready.</div>
+      </div>
+      <span style="margin-left:auto;color:#D4A017;font-size:1.2rem;flex-shrink:0;">›</span>
+    </button>
+    <button onclick="selectOrderType('pickup')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:22px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#D4A017';this.style.background='rgba(212,160,23,0.06)'" onmouseout="this.style.borderColor='rgba(212,160,23,0.2)';this.style.background='rgba(255,255,255,0.03)'">
+      <span style="font-size:2.2rem;flex-shrink:0;">🏃</span>
+      <div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#FAF0E6;letter-spacing:2px;margin-bottom:3px;">TAKEOUT</div>
+        <div style="font-size:0.78rem;color:#B8A99A;line-height:1.5;">Order now, pick up at 43 An Thuong 30. Pay when you collect.</div>
+      </div>
+      <span style="margin-left:auto;color:#D4A017;font-size:1.2rem;flex-shrink:0;">›</span>
+    </button>
+    <button onclick="selectOrderType('delivery')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.2);border-radius:10px;padding:22px 20px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#D4A017';this.style.background='rgba(212,160,23,0.06)'" onmouseout="this.style.borderColor='rgba(212,160,23,0.2)';this.style.background='rgba(255,255,255,0.03)'">
+      <span style="font-size:2.2rem;flex-shrink:0;">🛵</span>
+      <div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:#FAF0E6;letter-spacing:2px;margin-bottom:3px;">DELIVERY</div>
+        <div style="font-size:0.78rem;color:#B8A99A;line-height:1.5;">We bring it to you. Da Nang area. Pay via WhatsApp or Zalo before cooking starts.</div>
+      </div>
+      <span style="margin-left:auto;color:#D4A017;font-size:1.2rem;flex-shrink:0;">›</span>
+    </button>
+  </div>
+  <div style="text-align:center;border-top:1px solid rgba(212,160,23,0.1);padding-top:20px;">
+    <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">Open Tue–Sun · 4:00 PM – 12:00 AM</div>
+    <div style="font-size:0.75rem;color:rgba(184,169,154,0.5);">43 An Thuong 30 · Ngu Hanh Son · Da Nang</div>
+  </div>
+</div>
+<div id="cart-view-menu" style="flex:1;overflow-y:auto;display:none;flex-direction:column;">
+<div style="padding:15px 15px 0;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <button onclick="showWelcome()" style="background:transparent;border:none;color:#B8A99A;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;">‹ Change</button>
+    <div id="order-type-badge" style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#D4A017;background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.2);padding:4px 12px;border-radius:20px;"></div>
+  </div>
+  <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:12px;">Tap + to add items</div><div id="cart-menu-items"></div></div>
 <div id="cart-items-section" style="display:none;border-top:1px solid rgba(212,160,23,0.15);padding:15px;"><div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:10px;">Your Order</div><div id="cart-items-list"></div><div style="margin-top:12px;padding:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,160,23,0.1);border-radius:6px;">
 <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#B8A99A;margin-bottom:8px;">Extras & Add-ons</div>
 <div id="addon-items"></div>
@@ -712,6 +754,28 @@ function notifyStaffPayment(){
   });
 }
 function fV(n){n=parseInt(n)||0;if(n>=1000000)return'\u20ab'+(n/1e6).toFixed(1)+'M';if(n>=1000)return'\u20ab'+(n/1000).toFixed(0)+'k';return'\u20ab'+n;}
+function showWelcome(){
+  var w=document.getElementById('cart-view-welcome');
+  var m=document.getElementById('cart-view-menu');
+  if(w)w.style.display='flex';
+  if(m)m.style.display='none';
+}
+function updateOrderBadge(){
+  var b=document.getElementById('order-type-badge');
+  if(!b)return;
+  var labels={dinein:'🍽️ Dine In',pickup:'🏃 Takeout',delivery:'🛵 Delivery'};
+  b.textContent=labels[oType]||'';
+}
+function selectOrderType(type){
+  oType=type;
+  setOT(type);
+  var w=document.getElementById('cart-view-welcome');
+  var m=document.getElementById('cart-view-menu');
+  if(w)w.style.display='none';
+  if(m)m.style.display='flex';
+  updateOrderBadge();
+  renderCM();
+}
 function toggleCart(){
   if(qrTable){
     setTimeout(function(){
@@ -719,7 +783,40 @@ function toggleCart(){
       pickTable(qrTable);
       lockQRMode(qrTable);
     },100);
-  }var sb=document.getElementById('cart-sidebar');var ov=document.getElementById('cart-overlay');var open=sb.style.right==='0px';if(open){sb.style.right='-460px';ov.style.display='none';ov.style.background='rgba(0,0,0,0)';}else{sb.style.right='0px';ov.style.display='block';setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);renderCM();}}
+  }
+  var sb=document.getElementById('cart-sidebar');
+  var ov=document.getElementById('cart-overlay');
+  var open=sb.style.right==='0px';
+  if(open){
+    sb.style.right='-460px';
+    ov.style.display='none';
+    ov.style.background='rgba(0,0,0,0)';
+  } else {
+    sb.style.right='0px';
+    ov.style.display='block';
+    setTimeout(function(){ov.style.background='rgba(0,0,0,0.7)';},10);
+    // Show welcome screen unless QR scan (already knows order type)
+    if(!qrTable){
+      var w=document.getElementById('cart-view-welcome');
+      var m=document.getElementById('cart-view-menu');
+      var co=document.getElementById('cart-view-checkout');
+      var ct=document.getElementById('cart-view-tracker');
+      // Only show welcome if not mid-order
+      var hasItems=Object.keys(cart).length>0;
+      var inCheckout=co&&co.style.display==='flex';
+      var inTracker=ct&&ct.style.display==='flex';
+      if(!hasItems&&!inCheckout&&!inTracker&&w){
+        w.style.display='flex';
+        if(m)m.style.display='none';
+      } else {
+        if(w)w.style.display='none';
+        if(m)m.style.display='flex';
+        renderCM();
+      }
+    } else {
+      renderCM();
+    }
+  }}
 function renderCM(){var h='';for(var i=0;i<CM.length;i++){var m=CM[i];var q=cart[m.id]||0;var pl=m.p2?'2 tacos: '+fV(m.p2)+' · 3 tacos: '+fV(m.p3):fV(m.p1);h+='<div class="cmi"><div style="flex:1;"><div style="font-family:Bebas Neue,sans-serif;font-size:1.15rem;color:#FAF0E6;letter-spacing:1px;">'+m.e+' '+m.name+'</div><div style="font-size:0.78rem;color:#B8A99A;margin-top:3px;">'+m.desc+'</div><div style="font-size:1rem;color:#D4A017;margin-top:5px;font-family:Bebas Neue,sans-serif;letter-spacing:1px;">'+pl+'</div></div><div class="qc"><button class="qb" onclick="cQ(\''+m.id+'\',-1)">−</button><span class="qn">'+q+'</span><button class="qb" onclick="cQ(\''+m.id+'\',1)">+</button></div></div>';}document.getElementById('cart-menu-items').innerHTML=h;
   // Render add-ons
   var ADDONS=[
@@ -769,7 +866,12 @@ function gTI(){var t=0;Object.values(cart).forEach(function(v){t+=v;});return t;
 function uCS(){var d=gCI();var cc=document.getElementById('cart-count');var ti=gTI();cc.style.display=ti>0?'flex':'none';cc.textContent=ti;var is=document.getElementById('cart-items-section');var cr=document.getElementById('cart-checkout-row');if(d.items.length>0){is.style.display='block';cr.style.display='block';var lh='';d.items.forEach(function(it){lh+='<div class="cl"><span>'+it.qty+'x '+it.name+'</span><span>'+fV(it.price)+'</span></div>';});document.getElementById('cart-items-list').innerHTML=lh;var sh='<div class="cl"><span>Subtotal</span><span>'+fV(d.total)+'</span></div><div class="cl"><span>TOTAL</span><span>'+fV(d.total)+'</span></div><div style="font-size:0.78rem;color:#B8A99A;margin-top:8px;text-align:center;">You will earn <strong style="color:#D4A017;">+'+d.points+' loyalty points</strong></div>';document.getElementById('cart-summary').innerHTML=sh;}else{is.style.display='none';cr.style.display='none';}}
 function goToCheckout(){if(!gTI())return;
   setTimeout(function(){var hpb=document.getElementById('how-to-pay-box');if(hpb)hpb.style.display=oType==='dinein'?'none':'block';},50);var d=gCI();document.getElementById('cart-view-menu').style.display='none';document.getElementById('cart-view-checkout').style.display='flex';var sh='';d.items.forEach(function(it){sh+='<div class="cl"><span>'+it.qty+'x '+it.name+'</span><span>'+fV(it.price)+'</span></div>';});sh+='<div class="cl"><span>TOTAL</span><span>'+fV(d.total)+'</span></div>';document.getElementById('checkout-summary').innerHTML=sh;}
-function backToMenu(){document.getElementById('cart-view-menu').style.display='flex';document.getElementById('cart-view-checkout').style.display='none';}
+function backToMenu(){
+  var w=document.getElementById('cart-view-welcome');
+  if(w)w.style.display='none';
+  document.getElementById('cart-view-menu').style.display='flex';
+  document.getElementById('cart-view-checkout').style.display='none';
+}
 function setOT(t){
   oType=t;
   var btns=['delivery','pickup','dinein'];
