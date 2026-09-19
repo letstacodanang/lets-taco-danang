@@ -869,7 +869,7 @@ function initApp(){
     Notification.requestPermission();
   }
   loadO();loadC();renderMenu();
-  setInterval(loadO,30000);
+  setInterval(loadO,5000);
   setInterval(checkReadyAlert,8000);
   setInterval(checkPayAlert,10000);
   setInterval(checkEOD,60000); // Check every minute for 2am report
@@ -973,7 +973,7 @@ function handlePayAlert(){
 function loadO(){
   return sbF('/rest/v1/orders?select=*&order=created_at.desc&limit=100').then(function(data){
     if(!data)return;
-    allO=data;
+    allO=data;window._ordersLoaded=true;
     var today=new Date().toISOString().split('T')[0];
     var tod=data.filter(function(o){return o.created_at&&o.created_at.startsWith(today);});
     var act=data.filter(function(o){return['placed','accepted','prepping','cooking','dispatched'].indexOf(o.status)>-1;});
@@ -1662,14 +1662,15 @@ setInterval(function(){
 }, 1000);
 
 // Also monitor for new orders appearing in the list
-var _lastOrderCount = 0;
+var _seenOrderIds = null;
 setInterval(function(){
-  var orderCards = document.querySelectorAll('.oc');
-  var count = orderCards.length;
-  if(count > _lastOrderCount && _lastOrderCount > 0){
-    notifyNewOrder();
+  if(!window._ordersLoaded || typeof allO === 'undefined' || !allO) return;
+  var ids = {};
+  allO.forEach(function(o){ ids[o.id] = 1; });
+  if(_seenOrderIds){
+    for(var k in ids){ if(!_seenOrderIds[k]){ notifyNewOrder(); break; } }
   }
-  _lastOrderCount = count;
+  _seenOrderIds = ids;
 }, 2000);
 
 console.log('✅ Lets Taco notification system loaded');
