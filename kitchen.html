@@ -42,6 +42,7 @@ header{background:#1A0800;border-bottom:2px solid rgba(212,160,23,0.3);padding:1
 .item-row:last-child{border-bottom:none;}
 .item-qty{color:#D4A017;font-family:Bebas Neue,sans-serif;font-size:1.1rem;margin-right:8px;}
 .item-name{color:#FAF0E6;flex:1;}
+.item-mods{background:rgba(212,160,23,0.16);color:#FFD866;border-left:4px solid #D4A017;padding:7px 12px;margin:2px 0 8px;font-size:1rem;font-weight:700;border-radius:0 6px 6px 0;letter-spacing:0.3px;}
 .card-notes{background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);border-radius:6px;padding:10px;margin-bottom:14px;font-size:0.82rem;color:#F7DC6F;line-height:1.5;}
 .card-time{font-size:0.72rem;color:#B8A99A;margin-bottom:14px;}
 .card-btn{width:100%;padding:14px;border:none;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:1.2rem;letter-spacing:3px;cursor:pointer;transition:all 0.2s;touch-action:manipulation;}
@@ -211,7 +212,10 @@ function renderCard(o){
   var paid=isPaid(o);
   var items=Array.isArray(o.items)?o.items:[];
   var ihtml=items.map(function(it){
-    return "<div class=\"item-row\"><span class=\"item-qty\">"+(it.qty||1)+"x</span><span class=\"item-name\">"+esc(it.name||it)+"</span><span style=\"color:#B8A99A;\">"+fV(it.price||0)+"</span></div>";
+    var q=it.qty||1,nm=it.name||it,ex="";
+    if(it.attached){q=q-it.attached;if(q<=0)return "";nm=nm+" (not on a dish)";}
+    if(Array.isArray(it.mods)&&it.mods.length){ex="<div class=\"item-mods\">"+it.mods.map(function(m){return "+ "+(m.qty||1)+" "+esc(m.name||m.id);}).join(" &nbsp;·&nbsp; ")+"</div>";}
+    return "<div class=\"item-row\"><span class=\"item-qty\">"+q+"x</span><span class=\"item-name\">"+esc(nm)+"</span></div>"+ex;
   }).join("");
   var tableRow=o.table_number?"<div class=\"card-table\">TABLE "+esc(o.table_number)+"</div>":"";
   var notesRow=o.special_instructions?"<div class=\"card-notes\">📝 "+esc(o.special_instructions)+"</div>":"";

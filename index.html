@@ -828,12 +828,47 @@ function toggleCart(){
       renderCM();
     }
   }}
-function renderCM(){var h='';for(var i=0;i<CM.length;i++){var m=CM[i];var q=cart[m.id]||0;var pl=m.p2?'2 tacos: '+fV(m.p2)+' · 3 tacos: '+fV(m.p3):fV(m.p1);h+='<div class="cmi"><div style="flex:1;"><div style="font-family:Bebas Neue,sans-serif;font-size:1.15rem;color:#FAF0E6;letter-spacing:1px;">'+m.e+' '+m.name+'</div><div style="font-size:0.78rem;color:#B8A99A;margin-top:3px;">'+m.desc+'</div><div style="font-size:1rem;color:#D4A017;margin-top:5px;font-family:Bebas Neue,sans-serif;letter-spacing:1px;">'+pl+'</div></div><div class="qc"><button class="qb" onclick="cQ(\''+m.id+'\',-1)">−</button><span class="qn">'+q+'</span><button class="qb" onclick="cQ(\''+m.id+'\',1)">+</button></div></div>';}document.getElementById('cart-menu-items').innerHTML=h;
+var att={};
+var XM=[{id:'cheese',name:'Extra Cheese',p:10000,e:'🧀'},{id:'avo',name:'Extra Avocado',p:10000,e:'🥑'},{id:'dip',name:'Birria Sauce',p:25000,e:'🍵',only:'birria'}];
+function isMainId(id){for(var i=0;i<CM.length;i++){if(CM[i].id===id)return !!CM[i].p2||id.indexOf('rice_')===0;}return false;}
+function syncAtt(){
+  var tot={cheese:0,avo:0,dip:0};
+  Object.keys(att).forEach(function(mid){
+    var q=cart[mid]||0;
+    Object.keys(att[mid]).forEach(function(x){
+      if(att[mid][x]>q)att[mid][x]=q;
+      if(att[mid][x]<=0)delete att[mid][x];else tot[x]+=att[mid][x];
+    });
+    if(!q||!Object.keys(att[mid]).length)delete att[mid];
+  });
+  XM.forEach(function(x){if(tot[x.id])cart[x.id]=tot[x.id];else delete cart[x.id];});
+}
+function aQ(mid,xid,d){
+  var cur=(att[mid]&&att[mid][xid])||0;
+  var n=Math.max(0,Math.min(cart[mid]||0,cur+d));
+  if(!att[mid])att[mid]={};
+  att[mid][xid]=n;
+  syncAtt();renderCM();
+}
+function extrasHtml(){
+  var h='',bs='width:26px;height:26px;border-radius:50%;border:1px solid rgba(212,160,23,0.4);background:transparent;color:#D4A017;font-size:1.1rem;cursor:pointer;line-height:1;';
+  for(var i=0;i<CM.length;i++){
+    var m=CM[i],q=cart[m.id]||0;if(!q||!isMainId(m.id))continue;
+    var row='';
+    XM.forEach(function(x){
+      if(x.only&&x.only!==m.id)return;
+      var n=(att[m.id]&&att[m.id][x.id])||0;
+      row+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;"><div style="font-size:0.82rem;color:#FAF0E6;">'+x.e+' '+x.name+' <span style="color:#D4A017;font-family:Bebas Neue,sans-serif;margin-left:6px;">'+fV(x.p)+'</span></div><div style="display:flex;align-items:center;gap:8px;">'
+        +(n>0?'<button data-xm="'+m.id+'|'+x.id+'|-1" style="'+bs+'">-</button><span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:#FAF0E6;min-width:18px;text-align:center;">'+n+'</span>':'')
+        +'<button data-xm="'+m.id+'|'+x.id+'|1" style="'+bs+'">+</button></div></div>';
+    });
+    h+='<div style="border:1px solid rgba(212,160,23,0.25);border-radius:6px;padding:8px 12px;margin-bottom:10px;"><div style="font-family:Bebas Neue,sans-serif;letter-spacing:1px;color:#D4A017;font-size:0.95rem;">EXTRAS FOR '+q+'x '+esc(m.name)+'</div>'+row+'</div>';
+  }
+  return h?'<div style="font-size:0.72rem;color:#B8A99A;letter-spacing:2px;margin:6px 0 8px;">ADD EXTRAS TO A DISH</div>'+h+'<div style="font-size:0.72rem;color:#B8A99A;letter-spacing:2px;margin:10px 0 4px;">DRINKS &amp; SIDES</div>':'';
+}
+function renderCM(){var h='';for(var i=0;i<CM.length;i++){var m=CM[i];if(m.id==='cheese'||m.id==='avo'||m.id==='dip')continue;var q=cart[m.id]||0;var pl=m.p2?'2 tacos: '+fV(m.p2)+' · 3 tacos: '+fV(m.p3):fV(m.p1);h+='<div class="cmi"><div style="flex:1;"><div style="font-family:Bebas Neue,sans-serif;font-size:1.15rem;color:#FAF0E6;letter-spacing:1px;">'+m.e+' '+m.name+'</div><div style="font-size:0.78rem;color:#B8A99A;margin-top:3px;">'+m.desc+'</div><div style="font-size:1rem;color:#D4A017;margin-top:5px;font-family:Bebas Neue,sans-serif;letter-spacing:1px;">'+pl+'</div></div><div class="qc"><button class="qb" onclick="cQ(\''+m.id+'\',-1)">−</button><span class="qn">'+q+'</span><button class="qb" onclick="cQ(\''+m.id+'\',1)">+</button></div></div>';}document.getElementById('cart-menu-items').innerHTML=h;
   // Render add-ons
   var ADDONS=[
-    {id:'cheese',name:'Extra Cheese',p:10000,e:'🧀'},
-    {id:'avo',name:'Extra Avocado',p:10000,e:'🥑'},
-    {id:'dip',name:'Birria Sauce',p:25000,e:'🍵'},
     {id:'chips',name:'Rice Chips + Avo Salsa',p:100000,e:'🥑'},
     {id:'coke',name:'Coke',p:20000,e:'🥤'},
     {id:'7up',name:'7Up',p:20000,e:'🥤'}
@@ -841,14 +876,11 @@ function renderCM(){var h='';for(var i=0;i<CM.length;i++){var m=CM[i];var q=cart
   var ag=document.getElementById('addon-items');
   if(ag){
     var ADDONS2=[
-      {id:'cheese',name:'Extra Cheese',p:10000,e:'🧀'},
-      {id:'avo',name:'Extra Avocado',p:10000,e:'🥑'},
-      {id:'dip',name:'Birria Sauce',p:25000,e:'🍵'},
       {id:'chips',name:'Rice Chips',p:100000,e:'🥑'},
       {id:'coke',name:'Coke',p:20000,e:'🥤'},
       {id:'7up',name:'7Up',p:20000,e:'🥤'}
     ];
-    var ah='';
+    var ah=extrasHtml();
     ADDONS2.forEach(function(a){
       var q=cart[a.id]||0;
       ah+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">';
@@ -862,7 +894,7 @@ function renderCM(){var h='';for(var i=0;i<CM.length;i++){var m=CM[i];var q=cart
       ah+='<button data-aid="'+a.id+'" data-d="1" style="width:26px;height:26px;border-radius:50%;border:1px solid rgba(212,160,23,0.4);background:transparent;color:#D4A017;font-size:1rem;cursor:pointer;line-height:1;">+</button>';
       ah+='</div></div>';
     });
-    ag.innerHTML=ah;
+    ag.innerHTML=ah;ag.querySelectorAll('[data-xm]').forEach(function(b){b.addEventListener('click',function(){var p=this.getAttribute('data-xm').split('|');aQ(p[0],p[1],parseInt(p[2],10));});});
     ag.querySelectorAll('[data-aid]').forEach(function(btn){
       btn.addEventListener('click',function(){
         cQ(this.getAttribute('data-aid'),parseInt(this.getAttribute('data-d')));
@@ -871,7 +903,7 @@ function renderCM(){var h='';for(var i=0;i<CM.length;i++){var m=CM[i];var q=cart
   }
   uCS();
 }
-function cQ(id,d){var c=cart[id]||0;var n=Math.max(0,c+d);if(!n)delete cart[id];else cart[id]=n;renderCM();}
+function cQ(id,d){var c=cart[id]||0;var n=Math.max(0,c+d);if(!n)delete cart[id];else cart[id]=n;syncAtt();renderCM();}
 function gCI(){
   var its=[],tot=0,units=[],nT=0,share={},i;
   for(i=0;i<CM.length;i++){var m=CM[i],q=cart[m.id]||0;if(q&&m.p2){for(var u=0;u<q;u++)units.push(m);nT+=q;}}
@@ -982,7 +1014,7 @@ function setCM(m){
   if(m==='whatsapp'){wa.style.background='linear-gradient(135deg,#25D366,#128C7E)';wa.style.color='white';wa.style.border='none';zl.style.background='rgba(255,255,255,0.04)';zl.style.color='#B8A99A';zl.style.border='2px solid rgba(255,255,255,0.1)';}
   else{zl.style.background='linear-gradient(135deg,#0068FF,#0052CC)';zl.style.color='white';zl.style.border='none';wa.style.background='rgba(255,255,255,0.04)';wa.style.color='#B8A99A';wa.style.border='2px solid rgba(255,255,255,0.1)';}
 }
-async function placeOrder(){var btn=document.getElementById('place-btn');var err=document.getElementById('co-err');err.style.display='none';var d=gCI();if(!d.items.length){err.style.display='block';err.textContent='Your cart is empty! Add some tacos first.';return;}if(d.tacoErr){err.style.display='block';err.textContent='Tacos are sold in 2s or 3s. Please add at least 1 more taco.';return;}var name=document.getElementById('c-name').value.trim();var email=document.getElementById('c-email').value.trim().toLowerCase();var phone=document.getElementById('c-phone').value.trim();if(!name){err.style.display='block';err.textContent='Please enter your name.';return;}if(oType==='dinein'){var tbl=document.getElementById('c-table').value;if(!tbl){err.style.display='block';err.textContent='Please select your table number.';return;}}else{if(!email||!phone){err.style.display='block';err.textContent='Please fill in your email and phone number.';return;}}if(oType==='delivery'&&!document.getElementById('c-address').value.trim()){err.style.display='block';err.textContent='Please enter your delivery address.';return;}btn.textContent='PLACING YOUR ORDER...';btn.disabled=true;try{var tblNum=oType==='dinein'?document.getElementById('c-table').value:null;if(!window._ltIdem)window._ltIdem=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('k'+Date.now()+Math.random().toString(36).slice(2));var ord=await sbC('/rest/v1/rpc/create_order',{method:'POST',body:JSON.stringify({p:{order_type:oType,name:name,email:email,phone:phone,address:oType==='delivery'?document.getElementById('c-address').value.trim():null,table_number:tblNum,notes:document.getElementById('cart-notes').value||null,contact_method:contactMethod,idem_key:window._ltIdem,items:d.items.map(function(i){return{id:i.id,qty:i.qty};})}})});if(ord&&ord.id){window._ltIdem=null;oId=ord.id;var ref=ord.order_ref;d.total=ord.total;d.points=ord.points;showTracker(ref,d);
+async function placeOrder(){var btn=document.getElementById('place-btn');var err=document.getElementById('co-err');err.style.display='none';var d=gCI();if(!d.items.length){err.style.display='block';err.textContent='Your cart is empty! Add some tacos first.';return;}if(d.tacoErr){err.style.display='block';err.textContent='Tacos are sold in 2s or 3s. Please add at least 1 more taco.';return;}var name=document.getElementById('c-name').value.trim();var email=document.getElementById('c-email').value.trim().toLowerCase();var phone=document.getElementById('c-phone').value.trim();if(!name){err.style.display='block';err.textContent='Please enter your name.';return;}if(oType==='dinein'){var tbl=document.getElementById('c-table').value;if(!tbl){err.style.display='block';err.textContent='Please select your table number.';return;}}else{if(!email||!phone){err.style.display='block';err.textContent='Please fill in your email and phone number.';return;}}if(oType==='delivery'&&!document.getElementById('c-address').value.trim()){err.style.display='block';err.textContent='Please enter your delivery address.';return;}btn.textContent='PLACING YOUR ORDER...';btn.disabled=true;try{var tblNum=oType==='dinein'?document.getElementById('c-table').value:null;if(!window._ltIdem)window._ltIdem=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('k'+Date.now()+Math.random().toString(36).slice(2));var ord=await sbC('/rest/v1/rpc/create_order',{method:'POST',body:JSON.stringify({p:{order_type:oType,name:name,email:email,phone:phone,address:oType==='delivery'?document.getElementById('c-address').value.trim():null,table_number:tblNum,notes:document.getElementById('cart-notes').value||null,contact_method:contactMethod,idem_key:window._ltIdem,items:d.items.map(function(i){return{id:i.id,qty:i.qty};}),attach:att}})});if(ord&&ord.id){window._ltIdem=null;oId=ord.id;var ref=ord.order_ref;d.total=ord.total;d.points=ord.points;showTracker(ref,d);
   // Save session so ORDER MORE is instant — no re-entry needed
   try{
     var sess={
@@ -1026,7 +1058,7 @@ function showTracker(ref,d){document.getElementById('cart-view-checkout').style.
   // Dine in pay alert
   var da=document.getElementById('dinein-pay-alert');
   if(da)da.style.display='none';
-  rTR('placed');if(oId)tInt=setInterval(pollS,10000);cart={};document.getElementById('cart-count').style.display='none';}
+  rTR('placed');if(oId)tInt=setInterval(pollS,10000);cart={};att={};document.getElementById('cart-count').style.display='none';}
 function rTR(status){var ss=['placed','accepted','prepping','cooking','dispatched','delivered'];var sl=['Placed','Accepted','Prepping','Cooking','On Way','Done'];var si2=['📥','✅','🔪','🔥','🛵','🎉'];var ix=ss.indexOf(status);var h='';for(var i=0;i<6;i++){var dn=i<ix;var cu=i===ix;h+='<div class="tsm"><div class="tdm'+(dn?' done':cu?' curr':'')+'">'+( dn?'✓':si2[i])+'</div><div class="tlm'+(dn?' done':cu?' curr':'')+'">'+sl[i]+'</div></div>';if(i<5)h+='<div class="tlnm'+(dn?' done':'')+'"></div>';}document.getElementById('order-tracker-steps').innerHTML=h;}
 function pollS(){if(!oId)return;sbC('/rest/v1/rpc/track_order',{method:'POST',body:JSON.stringify({p_id:oId})}).then(function(d){if(d&&d.length>0){rTR(d[0].status);if(d[0].status==='dispatched'&&d[0].driver_name){(document.getElementById('payment-reminder-delivery')||document.createElement('div')).innerHTML='<div style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:#27AE60;letter-spacing:2px;margin-bottom:8px;">🛵 ON THE WAY!</div><div style="font-size:0.85rem;color:#FAF0E6;line-height:1.6;">Driver <strong>'+esc(d[0].driver_name)+'</strong> is heading to you!<br>Contact: <strong style="color:#D4A017;">'+esc(d[0].driver_phone)+'</strong></div>';}if(d[0].status==='delivered'){clearInterval(tInt);(document.getElementById('payment-reminder-delivery')||document.createElement('div')).style.display='none';}}});}
 function newOrder(){
