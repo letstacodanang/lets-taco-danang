@@ -724,6 +724,12 @@ var NS = {placed:'accepted',accepted:'prepping',prepping:'cooking',cooking:'read
 var NL = {placed:'Accept Order',accepted:'Prepping',prepping:'Cooking',cooking:'Mark Ready',ready:'Dispatch',dispatched:'Delivered'};
 
 function sbF(p,o){return LTAuth.api(p,o||{});}
+// signed-in write helper: rejects when the database refuses, so buttons can show the error
+function sbC(p,o){return LTAuth.fetch(p,o||{}).then(function(r){if(!r||!r.ok){throw new Error('http '+(r?r.status:'signed out'));}return r.status===204?null:r.json().catch(function(){return null;});});}
+function showToast(t,m){showT(t,m);}
+function loadOrders(){loadO();}
+function loadHome(){loadO();}
+var handleReadyAlert_orig=null;
 function showT(t,m){
   document.getElementById('tt').textContent=t;
   document.getElementById('tm').textContent=m||'';
@@ -1685,7 +1691,7 @@ function sendBrowserNotif(title, body, icon){
 <script>
 var mktContacts={whatsapp:[],zalo:[]};
 function loadMarketing(){
-  sbC("/rest/v1/orders?select=customer_name,customer_phone,contact_method&order=created_at.desc")
+  sbF("/rest/v1/orders?select=customer_name,customer_phone,contact_method&order=created_at.desc")
   .then(function(orders){
     if(!orders)return;
     var seen={},wa=[],zl=[];
