@@ -66,20 +66,31 @@ header{background:#1A0800;border-bottom:2px solid rgba(212,160,23,0.3);padding:1
 </style>
 </head>
 <body>
+<div id="klogin" style="position:fixed;inset:0;background:#0a0300;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px">
+  <form onsubmit="return kLogin(event)" style="background:#1A0800;border:1px solid rgba(212,160,23,0.3);border-radius:12px;padding:32px;width:100%;max-width:360px">
+    <div class="hlogo" style="text-align:center;margin-bottom:20px">KITCHEN LOGIN</div>
+    <input id="kemail" type="email" autocomplete="username" placeholder="Email" style="width:100%;padding:12px;margin-bottom:12px;border-radius:6px;border:1px solid rgba(212,160,23,0.3);background:#0a0300;color:#FAF0E6;font-size:1rem">
+    <input id="kpass" type="password" autocomplete="current-password" placeholder="Password" style="width:100%;padding:12px;margin-bottom:12px;border-radius:6px;border:1px solid rgba(212,160,23,0.3);background:#0a0300;color:#FAF0E6;font-size:1rem">
+    <button type="submit" class="card-btn btn-start">SIGN IN</button>
+    <div id="kerr" style="color:#E74C3C;font-size:0.85rem;margin-top:12px;text-align:center;min-height:1.2em"></div>
+  </form>
+</div>
 <header>
   <div class="hlogo">KITCHEN — LETS TACO</div>
   <div class="hright">
     <div class="hcount" id="kcount">0 ACTIVE</div>
     <div class="hclock" id="kclock">00:00:00</div>
-    <div class="hpoll" title="Live — polling every 8s"></div>
+    <div class="hpoll" title="Live"></div>
+    <span id="kuser" style="font-size:0.8rem;color:#B8A99A;letter-spacing:1px"></span>
+    <button onclick="kLogout()" style="background:transparent;border:1px solid rgba(212,160,23,0.4);color:#D4A017;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:0.75rem;letter-spacing:2px">SIGN OUT</button>
   </div>
 </header>
 <div class="grid" id="kgrid">
   <div class="empty-state"><div class="emoji">🌮</div><p>No active orders — standing by</p></div>
 </div>
+<script src="/auth.js"></script>
 <script>
 var SB="https://kigqjuxxoeoeezjguuxu.supabase.co";
-var SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpZ3FqdXh4b2VvZWV6amd1dXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTgxNjIsImV4cCI6MjA5NTYzNDE2Mn0.e-V7jsZ0yEjHUziUeFAZQkNDgxKmMq_v4TcYcHBEyhQ";
 var lastIds=[];
 var lastPaidIds=[];
 
@@ -89,7 +100,7 @@ function playNew(){try{var c=mkCtx();[0,0.18,0.36].forEach(function(t){beep(c,88
 function playReady(){try{var c=mkCtx();[0,0.15,0.30,0.45].forEach(function(t,i){beep(c,600+i*120,c.currentTime+t,0.14);});}catch(e){}}
 function playPaid(){try{var c=mkCtx();[0,0.12,0.24].forEach(function(t,i){beep(c,500+i*150,c.currentTime+t,0.15);});}catch(e){}}
 
-function sbF(p){return fetch(SB+p,{headers:{"apikey":SK,"Authorization":"Bearer "+SK}}).then(function(r){return r.json();}).catch(function(){return null;});}
+function sbF(p){return LTAuth.api(p);}
 function fV(n){n=parseInt(n)||0;if(n>=1000)return "\u20ab"+(n/1000).toFixed(0)+"k";return "\u20ab"+n;}
 function tAgo(ts){if(!ts)return "";var d=Math.floor((Date.now()-new Date(ts))/1000);if(d<60)return d+"s ago";if(d<3600)return Math.floor(d/60)+"m ago";return Math.floor(d/3600)+"h ago";}
 
@@ -179,7 +190,7 @@ function render(orders){
       var origTxt=this.textContent;
       this.textContent="SAVING...";this.disabled=true;this.style.opacity="0.6";
       var _btn=this;
-      fetch(SB+"/rest/v1/orders?id=eq."+id,{method:"PATCH",headers:{"apikey":SK,"Authorization":"Bearer "+SK,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(u)}).then(function(r){
+      LTAuth.fetch("/rest/v1/orders?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify(u)}).then(function(r){
         if(r.ok||r.status===204){
           if(ns==="delivered"){
             var card=_btn.closest(".card");
@@ -200,10 +211,10 @@ function renderCard(o){
   var paid=isPaid(o);
   var items=Array.isArray(o.items)?o.items:[];
   var ihtml=items.map(function(it){
-    return "<div class=\"item-row\"><span class=\"item-qty\">"+(it.qty||1)+"x</span><span class=\"item-name\">"+(it.name||it)+"</span><span style=\"color:#B8A99A;\">"+fV(it.price||0)+"</span></div>";
+    return "<div class=\"item-row\"><span class=\"item-qty\">"+(it.qty||1)+"x</span><span class=\"item-name\">"+esc(it.name||it)+"</span><span style=\"color:#B8A99A;\">"+fV(it.price||0)+"</span></div>";
   }).join("");
-  var tableRow=o.table_number?"<div class=\"card-table\">TABLE "+o.table_number+"</div>":"";
-  var notesRow=o.special_instructions?"<div class=\"card-notes\">📝 "+o.special_instructions+"</div>":"";
+  var tableRow=o.table_number?"<div class=\"card-table\">TABLE "+esc(o.table_number)+"</div>":"";
+  var notesRow=o.special_instructions?"<div class=\"card-notes\">📝 "+esc(o.special_instructions)+"</div>":"";
 
   // Payment status banner for takeout/delivery
   var payBanner="";
@@ -217,9 +228,9 @@ function renderCard(o){
 
   var html="";
   html+="<div class=\"card "+sm.cls+"\">";
-  html+="<div class=\"card-header\"><div><div class=\"card-ref\">"+o.order_ref+"</div><span class=\"status-badge "+sm.badge+"\">"+sm.label+"</span></div>"+typeLabel(o)+"</div>";
+  html+="<div class=\"card-header\"><div><div class=\"card-ref\">"+esc(o.order_ref)+"</div><span class=\"status-badge "+sm.badge+"\">"+sm.label+"</span></div>"+typeLabel(o)+"</div>";
   html+=tableRow;
-  html+="<div class=\"card-customer\">"+(o.customer_name||"Customer")+(o.customer_phone?" · "+o.customer_phone:"")+"</div>";
+  html+="<div class=\"card-customer\">"+esc(o.customer_name||"Customer")+"</div>";
   html+=payBanner;
   html+="<div class=\"card-items\">"+ihtml+"</div>";
   html+=notesRow;
@@ -230,7 +241,7 @@ function renderCard(o){
 }
 
 function poll(){
-  sbF("/rest/v1/orders?select=*&status=in.(placed,accepted,prepping,cooking,ready)&order=created_at.asc").then(function(d){if(d)render(d);});
+  sbF("/rest/v1/orders?select=id,order_ref,order_type,table_number,customer_name,payment_status,status,items,special_instructions,created_at&status=in.(placed,accepted,prepping,cooking,ready)&order=created_at.asc").then(function(d){if(Array.isArray(d))render(d);});
 }
 
 setInterval(function(){
@@ -238,8 +249,33 @@ setInterval(function(){
   document.getElementById("kclock").textContent=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")+":"+String(n.getSeconds()).padStart(2,"0");
 },1000);
 
-poll();
-setInterval(poll,2000);
+var kStarted=false,kTimer=null;
+function kOk(role){return role==='kitchen'||role==='staff'||role==='owner';}
+function kShowLogin(msg){document.getElementById('klogin').style.display='flex';document.getElementById('kerr').textContent=msg||'';}
+function kStart(){
+  document.getElementById('klogin').style.display='none';
+  document.getElementById('kuser').textContent=(LTAuth.session()||{}).name||'';
+  if(kStarted)return;kStarted=true;poll();kTimer=setInterval(poll,2000);
+}
+function kStop(){kStarted=false;clearInterval(kTimer);lastIds=[];lastPaidIds=[];document.getElementById('kgrid').innerHTML='';}
+function kLogin(ev){
+  ev.preventDefault();
+  var e=document.getElementById('kemail').value.trim().toLowerCase(),p=document.getElementById('kpass').value;
+  if(!e||!p){document.getElementById('kerr').textContent='Enter email and password';return false;}
+  LTAuth.signIn(e,p).then(function(r){
+    if(!r.ok){document.getElementById('kerr').textContent=r.msg;return;}
+    if(!kOk(r.role)){LTAuth.signOut();document.getElementById('kerr').textContent='This account has no kitchen access.';return;}
+    document.getElementById('kpass').value='';kStart();
+  });
+  return false;
+}
+function kLogout(){LTAuth.signOut();kStop();kShowLogin('');}
+window.addEventListener('lt-auth-lost',function(){kStop();kShowLogin('Session expired - please sign in again');});
+(function(){
+  var s=LTAuth.session();
+  if(s&&kOk(s.role)){LTAuth.ready().then(function(ok){if(ok)kStart();else kShowLogin('');});}
+  else kShowLogin('');
+})();
 </script>
 </body>
 </html>

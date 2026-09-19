@@ -489,8 +489,8 @@ input:focus{outline:none;}
     <div class="ll">LET'S TACO</div>
     <div class="ls" id="lsub">Staff Login</div>
     <div id="sv">
-      <div class="fg"><label>Staff Password</label><input type="password" id="lps" placeholder="Enter staff password" onkeydown="if(event.key==='Enter')doSL()"></div>
-      <div class="fg" id="nf" style="display:none"><label>Your Name</label><input type="text" id="ln" placeholder="e.g. Minh, Lan, Danny" onkeydown="if(event.key==='Enter')doSL()"><div style="font-size:0.72rem;color:#B8A99A;margin-top:6px;line-height:1.5">Use the same name every shift.</div></div>
+      <div class="fg"><label>Email</label><input type="email" id="lse" placeholder="your work email" autocomplete="username" onkeydown="if(event.key==='Enter')doSL()"></div>
+      <div class="fg"><label>Password</label><input type="password" id="lps" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doSL()"></div>
       <button class="btn-l" id="lbs" onclick="doSL()">START SHIFT</button>
       <div style="text-align:center;margin-top:15px"><button onclick="showOL()" style="background:transparent;border:none;color:#B8A99A;font-size:0.75rem;cursor:pointer;text-decoration:underline">Owner login</button></div>
     </div>
@@ -700,13 +700,9 @@ input:focus{outline:none;}
 </div>
 <div class="mo" id="nmo"><div class="mb"><div class="mt">Owner Notes</div><textarea class="mi2" id="ni" rows="4" placeholder="Private notes..."></textarea><div class="ma"><button class="mx" id="ncl">Cancel</button><button class="mc" id="nsv">Save</button></div></div></div>
 <div class="mo" id="dmo"><div class="mb"><div class="mt">Assign Driver</div><input class="mi2" id="dn" placeholder="Driver name"><input class="mi2" id="dp" placeholder="Driver phone"><div class="ma"><button class="mx" id="dcl">Cancel</button><button class="mc" id="dsv">Assign</button></div></div></div>
+<script src="/auth.js"></script>
 <script>
 var SB = 'https://kigqjuxxoeoeezjguuxu.supabase.co';
-var SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpZ3FqdXh4b2VvZWV6amd1dXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTgxNjIsImV4cCI6MjA5NTYzNDE2Mn0.e-V7jsZ0yEjHUziUeFAZQkNDgxKmMq_v4TcYcHBEyhQ';
-var AEMAIL = 'letstacodanang@gmail.com';
-var APASS="d47d678e778fa11eb69b1f58c41719aae521caec31426a80cb87b8535c5c59c1";
-var SPASS="cadf43119a68cba8975678a0e9f3ac8a324c0bd2ca38167b0882b47144814ab0";
-var OPIN="3dd9c0995d54c0abd51a90f1d57b1ce77bc885fc8a7cea52dcad3c2540dda5ee";
 var isOwner=false,currentStaff='',shiftId=null;
 var allO = [], allC = [], curF = 'all', nId = null, dId = null, attempts = 0, locked = false, rOpen = true;
 var MENU = [
@@ -727,11 +723,7 @@ var SBS = {placed:'sb-p',accepted:'sb-a',prepping:'sb-r',cooking:'sb-k',ready:'s
 var NS = {placed:'accepted',accepted:'prepping',prepping:'cooking',cooking:'ready',ready:'dispatched',dispatched:'delivered'};
 var NL = {placed:'Accept Order',accepted:'Prepping',prepping:'Cooking',cooking:'Mark Ready',ready:'Dispatch',dispatched:'Delivered'};
 
-function sbF(p,o){
-  o=o||{};
-  return fetch(SB+p,Object.assign({},o,{headers:Object.assign({'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},o.headers||{})}))
-  .then(function(r){return r.status===204?null:r.json();}).catch(function(){return null;});
-}
+function sbF(p,o){return LTAuth.api(p,o||{});}
 function showT(t,m){
   document.getElementById('tt').textContent=t;
   document.getElementById('tm').textContent=m||'';
@@ -765,6 +757,7 @@ document.getElementById('lbtn').addEventListener('click',doLogin);
 document.getElementById('lp').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 document.getElementById('lout').addEventListener('click',function(){
   if(shiftId){sbF('/rest/v1/staff_shifts?id=eq.'+shiftId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({logout_time:new Date().toISOString()})});shiftId=null;}
+  LTAuth.signOut();
   // Clear session on explicit logout
   localStorage.removeItem('lt_role');
   localStorage.removeItem('lt_staff');
@@ -809,32 +802,40 @@ async function sha256(message){
   var hashArray=Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(function(b){return b.toString(16).padStart(2,'0');}).join('');
 }
-function doLogin(){
+function ltLockCheck(){
+  if(attempts>=5){
+    locked=true;var secs=600;var err=document.getElementById('lerr');err.style.display='none';
+    var lk=document.getElementById('llock');lk.style.display='block';
+    var t=setInterval(function(){secs--;lk.textContent='Too many attempts. Try again in '+Math.floor(secs/60)+'m '+(secs%60)+'s';if(secs<=0){clearInterval(t);locked=false;attempts=0;lk.style.display='none';}},1000);
+  }
+}
+function ltLogin(e,p){
   if(locked)return;
-  var e=document.getElementById('le').value.trim().toLowerCase();
-  var p=document.getElementById('lp').value;
   var err=document.getElementById('lerr');
   if(!e||!p){err.style.display='block';err.textContent='Please enter email and password';return;}
-  sha256(p).then(function(ph){
-    if(e===AEMAIL.toLowerCase()&&ph===APASS){
-      document.getElementById('lw').style.display='none';
-      document.getElementById('app').style.display='flex';
-      err.style.display='none';
-      attempts=0;isOwner=true;currentStaff='Owner';
-      localStorage.setItem('lt_role','owner');
-      localStorage.setItem('lt_ts',Date.now().toString());
-      document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
-      initApp();return;
+  LTAuth.signIn(e,p).then(function(r){
+    if(!r.ok){attempts++;err.style.display='block';err.textContent=r.msg+' ('+attempts+'/5)';ltLockCheck();return;}
+    if(r.role!=='owner'&&r.role!=='staff'){
+      LTAuth.signOut();err.style.display='block';
+      err.textContent='This account does not have admin access. Ask the owner to assign a role.';return;
     }
-    attempts++;
-    err.style.display='block';
-    err.textContent='Incorrect email or password ('+attempts+'/5)';
-    if(attempts>=5){
-      locked=true;var secs=600;err.style.display='none';
-      var lk=document.getElementById('llock');lk.style.display='block';
-      var t=setInterval(function(){secs--;lk.textContent='Too many attempts. Try again in '+Math.floor(secs/60)+'m '+(secs%60)+'s';if(secs<=0){clearInterval(t);locked=false;attempts=0;lk.style.display='none';}},1000);
-    }
+    err.style.display='none';attempts=0;
+    document.getElementById('lp').value='';document.getElementById('lps').value='';
+    enterApp(r,true);
   });
+}
+function doLogin(){ltLogin(document.getElementById('le').value.trim().toLowerCase(),document.getElementById('lp').value);}
+function enterApp(r,fresh){
+  isOwner=(r.role==='owner');
+  currentStaff=isOwner?'Owner':r.name;
+  document.getElementById('lw').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.querySelectorAll('.owner-only').forEach(function(el){el.style.display=isOwner?'':'none';});
+  if(fresh&&!isOwner){
+    sbF('/rest/v1/staff_shifts',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({staff_name:currentStaff,login_time:new Date().toISOString()})}).then(function(d){if(d&&d.length>0)shiftId=d[0].id;});
+    showT('Welcome '+currentStaff+'!','Shift started. Have a great service!');
+  }
+  initApp();
 }
 
 var PGT={home:'Dashboard',dinein:'Dine In',orders:'All Orders',customers:'Customers',revenue:'Revenue',menu:'Menu Items',settings:'Settings',help:'Staff Guide'};
@@ -921,7 +922,7 @@ function checkReadyAlert(){
   var newReady=ids.filter(function(id){return lastReadyIds.indexOf(id)===-1;});
   if(newReady.length>0){
     var o=readyOrds.find(function(x){return x.id===newReady[0];});
-    var msg=o?(o.order_type==='dinein'?'TABLE '+(o.table_number||'?')+' ORDER READY FOR PICKUP':'ORDER '+(o.order_ref||'')+ ' IS READY'):'ORDER READY FOR PICKUP';
+    var msg=o?(o.order_type==='dinein'?'TABLE '+esc(o.table_number||'?')+' ORDER READY FOR PICKUP':'ORDER '+(o.order_ref||'')+ ' IS READY'):'ORDER READY FOR PICKUP';
     document.getElementById('ready-alert-text').textContent=msg;
     document.getElementById('ready-alert').style.display='block';
     try{var ac=new(window.AudioContext||window.webkitAudioContext)();var os=ac.createOscillator();var gs=ac.createGain();os.connect(gs);gs.connect(ac.destination);os.frequency.value=880;gs.gain.setValueAtTime(0.5,ac.currentTime);gs.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.4);os.start(ac.currentTime);os.stop(ac.currentTime+0.4);}catch(e){}
@@ -940,7 +941,7 @@ function checkPayAlert(){
   var newPay=ids.filter(function(id){return lastPayIds.indexOf(id)===-1;});
   if(newPay.length>0){
     var o=payOrds.find(function(x){return x.id===newPay[0];});
-    var msg=o?'TABLE '+(o.table_number||'?')+' — READY TO PAY':'TABLE READY TO PAY';
+    var msg=o?'TABLE '+esc(o.table_number||'?')+' — READY TO PAY':'TABLE READY TO PAY';
     document.getElementById('pay-alert-text').textContent=msg;
     document.getElementById('pay-alert').style.display='block';
     try{
@@ -1074,7 +1075,7 @@ function renderCard(o){
   var ihtml='';
   for(var k=0;k<items.length;k++){
     var it=items[k];
-    ihtml+='<div class="oirow"><span>'+(it.qty||1)+'x '+(it.name||it)+'</span><span>'+fV(it.price||0)+'</span></div>';
+    ihtml+='<div class="oirow"><span>'+(it.qty||1)+'x '+esc(it.name||it)+'</span><span>'+fV(it.price||0)+'</span></div>';
   }
   var cm=o.contact_method||'whatsapp';
   var cml=cm==='zalo'?'Zalo':'WhatsApp';
@@ -1087,7 +1088,7 @@ function renderCard(o){
   acts+='<button class="abtn abtn-muted" data-nts="'+o.id+'">Notes</button>';
   if(o.status!=='delivered'&&o.status!=='cancelled')acts+='<button class="abtn abtn-red" data-cnc="'+o.id+'">Cancel</button>';
   var typeTag='';
-  if(o.order_type==='dinein'){typeTag='<span style="background:rgba(212,160,23,0.15);color:#D4A017;border:1px solid rgba(212,160,23,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TABLE '+(o.table_number||'?')+'</span>';if(o.payment_status==='requested')typeTag+='<span style="background:rgba(212,160,23,0.3);color:#0F0500;padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;font-weight:700;margin-left:4px;">💳 PAY</span>';}
+  if(o.order_type==='dinein'){typeTag='<span style="background:rgba(212,160,23,0.15);color:#D4A017;border:1px solid rgba(212,160,23,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TABLE '+esc(o.table_number||'?')+'</span>';if(o.payment_status==='requested')typeTag+='<span style="background:rgba(212,160,23,0.3);color:#0F0500;padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;font-weight:700;margin-left:4px;">💳 PAY</span>';}
   else if(o.order_type==='delivery')typeTag='<span style="background:rgba(142,68,173,0.15);color:#BB8FCE;border:1px solid rgba(142,68,173,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">DELIVERY</span>';
   else typeTag='<span style="background:rgba(41,128,185,0.15);color:#5DADE2;border:1px solid rgba(41,128,185,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TAKEOUT</span>';
   var isNew=o.status==='placed';
@@ -1098,7 +1099,7 @@ function renderCard(o){
   card+='<div class="oc-hdr" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;'+(isNew?'background:rgba(192,57,43,0.08);':'')+'">';
   card+='<div style="display:flex;align-items:center;gap:10px;">';
   card+='<span class="oc-arr" style="color:#D4A017;font-size:0.7rem;">▶</span>';
-  card+='<span style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:#D4A017;letter-spacing:2px;">'+o.order_ref+'</span>';
+  card+='<span style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:#D4A017;letter-spacing:2px;">'+esc(o.order_ref)+'</span>';
   card+=typeTag;
   card+='<span class="sbadge '+(SBS[o.status]||'sb-p')+'" style="font-size:0.6rem;padding:3px 8px;">'+o.status.toUpperCase()+'</span>';
   card+='</div>';
@@ -1109,10 +1110,10 @@ function renderCard(o){
   card+='</div>';
   // Expanded body - hidden by default, click to expand
   card+='<div class="oc-body" style="display:none;padding:16px;border-top:1px solid rgba(212,160,23,0.1);">';
-  card+=mkDiv('onm',o.customer_name||'Customer');
-  if(o.customer_phone)card+=mkDiv('oph',o.customer_phone+' · '+(o.order_type||'takeout'));
-  if(o.delivery_address)card+=mkDiv('oph','📍 '+o.delivery_address);
-  if(o.special_instructions)card+='<div class="oph" style="color:#F7DC6F;">📝 '+o.special_instructions+'</div>';
+  card+=mkDiv('onm',esc(o.customer_name||'Customer'));
+  if(o.customer_phone)card+=mkDiv('oph',esc(o.customer_phone)+' · '+esc(o.order_type||'takeout'));
+  if(o.delivery_address)card+=mkDiv('oph','📍 '+esc(o.delivery_address));
+  if(o.special_instructions)card+='<div class="oph" style="color:#F7DC6F;">📝 '+esc(o.special_instructions)+'</div>';
   card+=mkDiv('tracker',trk);
   card+=mkDiv('oitems',ihtml);
   // Build payment banner for takeout/delivery
@@ -1177,7 +1178,7 @@ function renderCL(list){
     var stats=mkSpan('cstat','Orders: <strong>'+(x.total_orders||0)+'</strong>')+mkSpan('cstat','Spent: <strong>'+fV(x.total_spent||0)+'</strong>')+mkSpan('cstat','Points: <strong style="color:#D4A017;">'+pts+'</strong>')+(rdy?'<span style="color:#27AE60;font-size:0.75rem;font-weight:600;">Reward Ready!</span>':'');
     var prog='<div class="pbar-w"><div class="pbar"><div class="pfill" style="width:'+pct+'%"></div></div><div class="ptext">'+(pts%10)+'/10 to reward</div></div>';
     var badge='<div class="pbadge">'+pts+'<br><span style="font-size:0.6rem;letter-spacing:1px;">PTS</span></div>';
-    html+='<div class="cc"><div>'+mkDiv('cname',x.name||'Customer')+mkDiv('cemail',(x.email||'')+' · '+(x.phone||''))+mkDiv('cstats',stats)+prog+'</div>'+badge+'</div>';
+    html+='<div class="cc"><div>'+mkDiv('cname',esc(x.name||'Customer'))+mkDiv('cemail',esc(x.email||'')+' · '+esc(x.phone||''))+mkDiv('cstats',stats)+prog+'</div>'+badge+'</div>';
   }
   con.innerHTML=html;
 }
@@ -1243,7 +1244,7 @@ function loadRev(){
     var ti=document.getElementById('ti');
     if(sorted.length){
       ti.innerHTML=sorted.map(function(x){
-        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.85rem;"><span>'+x[0]+'</span><span style="color:#D4A017;font-family:Bebas Neue,sans-serif;">'+x[1]+'x</span></div>';
+        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.85rem;"><span>'+esc(x[0])+'</span><span style="color:#D4A017;font-family:Bebas Neue,sans-serif;">'+x[1]+'x</span></div>';
       }).join('');
     }
     // Load daily reports
@@ -1477,38 +1478,15 @@ window.addEventListener('load',function(){
 });
 
 function restoreSession(){
-  var role=localStorage.getItem('lt_role');
-  var ts=parseInt(localStorage.getItem('lt_ts')||'0');
-  var now=Date.now();
-  var maxAge=12*60*60*1000; // 12 hours
-  // Clear expired sessions
-  if(!role||!ts||(now-ts)>maxAge){
-    localStorage.removeItem('lt_role');
-    localStorage.removeItem('lt_staff');
-    localStorage.removeItem('lt_ts');
-    return; // Show login screen
-  }
-  // Valid session — restore it
-  if(role==='owner'){
-    isOwner=true;
-    currentStaff='Owner';
-    document.getElementById('lw').style.display='none';
-    document.getElementById('app').style.display='flex';
-    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
-    initApp();
-    console.log('Session restored: Owner');
-  } else if(role==='staff'){
-    var name=localStorage.getItem('lt_staff')||'Staff';
-    currentStaff=name;
-    isOwner=false;
-    document.getElementById('lw').style.display='none';
-    document.getElementById('app').style.display='flex';
-    document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});
-    // Restore shift tracking without creating new shift
-    initApp();
-    console.log('Session restored: Staff —',name);
-  }
+  var s=LTAuth.session();
+  if(!s||(s.role!=='owner'&&s.role!=='staff'))return;
+  LTAuth.ready().then(function(ok){if(ok)enterApp(s,false);});
 }
+window.addEventListener('lt-auth-lost',function(){
+  var a=document.getElementById('app'),l=document.getElementById('lw'),er=document.getElementById('lerr');
+  if(a)a.style.display='none';if(l)l.style.display='flex';
+  if(er){er.style.display='block';er.textContent='Session expired - please sign in again';}
+});
 
 window.addEventListener('resize',function(){
   if(isMobile()){updateMobileNav();}
@@ -1740,9 +1718,9 @@ function renderMktList(type,contacts){
     var bg=type==="wa"?"#25D366":"linear-gradient(135deg,#0068FF,#0052CC)";
     var ico=type==="wa"?"💬":"🔵";
     h+="<div style=\"display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;\">";
-    h+="<div><div style=\"font-size:0.88rem;color:#1A1A2E;font-weight:600;\">"+c.name+"</div>";
-    h+="<div style=\"font-size:0.75rem;color:#6B7280;\">"+c.phone+"</div></div>";
-    h+="<button onclick=\"mktSendOne('"+platform+"','"+c.phoneClean+"','"+c.name+"')\" style=\"background:"+bg+";color:white;border:none;padding:7px 14px;border-radius:6px;font-family:Jost,sans-serif;font-size:0.75rem;font-weight:700;cursor:pointer;\">"+ico+" Send</button>";
+    h+="<div><div style=\"font-size:0.88rem;color:#1A1A2E;font-weight:600;\">"+esc(c.name)+"</div>";
+    h+="<div style=\"font-size:0.75rem;color:#6B7280;\">"+esc(c.phone)+"</div></div>";
+    h+="<button onclick=\"mktSendOne('"+platform+"','"+escJs(c.phoneClean)+"','"+escJs(c.name)+"')\" style=\"background:"+bg+";color:white;border:none;padding:7px 14px;border-radius:6px;font-family:Jost,sans-serif;font-size:0.75rem;font-weight:700;cursor:pointer;\">"+ico+" Send</button>";
     h+="</div>";
   });
   el.innerHTML=h;
@@ -1806,59 +1784,15 @@ function openChatAuto(oid,ns){
   var _x=allO.find(function(o){return o.id===oid;});
   if(_x&&_x.order_type==="dinein")return;var o=allO.find(function(x){return x.id===oid;});if(!o)return;var tpl=SMSGS[ns];if(!tpl)return;var msg=tpl.replace('{n}',o.customer_name||'friend').replace('{r}',o.order_ref||'');chatOId=oid;var cm=o.contact_method||'whatsapp';document.getElementById('chat-name').textContent=o.customer_name||'Customer';document.getElementById('chat-ref').textContent=(o.order_ref||'')+' - '+ns.toUpperCase()+' - tap SEND to notify';var sb=document.getElementById('chat-send');sb.style.background=cm==='zalo'?'linear-gradient(135deg,#0068FF,#0052CC)':'linear-gradient(135deg,#25D366,#128C7E)';document.getElementById('chat-note').textContent='Opens in '+(cm==='zalo'?'Zalo':'WhatsApp')+' - dashboard stays open';document.getElementById('chat-msg').value=msg;renderCH(o);showCW();}
 function showCW(){var ov=document.getElementById('chat-overlay');var cw=document.getElementById('chat-window');ov.style.display='block';cw.style.display='flex';setTimeout(function(){cw.style.transform='translate(-50%,-50%) scale(1)';cw.style.opacity='1';},10);}
-function renderCH(o){var log=o.chat_log?(typeof o.chat_log==='string'?JSON.parse(o.chat_log):o.chat_log):[];var con=document.getElementById('chat-history');if(!log.length){con.innerHTML='<div style="color:#B8A99A;font-size:0.8rem;text-align:center;padding:15px;">No messages yet</div>';return;}con.innerHTML=log.map(function(m){var own=m.from==='owner';return '<div style="display:flex;justify-content:'+(own?'flex-end':'flex-start')+';"><div style="max-width:82%;background:'+(own?'linear-gradient(135deg,#D4A017,#E67E22)':'rgba(255,255,255,0.07)')+';color:'+(own?'#0F0500':'#FAF0E6')+';padding:9px 13px;border-radius:'+(own?'12px 12px 2px 12px':'12px 12px 12px 2px')+';font-size:0.85rem;line-height:1.5;"><div>'+m.text+'</div><div style="font-size:0.65rem;opacity:0.6;margin-top:3px;text-align:right;">'+m.time+'</div></div></div>';}).join('');con.scrollTop=con.scrollHeight;}
+function renderCH(o){var log=o.chat_log?(typeof o.chat_log==='string'?JSON.parse(o.chat_log):o.chat_log):[];var con=document.getElementById('chat-history');if(!log.length){con.innerHTML='<div style="color:#B8A99A;font-size:0.8rem;text-align:center;padding:15px;">No messages yet</div>';return;}con.innerHTML=log.map(function(m){var own=m.from==='owner';return '<div style="display:flex;justify-content:'+(own?'flex-end':'flex-start')+';"><div style="max-width:82%;background:'+(own?'linear-gradient(135deg,#D4A017,#E67E22)':'rgba(255,255,255,0.07)')+';color:'+(own?'#0F0500':'#FAF0E6')+';padding:9px 13px;border-radius:'+(own?'12px 12px 2px 12px':'12px 12px 12px 2px')+';font-size:0.85rem;line-height:1.5;"><div>'+esc(m.text)+'</div><div style="font-size:0.65rem;opacity:0.6;margin-top:3px;text-align:right;">'+esc(m.time)+'</div></div></div>';}).join('');con.scrollTop=con.scrollHeight;}
 function sendChat(){var msg=document.getElementById('chat-msg').value.trim();if(!msg||!chatOId)return;var o=allO.find(function(x){return x.id===chatOId;});if(!o)return;var cm=o.contact_method||'whatsapp';var ph=(o.customer_phone||'').replace(/[^0-9+]/g,'');if(ph.startsWith('0'))ph='+84'+ph.substring(1);var url=cm==='zalo'?('https://zalo.me/'+ph.replace('+','')):('https://wa.me/'+ph.replace('+','')+'/send?text='+encodeURIComponent(msg));var win=window.open(url,'_blank');var now=new Date();var t=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');var log=o.chat_log?(typeof o.chat_log==='string'?JSON.parse(o.chat_log):o.chat_log):[];log.push({from:'owner',text:msg,time:t});sbF('/rest/v1/orders?id=eq.'+chatOId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({chat_log:log})}).then(function(){loadO();renderCH(Object.assign({},o,{chat_log:log}));});document.getElementById('chat-msg').value='';if(win)setTimeout(function(){try{win.close();}catch(e){}},4000);}
 function closeChat(){var cw=document.getElementById('chat-window');var ov=document.getElementById('chat-overlay');cw.style.transform='translate(-50%,-50%) scale(0.92)';cw.style.opacity='0';setTimeout(function(){cw.style.display='none';ov.style.display='none';},220);chatOId=null;}
 
 function showSL(){document.getElementById('sv').style.display='block';document.getElementById('ov').style.display='none';document.getElementById('lsub').textContent='Staff Login';}
 function showOL(){document.getElementById('sv').style.display='none';document.getElementById('ov').style.display='block';document.getElementById('lsub').textContent='Owner Login';}
-function doSL(){
-  var p=document.getElementById('lps').value;
-  var err=document.getElementById('lerr');
-  err.style.display='none';
-  sha256(p).then(function(ph){
-    if(ph!==SPASS){err.style.display='block';err.textContent='Wrong password. Ask your manager.';return;}
-    var nf=document.getElementById('nf'),ni=document.getElementById('ln');
-    if(nf.style.display==='none'||nf.style.display===''){
-      var sv=localStorage.getItem('lt_sn');
-      if(sv){currentStaff=sv;startSS();return;}
-      nf.style.display='block';document.getElementById('lbs').textContent='CONFIRM NAME';ni.focus();return;
-    }
-    var nm=ni.value.trim();
-    if(!nm){err.style.display='block';err.textContent='Please enter your name.';return;}
-    var sv=localStorage.getItem('lt_sn');
-    if(sv&&sv.toLowerCase()!==nm.toLowerCase()){err.style.display='block';err.textContent='Use your registered name: '+sv;return;}
-    localStorage.setItem('lt_sn',nm);currentStaff=nm;startSS();
-  });
-}
-function startSS(){
-  // Save staff session to localStorage
-  localStorage.setItem('lt_role','staff');
-  localStorage.setItem('lt_staff',currentStaff||'');
-  localStorage.setItem('lt_ts',Date.now().toString());
-  isOwner=false;
-  sbF('/rest/v1/staff_shifts',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({staff_name:currentStaff,login_time:new Date().toISOString()})}).then(function(d){if(d&&d.length>0)shiftId=d[0].id;});
-  document.getElementById('lw').style.display='none';
-  document.getElementById('app').style.display='flex';
-  document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});
-  showT('Welcome '+currentStaff+'!','Shift started. Have a great service!');
-  initApp();
-}
-function checkPin(){
-  var p=prompt('Enter owner PIN:');
-  if(!p)return;
-  sha256(p).then(function(ph){
-    if(ph===APIN||ph===OPIN){
-      isOwner=true;
-      document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='';});
-      showToast('Owner Access','PIN accepted');
-      pinTimer&&clearTimeout(pinTimer);
-      pinTimer=setTimeout(function(){isOwner=false;document.querySelectorAll('.owner-only').forEach(function(el){el.style.display='none';});showToast('Locked','Owner access expired');},30*60*1000);
-    } else {
-      showToast('Wrong PIN','Incorrect PIN entered');
-    }
-  });
-}
+function doSL(){ltLogin(document.getElementById('lse').value.trim().toLowerCase(),document.getElementById('lps').value);}
+function startSS(){}
+function checkPin(){showT('Owner access','Sign out and log in with the owner account to use owner features.');}
 var ntItems=[];
 var NTM=[
   {n:'Birria x2',p:125000},{n:'Birria x3',p:180000},{n:'Steak x2',p:115000},{n:'Steak x3',p:165000},
@@ -1941,10 +1875,10 @@ function viewT(t){
   } else {
     to.forEach(function(o){
       var items=Array.isArray(o.items)?o.items:[];
-      var ih=items.map(function(it){return (it.qty||1)+'x '+(it.name||it);}).join(', ');
+      var ih=items.map(function(it){return (it.qty||1)+'x '+esc(it.name||it);}).join(', ');
       h+='<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,160,23,0.1);border-radius:5px;padding:12px;margin-bottom:8px">';
       h+='<div style="display:flex;justify-content:space-between;margin-bottom:5px">';
-      h+='<div style="font-family:Bebas Neue,sans-serif;color:#D4A017;font-size:0.95rem">'+o.order_ref+'</div>';
+      h+='<div style="font-family:Bebas Neue,sans-serif;color:#D4A017;font-size:0.95rem">'+esc(o.order_ref)+'</div>';
       h+='<span style="font-size:0.72rem;background:rgba(230,126,34,0.15);color:#E67E22;padding:2px 7px;border-radius:3px">'+(o.status||'placed').toUpperCase()+'</span></div>';
       h+='<div style="font-size:0.82rem;color:#B8A99A;margin-bottom:5px">'+ih+'</div>';
       h+='<div style="font-family:Bebas Neue,sans-serif;color:#D4A017">'+fV(o.total||0)+'</div></div>';
