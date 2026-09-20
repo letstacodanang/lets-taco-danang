@@ -540,7 +540,7 @@ footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);paddi
 const emojis=["&#127790;","&#127798;","&#129363;","&#129381;","&#10024;"];
 const pc=document.getElementById("particles");
 for(let i=0;i<15;i++){const p=document.createElement("div");p.className="particle";p.innerHTML=emojis[Math.floor(Math.random()*emojis.length)];p.style.left=Math.random()*100+"%";p.style.animationDuration=(8+Math.random()*12)+"s";p.style.animationDelay=(Math.random()*10)+"s";pc.appendChild(p);}
-function checkOpen(){const now=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Ho_Chi_Minh"}));const day=now.getDay();const totalMins=now.getHours()*60+now.getMinutes();const isMonday=day===1;const isOpen=!isMonday&&totalMins>=960&&totalMins<1440;
+function checkOpen(){const now=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Ho_Chi_Minh"}));const day=now.getDay();const totalMins=now.getHours()*60+now.getMinutes();const isMonday=day===1;const isOpen=(window.SHOP&&SHOP.known)?SHOP.open:(!isMonday&&totalMins>=960&&totalMins<1440);
   // Sync hero status pill
   var hd=document.getElementById('hero-status-dot');
   var ht=document.getElementById('hero-status-text');
@@ -562,7 +562,7 @@ function checkOpen(){const now=new Date(new Date().toLocaleString("en-US",{timeZ
     }
   }
   const dot=document.getElementById("statusDot");const txt=document.getElementById("statusText");if(isOpen){dot.className="status-dot open";txt.innerHTML="<span class='status-open'>OPEN NOW</span> &middot; Closes at 12:00 AM &middot; 43 An Thuong 30";}else if(isMonday){dot.className="status-dot closed";txt.innerHTML="<span class='status-closed'>CLOSED TODAY (Monday)</span> &middot; Open Tue-Sun from 4:00 PM";}else if(totalMins<960){dot.className="status-dot closed";const m=960-totalMins;txt.innerHTML="<span class='status-closed'>NOT YET OPEN</span> &middot; Opens in "+Math.floor(m/60)+"h "+m%60+"m";}else{dot.className="status-dot closed";txt.innerHTML="<span class='status-closed'>CLOSED</span> &middot; Opens tomorrow at 4:00 PM";}}
-checkOpen();setInterval(checkOpen,60000);
+checkOpen();setInterval(function(){checkOpen();paintShop();},60000);
 function showToast(t,m,d=4000){document.getElementById("toastTitle").textContent=t;document.getElementById("toastMsg").textContent=m;const el=document.getElementById("toast");el.classList.add("show");setTimeout(()=>el.classList.remove("show"),d);}
 async function geoWelcome(){try{const res=await fetch("https://ipapi.co/json/");const d=await res.json();if(d.city&&d.country_name){const msg=d.country_code==="VN"?"Xin chao!":"Welcome from "+d.city+"!";setTimeout(()=>showToast(msg,"You are visiting from "+d.city+", "+d.country_name+". We can't wait to meet you!"),3000);}}catch(e){}}
 geoWelcome();
@@ -828,6 +828,17 @@ function toggleCart(){
       renderCM();
     }
   }}
+var SHOP={known:false,open:true,next:null,mode:'auto'};
+function shopMsg(){return 'We are closed right now'+(SHOP.next?'. We open '+SHOP.next+'.':'.');}
+function paintShop(){
+  if(!(SHOP.known&&!SHOP.open))return;
+  var t=document.getElementById('statusText');
+  if(t)t.innerHTML="<span class='status-closed'>"+(SHOP.mode==='closed'?'ORDERING PAUSED':'CLOSED NOW')+"</span>"+(SHOP.next?" &middot; We open "+SHOP.next:"")+" &middot; 43 An Thuong 30";
+  var ht=document.getElementById('hero-status-text');
+  if(ht)ht.textContent=(SHOP.mode==='closed'?'Ordering paused':'Closed now')+(SHOP.next?' — opens '+SHOP.next:'');
+}
+function loadShop(){sbC('/rest/v1/rpc/shop_status',{method:'POST',body:'{}'}).then(function(s){if(s&&typeof s.open==='boolean'){SHOP.known=true;SHOP.open=s.open;SHOP.next=s.next_open;SHOP.mode=s.mode;try{checkOpen();paintShop();uCS();}catch(e){}}});}
+loadShop();setInterval(loadShop,30000);
 var att={};
 var XM=[{id:'cheese',name:'Extra Cheese',p:10000,e:'🧀'},{id:'avo',name:'Extra Avocado',p:10000,e:'🥑'},{id:'dip',name:'Birria Sauce',p:25000,e:'🍵',only:'birria'}];
 function isMainId(id){for(var i=0;i<CM.length;i++){if(CM[i].id===id)return !!CM[i].p2||id.indexOf('rice_')===0;}return false;}
@@ -926,8 +937,8 @@ function gCI(){
   return{items:its,total:tot,points:nT,tacoErr:nT===1};
 }
 function gTI(){var t=0;Object.values(cart).forEach(function(v){t+=v;});return t;}
-function uCS(){var d=gCI();var cc=document.getElementById('cart-count');var ti=gTI();cc.style.display=ti>0?'flex':'none';cc.textContent=ti;var is=document.getElementById('cart-items-section');var cr=document.getElementById('cart-checkout-row');if(d.items.length>0){is.style.display='block';cr.style.display='block';var lh='';d.items.forEach(function(it){lh+='<div class="cl"><span>'+it.qty+'x '+it.name+'</span><span>'+fV(it.price)+'</span></div>';});document.getElementById('cart-items-list').innerHTML=lh;var sh='<div class="cl"><span>Subtotal</span><span>'+fV(d.total)+'</span></div><div class="cl"><span>TOTAL</span><span>'+fV(d.total)+'</span></div>'+(d.tacoErr?'<div style="color:#E8735A;font-size:0.82rem;margin-top:8px;text-align:center;">Tacos are sold in 2s or 3s. Please add at least 1 more taco.</div>':'')+'<div style="font-size:0.78rem;color:#B8A99A;margin-top:8px;text-align:center;">You will earn <strong style="color:#D4A017;">+'+d.points+' loyalty points</strong></div>';document.getElementById('cart-summary').innerHTML=sh;}else{is.style.display='none';cr.style.display='none';}}
-function goToCheckout(){if(!gTI())return;if(gCI().tacoErr){alert('Tacos are sold in 2s or 3s. Please add at least 1 more taco.');return;}
+function uCS(){var d=gCI();var cc=document.getElementById('cart-count');var ti=gTI();cc.style.display=ti>0?'flex':'none';cc.textContent=ti;var is=document.getElementById('cart-items-section');var cr=document.getElementById('cart-checkout-row');if(d.items.length>0){is.style.display='block';cr.style.display='block';var lh='';d.items.forEach(function(it){lh+='<div class="cl"><span>'+it.qty+'x '+it.name+'</span><span>'+fV(it.price)+'</span></div>';});document.getElementById('cart-items-list').innerHTML=lh;var sh='<div class="cl"><span>Subtotal</span><span>'+fV(d.total)+'</span></div><div class="cl"><span>TOTAL</span><span>'+fV(d.total)+'</span></div>'+((SHOP.known&&!SHOP.open)?'<div style="color:#E8735A;font-size:0.85rem;margin-top:8px;text-align:center;font-weight:600;">'+shopMsg()+' You can look around, but ordering is closed.</div>':'')+(d.tacoErr?'<div style="color:#E8735A;font-size:0.82rem;margin-top:8px;text-align:center;">Tacos are sold in 2s or 3s. Please add at least 1 more taco.</div>':'')+'<div style="font-size:0.78rem;color:#B8A99A;margin-top:8px;text-align:center;">You will earn <strong style="color:#D4A017;">+'+d.points+' loyalty points</strong></div>';document.getElementById('cart-summary').innerHTML=sh;}else{is.style.display='none';cr.style.display='none';}}
+function goToCheckout(){if(!gTI())return;if(gCI().tacoErr){alert('Tacos are sold in 2s or 3s. Please add at least 1 more taco.');return;}if(SHOP.known&&!SHOP.open){alert(shopMsg());return;}
   setTimeout(function(){
     var hpb=document.getElementById('how-to-pay-box');
     if(hpb)hpb.style.display=oType==='dinein'?'none':'block';
@@ -1014,7 +1025,7 @@ function setCM(m){
   if(m==='whatsapp'){wa.style.background='linear-gradient(135deg,#25D366,#128C7E)';wa.style.color='white';wa.style.border='none';zl.style.background='rgba(255,255,255,0.04)';zl.style.color='#B8A99A';zl.style.border='2px solid rgba(255,255,255,0.1)';}
   else{zl.style.background='linear-gradient(135deg,#0068FF,#0052CC)';zl.style.color='white';zl.style.border='none';wa.style.background='rgba(255,255,255,0.04)';wa.style.color='#B8A99A';wa.style.border='2px solid rgba(255,255,255,0.1)';}
 }
-async function placeOrder(){var btn=document.getElementById('place-btn');var err=document.getElementById('co-err');err.style.display='none';var d=gCI();if(!d.items.length){err.style.display='block';err.textContent='Your cart is empty! Add some tacos first.';return;}if(d.tacoErr){err.style.display='block';err.textContent='Tacos are sold in 2s or 3s. Please add at least 1 more taco.';return;}var name=document.getElementById('c-name').value.trim();var email=document.getElementById('c-email').value.trim().toLowerCase();var phone=document.getElementById('c-phone').value.trim();if(!name){err.style.display='block';err.textContent='Please enter your name.';return;}if(oType==='dinein'){var tbl=document.getElementById('c-table').value;if(!tbl){err.style.display='block';err.textContent='Please select your table number.';return;}}else{if(!email||!phone){err.style.display='block';err.textContent='Please fill in your email and phone number.';return;}}if(oType==='delivery'&&!document.getElementById('c-address').value.trim()){err.style.display='block';err.textContent='Please enter your delivery address.';return;}btn.textContent='PLACING YOUR ORDER...';btn.disabled=true;try{var tblNum=oType==='dinein'?document.getElementById('c-table').value:null;if(!window._ltIdem)window._ltIdem=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('k'+Date.now()+Math.random().toString(36).slice(2));var ord=await sbC('/rest/v1/rpc/create_order',{method:'POST',body:JSON.stringify({p:{order_type:oType,name:name,email:email,phone:phone,address:oType==='delivery'?document.getElementById('c-address').value.trim():null,table_number:tblNum,notes:document.getElementById('cart-notes').value||null,contact_method:contactMethod,idem_key:window._ltIdem,items:d.items.map(function(i){return{id:i.id,qty:i.qty};}),attach:att}})});if(ord&&ord.id){window._ltIdem=null;oId=ord.id;var ref=ord.order_ref;d.total=ord.total;d.points=ord.points;showTracker(ref,d);
+async function placeOrder(){var btn=document.getElementById('place-btn');var err=document.getElementById('co-err');err.style.display='none';var d=gCI();if(!d.items.length){err.style.display='block';err.textContent='Your cart is empty! Add some tacos first.';return;}if(d.tacoErr){err.style.display='block';err.textContent='Tacos are sold in 2s or 3s. Please add at least 1 more taco.';return;}if(SHOP.known&&!SHOP.open){err.style.display='block';err.textContent=shopMsg();return;}var name=document.getElementById('c-name').value.trim();var email=document.getElementById('c-email').value.trim().toLowerCase();var phone=document.getElementById('c-phone').value.trim();if(!name){err.style.display='block';err.textContent='Please enter your name.';return;}if(oType==='dinein'){var tbl=document.getElementById('c-table').value;if(!tbl){err.style.display='block';err.textContent='Please select your table number.';return;}}else{if(!email||!phone){err.style.display='block';err.textContent='Please fill in your email and phone number.';return;}}if(oType==='delivery'&&!document.getElementById('c-address').value.trim()){err.style.display='block';err.textContent='Please enter your delivery address.';return;}btn.textContent='PLACING YOUR ORDER...';btn.disabled=true;try{var tblNum=oType==='dinein'?document.getElementById('c-table').value:null;if(!window._ltIdem)window._ltIdem=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('k'+Date.now()+Math.random().toString(36).slice(2));var ord=await sbC('/rest/v1/rpc/create_order',{method:'POST',body:JSON.stringify({p:{order_type:oType,name:name,email:email,phone:phone,address:oType==='delivery'?document.getElementById('c-address').value.trim():null,table_number:tblNum,notes:document.getElementById('cart-notes').value||null,contact_method:contactMethod,idem_key:window._ltIdem,items:d.items.map(function(i){return{id:i.id,qty:i.qty};}),attach:att}})});if(ord&&ord.id){window._ltIdem=null;oId=ord.id;var ref=ord.order_ref;d.total=ord.total;d.points=ord.points;showTracker(ref,d);
   // Save session so ORDER MORE is instant — no re-entry needed
   try{
     var sess={
@@ -1028,7 +1039,7 @@ async function placeOrder(){var btn=document.getElementById('place-btn');var err
       cm:contactMethod
     };
     sessionStorage.setItem('lt_sess',JSON.stringify(sess));
-  }catch(e){}}else throw new Error('x');}catch(e){btn.textContent='PLACE ORDER 🌮';btn.disabled=false;err.style.display='block';err.textContent='Something went wrong. Please WhatsApp us directly at 0909 923 941.';}}
+  }catch(e){}}else throw new Error('x');}catch(e){btn.textContent='PLACE ORDER 🌮';btn.disabled=false;err.style.display='block';var _cl=ord&&ord.message&&/closed/i.test(ord.message);err.textContent=_cl?'We are closed right now. Please come back when we open.':'Something went wrong. Please WhatsApp us directly at 0909 923 941.';if(_cl)loadShop();}}
 function showTracker(ref,d){document.getElementById('cart-view-checkout').style.display='none';document.getElementById('cart-view-tracker').style.display='flex';document.getElementById('tracker-ref').textContent=ref;
   // Set headline by order type
   var th=document.getElementById('tracker-headline');

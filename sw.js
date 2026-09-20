@@ -1,4 +1,4 @@
-var CACHE = 'letstaco-v8';
+var CACHE = 'letstaco-v9';
 var ASSETS = ['/', '/index.html', '/manifest.json'];
 self.addEventListener('install', function(e) {
   e.waitUntil(caches.open(CACHE).then(function(cache) {

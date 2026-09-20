@@ -775,13 +775,24 @@ document.getElementById('lout').addEventListener('click',function(){
   document.getElementById('lp').value='';
 });
 document.getElementById('rbtn').addEventListener('click',loadO);
+var SHOPST={open:true,mode:'auto'};
+function paintShopSt(){
+  var open=SHOPST.open,m=SHOPST.mode,t=open?'OPEN':'CLOSED';
+  if(m==='closed')t='PAUSED';else if(m==='open')t='OPEN (LATE)';
+  var dot=document.getElementById('rdot'),tx=document.getElementById('rtxt');
+  if(dot){dot.style.background=open?'#27AE60':'#C0392B';dot.style.animation=open?'pd 2s infinite':'none';}
+  if(tx){tx.textContent=t;tx.style.color=open?'#27AE60':'#C0392B';}
+  var mp=document.getElementById('mobile-open-pill');if(mp){mp.textContent=t;mp.className='mobile-open-pill'+(open?'':' closed');}
+}
+function loadShopSt(){sbF('/rest/v1/rpc/shop_status',{method:'POST',body:'{}'}).then(function(s){if(s&&typeof s.open==='boolean'){SHOPST=s;paintShopSt();}});}
 document.getElementById('rtog').addEventListener('click',function(){
-  rOpen=!rOpen;
-  document.getElementById('rdot').style.background=rOpen?'#27AE60':'#C0392B';
-  document.getElementById('rdot').style.animation=rOpen?'pd 2s infinite':'none';
-  document.getElementById('rtxt').textContent=rOpen?'OPEN':'CLOSED';
-  document.getElementById('rtxt').style.color=rOpen?'#27AE60':'#C0392B';
-  showT('Restaurant '+(rOpen?'Opened':'Closed'),'');
+  var next=SHOPST.mode!=='auto'?'auto':(SHOPST.open?'closed':'open');
+  var q=next==='auto'?'Go back to the normal opening hours?':(next==='closed'?'Pause ALL ordering now? Customers will see that we are closed.':'Stay open outside the normal hours? Customers can order until you switch this off.');
+  if(!confirm(q))return;
+  sbC('/rest/v1/shop_control?id=eq.1',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({mode:next,updated_at:new Date().toISOString(),updated_by:(LTAuth.session()||{}).email||''})}).then(function(r){
+    if(r&&r.length){showT(next==='auto'?'Normal hours':(next==='closed'?'Ordering paused':'Staying open'),'');loadShopSt();}
+    else showT('Not allowed','Only the owner can change the opening status.');
+  }).catch(function(){showT('Not allowed','Only the owner can change the opening status.');});
 });
 document.getElementById('ncl').addEventListener('click',function(){document.getElementById('nmo').classList.remove('show');});
 document.getElementById('nsv').addEventListener('click',saveN);
@@ -871,6 +882,7 @@ function initApp(){
   }
   loadO();loadC();renderMenu();
   setInterval(loadO,5000);
+  loadShopSt();setInterval(loadShopSt,15000);
   setInterval(checkReadyAlert,8000);
   setInterval(checkPayAlert,10000);
   setInterval(checkEOD,60000); // Check every minute for 2am report
