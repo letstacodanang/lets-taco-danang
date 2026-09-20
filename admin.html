@@ -1118,13 +1118,14 @@ function renderCard(o){
   var cmc=cm==='zalo'?'linear-gradient(135deg,#0068FF,#0052CC)':'linear-gradient(135deg,#25D366,#128C7E)';
   var acts='';
   if(NL[o.status])acts+='<button class="abtn abtn-gold" data-adv="'+o.id+'" data-ns="'+NS[o.status]+'">'+NL[o.status]+'</button>';
-  if(o.status==='ready'&&o.order_type!=='dinein')acts+='<button class="abtn abtn-gold" data-drv="'+o.id+'">Assign Driver</button>';
-  if(cm!=='dinein')acts+='<button class="abtn" style="background:'+cmc+';color:white;" data-msg="'+o.id+'">'+cml+'</button>';
+  if(o.status==='ready'&&o.order_type!=='dinein'&&cm!=='walkup')acts+='<button class="abtn abtn-gold" data-drv="'+o.id+'">Assign Driver</button>';
+  if(cm!=='dinein'&&cm!=='walkup')acts+='<button class="abtn" style="background:'+cmc+';color:white;" data-msg="'+o.id+'">'+cml+'</button>';
     if(o.order_type==='dinein'&&o.payment_status==='requested')acts+='<button class="abtn" style="background:linear-gradient(135deg,#D4A017,#E67E22);color:#0F0500;font-weight:700;" data-paid="'+o.id+'">💳 Mark Paid</button>';
   acts+='<button class="abtn abtn-muted" data-nts="'+o.id+'">Notes</button>';
   if(o.status!=='delivered'&&o.status!=='cancelled')acts+='<button class="abtn abtn-red" data-cnc="'+o.id+'">Cancel</button>';
   var typeTag='';
   if(o.order_type==='dinein'){typeTag='<span style="background:rgba(212,160,23,0.15);color:#D4A017;border:1px solid rgba(212,160,23,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TABLE '+esc(o.table_number||'?')+'</span>';if(o.payment_status==='requested')typeTag+='<span style="background:rgba(212,160,23,0.3);color:#0F0500;padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;font-weight:700;margin-left:4px;">💳 PAY</span>';}
+  else if(o.contact_method==='walkup')typeTag='<span style="background:rgba(39,174,96,0.15);color:#27AE60;border:1px solid rgba(39,174,96,0.35);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">WALK-UP · '+esc((o.payment_method||'').toUpperCase())+'</span>';
   else if(o.order_type==='delivery')typeTag='<span style="background:rgba(142,68,173,0.15);color:#BB8FCE;border:1px solid rgba(142,68,173,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">DELIVERY</span>';
   else typeTag='<span style="background:rgba(41,128,185,0.15);color:#5DADE2;border:1px solid rgba(41,128,185,0.3);padding:2px 8px;border-radius:3px;font-size:0.65rem;letter-spacing:1px;">TAKEOUT</span>';
   var isNew=o.status==='placed';

@@ -106,6 +106,7 @@ function fV(n){n=parseInt(n)||0;if(n>=1000)return "\u20ab"+(n/1000).toFixed(0)+"
 function tAgo(ts){if(!ts)return "";var d=Math.floor((Date.now()-new Date(ts))/1000);if(d<60)return d+"s ago";if(d<3600)return Math.floor(d/60)+"m ago";return Math.floor(d/3600)+"h ago";}
 
 function typeLabel(o){
+  if(o.contact_method==="walkup")return "<span class=\"card-type type-takeout\">WALK-UP</span>";
   if(o.order_type==="dinein")return "<span class=\"card-type type-dinein\">DINE IN</span>";
   if(o.order_type==="delivery")return "<span class=\"card-type type-delivery\">DELIVERY</span>";
   return "<span class=\"card-type type-takeout\">TAKEOUT</span>";
@@ -252,7 +253,7 @@ function renderCard(o){
 }
 
 function poll(){
-  sbF("/rest/v1/orders?select=id,order_ref,order_type,table_number,customer_name,payment_status,status,items,special_instructions,created_at&status=in.(placed,accepted,prepping,cooking,ready)&order=created_at.asc").then(function(d){if(Array.isArray(d))render(d);});
+  sbF("/rest/v1/orders?select=id,order_ref,order_type,table_number,customer_name,payment_status,status,items,special_instructions,contact_method,created_at&status=in.(placed,accepted,prepping,cooking,ready)&order=created_at.asc").then(function(d){if(Array.isArray(d))render(d);});
 }
 
 setInterval(function(){

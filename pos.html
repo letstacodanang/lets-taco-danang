@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Lets Taco - Walk-up Checkout</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#0a0300;color:#FAF0E6;font-family:Jost,sans-serif;height:100vh;overflow:hidden;user-select:none}
+button{font-family:inherit;cursor:pointer;color:inherit}
+header{background:#1A0800;border-bottom:2px solid rgba(212,160,23,.3);height:56px;padding:0 16px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#D4A017;letter-spacing:4px}
+.hr{display:flex;align-items:center;gap:12px;font-size:.8rem;color:#B8A99A}
+.hbtn{background:transparent;border:1px solid rgba(212,160,23,.4);color:#D4A017;border-radius:6px;padding:6px 12px;font-size:.75rem;letter-spacing:2px}
+.main{display:grid;grid-template-columns:1fr 400px;height:calc(100vh - 56px)}
+.left{display:flex;flex-direction:column;min-width:0;border-right:1px solid rgba(212,160,23,.2)}
+.tabs{display:flex;gap:8px;padding:12px;overflow-x:auto}
+.tab{flex:1;min-width:90px;padding:14px 8px;border-radius:10px;border:1px solid rgba(212,160,23,.3);background:#1A0800;font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:3px;color:#B8A99A}
+.tab.on{background:#D4A017;color:#0F0500;border-color:#D4A017}
+.tiles{flex:1;overflow-y:auto;padding:0 12px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-content:start}
+.tile{background:#1A0800;border:1px solid rgba(212,160,23,.25);border-radius:12px;padding:14px 10px;min-height:110px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;position:relative}
+.tile:active{transform:scale(.97);background:#2a1200}
+.tn{font-weight:700;font-size:1.05rem;line-height:1.2}
+.tp{color:#D4A017;font-size:.85rem;margin-top:6px}
+.tb{position:absolute;top:8px;right:8px;background:#C0392B;color:#fff;border-radius:12px;min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;padding:0 7px}
+.hint{padding:6px 14px 10px;font-size:.78rem;color:#B8A99A}
+.right{display:flex;flex-direction:column;background:#120600;min-height:0}
+.lines{flex:1;overflow-y:auto;padding:10px}
+.empty{color:#7d6f62;text-align:center;padding:50px 10px;letter-spacing:2px;text-transform:uppercase;font-size:.85rem}
+.ln{background:#1A0800;border:1px solid rgba(212,160,23,.15);border-radius:10px;padding:10px;margin-bottom:8px}
+.lr{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lname{font-weight:700}
+.qty{display:flex;align-items:center;gap:8px}
+.qb{width:38px;height:38px;border-radius:8px;border:1px solid rgba(212,160,23,.4);background:#0a0300;font-size:1.3rem;font-weight:700}
+.qn{min-width:24px;text-align:center;font-weight:700;font-size:1.1rem}
+.ex{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px dashed rgba(212,160,23,.5);border-radius:16px;padding:6px 12px;background:transparent;font-size:.8rem;color:#D4A017}
+.chip.on{background:rgba(212,160,23,.18);border-style:solid;font-weight:700}
+.foot{border-top:1px solid rgba(212,160,23,.25);padding:12px;background:#1A0800}
+.inp{width:100%;padding:10px;margin-bottom:8px;border-radius:8px;border:1px solid rgba(212,160,23,.3);background:#0a0300;color:#FAF0E6;font-size:.95rem;font-family:inherit;user-select:text}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 8px}
+.tot span:first-child{letter-spacing:3px;color:#B8A99A;font-size:.85rem}
+.tot span:last-child{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:#D4A017}
+.err{color:#E8735A;font-size:.85rem;min-height:1.1em;margin-bottom:6px}
+.pay{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pb{padding:16px 4px;border-radius:10px;border:none;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:#0F0500}
+.pb:disabled{opacity:.35}
+.pcash{background:#27AE60}.pqr{background:#D4A017}.pcard{background:#5DADE2}
+.clr{margin-top:8px;width:100%;background:transparent;border:1px solid rgba(192,57,43,.5);color:#E8735A;border-radius:8px;padding:8px;font-size:.8rem;letter-spacing:2px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.ov.show{display:flex}
+.box{background:#1A0800;border:1px solid rgba(212,160,23,.4);border-radius:14px;padding:22px;width:100%;max-width:440px;max-height:96vh;overflow-y:auto;text-align:center}
+.box h2{font-family:'Bebas Neue',sans-serif;letter-spacing:4px;color:#D4A017;font-size:1.5rem;margin-bottom:6px}
+.big{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:#FAF0E6;line-height:1.1}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.quick button{padding:12px 4px;border-radius:8px;border:1px solid rgba(212,160,23,.4);background:#0a0300;font-weight:700}
+.chg{font-family:'Bebas Neue',sans-serif;font-size:2rem;margin:6px 0 12px}
+.go{width:100%;padding:16px;border:none;border-radius:10px;background:#27AE60;color:#0F0500;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px}
+.go:disabled{opacity:.35}
+.back{margin-top:10px;background:transparent;border:none;color:#B8A99A;text-decoration:underline;font-size:.9rem;padding:8px}
+.qrimg{background:#fff;border-radius:10px;padding:8px;margin:10px auto;width:280px;max-width:100%;min-height:120px}
+.qrimg img{width:100%;display:block}
+#rcpt{display:none}
+@media print{body>*:not(#rcpt){display:none!important}#rcpt{display:block;color:#000;background:#fff;font-family:monospace;font-size:12px;width:280px;padding:8px}}
+@media(max-width:820px){.main{grid-template-columns:1fr;grid-template-rows:45% 55%}.left{border-right:none;border-bottom:1px solid rgba(212,160,23,.2)}}
+</style>
+</head>
+<body>
+<div id="login" style="position:fixed;inset:0;background:#0a0300;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px">
+  <form onsubmit="return doLogin(event)" style="background:#1A0800;border:1px solid rgba(212,160,23,.3);border-radius:12px;padding:32px;width:100%;max-width:360px">
+    <div class="logo" style="text-align:center;margin-bottom:20px">CHECKOUT LOGIN</div>
+    <input class="inp" id="em" type="email" autocomplete="username" placeholder="Email">
+    <input class="inp" id="pw" type="password" autocomplete="current-password" placeholder="Password">
+    <button type="submit" class="go" style="background:#D4A017">SIGN IN</button>
+    <div id="lerr" class="err" style="text-align:center;margin-top:10px"></div>
+  </form>
+</div>
+<header>
+  <div class="logo">WALK-UP CHECKOUT</div>
+  <div class="hr"><span id="who"></span><button class="hbtn" id="cfgbtn" style="display:none" onclick="openCfg()">QR SETUP</button><button class="hbtn" onclick="logout()">SIGN OUT</button></div>
+</header>
+<div class="main">
+  <div class="left">
+    <div class="tabs" id="tabs"></div>
+    <div class="hint" id="hint"></div>
+    <div class="tiles" id="tiles"></div>
+  </div>
+  <div class="right">
+    <div class="lines" id="lines"></div>
+    <div class="foot">
+      <input class="inp" id="cname" maxlength="40" placeholder="Customer name (optional)" oninput="">
+      <input class="inp" id="cnote" maxlength="200" placeholder="Notes for the kitchen (optional)">
+      <div class="tot"><span>TOTAL</span><span id="total">0₫</span></div>
+      <div class="err" id="qerr"></div>
+      <div class="pay">
+        <button class="pb pcash" id="bcash" onclick="startPay('cash')" disabled>CASH</button>
+        <button class="pb pqr" id="bqr" onclick="startPay('qr')" disabled>QR</button>
+        <button class="pb pcard" id="bcard" onclick="startPay('card')" disabled>CARD</button>
+      </div>
+      <button class="clr" onclick="clearAll()">CLEAR ORDER</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ov"><div class="box" id="box"></div></div>
+<div id="rcpt"></div>
+
+<script src="/auth.js"></script>
+<script>
+var CATS=[['tacos','TACOS'],['rice','RICE'],['sides','SIDES & EXTRAS'],['drinks','DRINKS']];
+var MODS=['cheese','avo','dip'];
+var MENU=[],cat='tacos',cart={},loose={},att={},quote={total:0},qTimer=null,qSeq=0,busy=false,idem=null,last=null,CFG=null;
+function $(i){return document.getElementById(i);}
+function vnd(n){return String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))/g,',')+'₫';}
+function catOf(m){if(m.kind==='taco')return 'tacos';if(m.id.indexOf('rice_')===0)return 'rice';if(MODS.indexOf(m.id)>-1||m.id==='chips')return 'sides';return 'drinks';}
+function byId(id){for(var i=0;i<MENU.length;i++)if(MENU[i].id===id)return MENU[i];return null;}
+function isDish(id){var m=byId(id);return !!m&&(m.kind==='taco'||id.indexOf('rice_')===0);}
+function attSum(mod){var s=0;for(var d in att)s+=(att[d][mod]||0);return s;}
+function items(){var o=[],ids={},k;for(k in cart)if(cart[k]>0)ids[k]=1;MODS.forEach(function(m){if((loose[m]||0)+attSum(m)>0)ids[m]=1;});
+  for(k in ids){var q=(cart[k]||0)+(MODS.indexOf(k)>-1?(loose[k]||0)+attSum(k):0);if(q>0)o.push({id:k,qty:q});}return o;}
+function tacoCount(){var n=0;MENU.forEach(function(m){if(m.kind==='taco')n+=cart[m.id]||0;});return n;}
+
+/* ---------- login ---------- */
+function ok(role){return role==='owner'||role==='staff';}
+function showLogin(msg){$('login').style.display='flex';$('lerr').textContent=msg||'';}
+function doLogin(ev){ev.preventDefault();var e=$('em').value.trim().toLowerCase(),p=$('pw').value;if(!e||!p){$('lerr').textContent='Enter email and password';return false;}
+  LTAuth.signIn(e,p).then(function(r){if(!r.ok){$('lerr').textContent=r.msg;return;}if(!ok(r.role)){LTAuth.signOut();$('lerr').textContent='This account cannot use the checkout.';return;}$('pw').value='';start();});return false;}
+function logout(){LTAuth.signOut();showLogin('');clearAll();}
+window.addEventListener('lt-auth-lost',function(){showLogin('Session expired - please sign in again');});
+function start(){$('login').style.display='none';var s=LTAuth.session()||{};$('who').textContent=s.name||'';$('cfgbtn').style.display=s.role==='owner'?'':'none';loadMenu();loadCfg();}
+(function(){var s=LTAuth.session();if(s&&ok(s.role)){LTAuth.ready().then(function(g){if(g)start();else showLogin('');});}else showLogin('');})();
+
+/* ---------- menu ---------- */
+function loadMenu(){LTAuth.api('/rest/v1/menu_prices?select=*&active=eq.true&order=id.asc').then(function(d){
+  if(!Array.isArray(d)||!d.length){$('tiles').innerHTML='<div class="empty" style="grid-column:1/-1">Could not load the menu. Check connection and sign in again.</div>';return;}
+  var order=['birria','steak','pork','chicken','carnitas','rice_c','rice_p','rice_s','chips','dip','cheese','avo','coke','7up'];
+  MENU=d.sort(function(a,b){var x=order.indexOf(a.id),y=order.indexOf(b.id);return (x<0?99:x)-(y<0?99:y);});drawTabs();drawTiles();drawLines();});}
+function drawTabs(){$('tabs').innerHTML=CATS.map(function(c){return '<button class="tab'+(c[0]===cat?' on':'')+'" data-c="'+c[0]+'">'+c[1]+'</button>';}).join('');
+  $('tabs').querySelectorAll('.tab').forEach(function(b){b.onclick=function(){cat=b.getAttribute('data-c');drawTabs();drawTiles();};});}
+function badge(id){var q=MODS.indexOf(id)>-1?(loose[id]||0):(cart[id]||0);return q?'<span class="tb">'+q+'</span>':'';}
+function drawTiles(){
+  $('hint').textContent=cat==='tacos'?'Tacos come in 2s or 3s. Mixing flavors is fine - the priciest flavor sets the price. Tap a flavor to add one.':(cat==='sides'?'Extras for a specific dish: add them from the dish in the order list (so the kitchen knows what goes where).':'');
+  $('tiles').innerHTML=MENU.filter(function(m){return catOf(m)===cat;}).map(function(m){
+    var p=m.kind==='taco'?('2 = '+vnd(m.p2)+' · 3 = '+vnd(m.p3)):vnd(m.p1);
+    return '<button class="tile" data-id="'+esc(m.id)+'">'+badge(m.id)+'<div class="tn">'+esc(m.name)+'</div><div class="tp">'+p+'</div></button>';}).join('');
+  $('tiles').querySelectorAll('.tile').forEach(function(b){b.onclick=function(){add(b.getAttribute('data-id'));};});}
+function add(id){if(MODS.indexOf(id)>-1)loose[id]=Math.min(20,(loose[id]||0)+1);else cart[id]=Math.min(20,(cart[id]||0)+1);changed();}
+function setQ(id,d){cart[id]=Math.max(0,Math.min(20,(cart[id]||0)+d));if(!cart[id]){delete cart[id];delete att[id];}else if(att[id]){MODS.forEach(function(m){if((att[id][m]||0)>cart[id])att[id][m]=cart[id];});}changed();}
+function setLoose(id,d){loose[id]=Math.max(0,(loose[id]||0)+d);if(!loose[id])delete loose[id];changed();}
+function cyc(dish,mod){var a=att[dish]=att[dish]||{};var mx=cart[dish]||0;var n=(a[mod]||0)+1;if(n>mx)n=0;if(n)a[mod]=n;else delete a[mod];changed();}
+
+function drawLines(){
+  var h='';
+  Object.keys(cart).forEach(function(id){var m=byId(id);if(!m)return;
+    h+='<div class="ln"><div class="lr"><span class="lname">'+esc(m.name)+'</span><span class="qty"><button class="qb" data-m="'+esc(id)+'">−</button><span class="qn">'+cart[id]+'</span><button class="qb" data-p="'+esc(id)+'">+</button></span></div>';
+    if(isDish(id)){h+='<div class="ex">'+MODS.filter(function(x){return x!=='dip'||id==='birria';}).map(function(x){var mm=byId(x),n=(att[id]||{})[x]||0;
+      return '<button class="chip'+(n?' on':'')+'" data-d="'+esc(id)+'" data-x="'+x+'">+ '+esc(mm?mm.name.replace('Extra ','').replace('Birria Dipping ',''):x)+(n?' ×'+n:'')+'</button>';}).join('')+'</div>';}
+    h+='</div>';});
+  MODS.forEach(function(x){if(loose[x]){var m=byId(x);h+='<div class="ln"><div class="lr"><span class="lname">'+esc(m?m.name:x)+' <span style="color:#B8A99A;font-weight:400;font-size:.8rem">(on the side)</span></span><span class="qty"><button class="qb" data-lm="'+x+'">−</button><span class="qn">'+loose[x]+'</span><button class="qb" data-lp="'+x+'">+</button></span></div></div>';}});
+  $('lines').innerHTML=h||'<div class="empty">Tap items to start an order</div>';
+  var L=$('lines');
+  L.querySelectorAll('[data-m]').forEach(function(b){b.onclick=function(){setQ(b.getAttribute('data-m'),-1);};});
+  L.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){setQ(b.getAttribute('data-p'),1);};});
+  L.querySelectorAll('[data-lm]').forEach(function(b){b.onclick=function(){setLoose(b.getAttribute('data-lm'),-1);};});
+  L.querySelectorAll('[data-lp]').forEach(function(b){b.onclick=function(){setLoose(b.getAttribute('data-lp'),1);};});
+  L.querySelectorAll('.chip').forEach(function(b){b.onclick=function(){cyc(b.getAttribute('data-d'),b.getAttribute('data-x'));};});
+}
+function changed(){idem=null;drawTiles();drawLines();requery();}
+function clearAll(){cart={};loose={};att={};idem=null;$('cname').value='';$('cnote').value='';drawTiles();drawLines();requery();}
+
+/* ---------- price (asked from the server, same maths as the website) ---------- */
+function requery(){clearTimeout(qTimer);var it=items();
+  if(!it.length){quote={total:0};paintTotal();return;}
+  if(tacoCount()===1){quote={total:0,error:'Tacos are sold in 2s or 3s - add one more taco.'};paintTotal();return;}
+  var seq=++qSeq;$('bcash').disabled=$('bqr').disabled=$('bcard').disabled=true;
+  qTimer=setTimeout(function(){LTAuth.api('/rest/v1/rpc/pos_quote',{method:'POST',body:JSON.stringify({p:{items:it}})}).then(function(r){if(seq!==qSeq)return;
+    quote=r&&typeof r.total==='number'?r:{total:0,error:'Could not price this order. Check connection.'};paintTotal();});},120);}
+function paintTotal(){$('total').textContent=vnd(quote.total);$('qerr').textContent=quote.error||'';
+  var okp=quote.total>0&&!quote.error&&!busy;$('bcash').disabled=$('bqr').disabled=$('bcard').disabled=!okp;}
+
+/* ---------- payment ---------- */
+function pack(pay,extra){var p={pay:pay,name:$('cname').value.trim(),notes:$('cnote').value.trim()||null,idem_key:idem,items:items(),attach:cleanAtt()};if(extra)for(var k in extra)p[k]=extra[k];return p;}
+function cleanAtt(){var o={};for(var d in att){var a={};for(var m in att[d])if(att[d][m]>0)a[m]=att[d][m];if(Object.keys(a).length&&cart[d])o[d]=a;}return o;}
+function ov(html){$('box').innerHTML=html;$('ov').classList.add('show');}
+function closeOv(){$('ov').classList.remove('show');}
+function startPay(pay){if(!(quote.total>0)||quote.error)return;idem=idem||('pos-'+((window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2)));
+  if(pay==='cash')cashUI();else if(pay==='qr')qrUI();else cardUI();}
+function cashUI(){var t=quote.total;var q=[t,50000,100000,200000,500000].filter(function(v,i,a){return v>=t&&a.indexOf(v)===i;}).slice(0,5);
+  ov('<h2>CASH</h2><div class="big">'+vnd(t)+'</div><div class="quick">'+q.map(function(v){return '<button data-v="'+v+'">'+(v===t?'EXACT':vnd(v))+'</button>';}).join('')+'</div><input class="inp" id="rcv" type="number" inputmode="numeric" placeholder="Cash received" style="text-align:center;font-size:1.3rem"><div class="chg" id="chg">Change: —</div><div class="err" id="perr"></div><button class="go" id="go" disabled>CONFIRM PAID</button><button class="back" onclick="closeOv()">Back</button>');
+  function upd(){var v=parseInt($('rcv').value,10)||0;$('chg').textContent=v>=t?'Give change: '+vnd(v-t):'Change: —';$('chg').style.color=v>=t?'#27AE60':'#B8A99A';$('go').disabled=!(v>=t);}
+  $('rcv').oninput=upd;document.querySelectorAll('.quick button').forEach(function(b){b.onclick=function(){$('rcv').value=b.getAttribute('data-v');upd();};});
+  $('go').onclick=function(){submit('cash',{cash_received:parseInt($('rcv').value,10)||0});};setTimeout(function(){$('rcv').focus();},50);}
+function cardUI(){ov('<h2>CARD</h2><div class="big">'+vnd(quote.total)+'</div><p style="margin:12px 0;color:#B8A99A">Charge exactly this amount on the card machine. Tap the button only after the machine says APPROVED.</p><div class="err" id="perr"></div><button class="go" id="go">CARD APPROVED - SEND TO KITCHEN</button><button class="back" onclick="closeOv()">Back</button>');
+  $('go').onclick=function(){submit('card');};}
+function qrUI(){var c=CFG||{};if(!c.bank_code||!c.account_no){ov('<h2>QR</h2><p style="margin:14px 0;color:#E8735A">Bank QR is not set up yet.</p><p style="color:#B8A99A;margin-bottom:14px">'+(LTAuth.role()==='owner'?'Tap QR SETUP (top right) to add your bank account.':'Ask the owner to add the bank account under QR SETUP.')+'</p><button class="back" onclick="closeOv()">Back</button>');return;}
+  var memo='TACO'+String(Math.floor(1000+Math.random()*9000));
+  var url='https://img.vietqr.io/image/'+encodeURIComponent(c.bank_code)+'-'+encodeURIComponent(c.account_no)+'-compact2.png?amount='+quote.total+'&addInfo='+encodeURIComponent(memo)+(c.account_name?'&accountName='+encodeURIComponent(c.account_name):'');
+  ov('<h2>SCAN TO PAY</h2><div class="big">'+vnd(quote.total)+'</div><div class="qrimg"><img alt="Bank QR" src="'+esc(url)+'"></div><p style="color:#B8A99A;font-size:.85rem">Reference: <b style="color:#D4A017">'+memo+'</b></p><p style="color:#E8735A;font-size:.85rem;margin:8px 0">Tap the green button ONLY after the money shows in your bank app.</p><div class="err" id="perr"></div><button class="go" id="go">MONEY RECEIVED - SEND TO KITCHEN</button><button class="back" onclick="closeOv()">Back</button>');
+  $('go').onclick=function(){submit('qr');};}
+function submit(pay,extra){if(busy)return;busy=true;var g=$('go');if(g){g.disabled=true;g.textContent='SENDING...';}
+  LTAuth.fetch('/rest/v1/rpc/pos_create_order',{method:'POST',body:JSON.stringify({p:pack(pay,extra)})}).then(function(r){
+    if(!r)throw new Error('Signed out - sign in again');
+    return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.order_ref)throw new Error(j.message||'Could not save the order');return j;});})
+  .then(function(j){busy=false;done(j,pay,extra);})
+  .catch(function(e){busy=false;var pe=$('perr');if(pe)pe.textContent=e.message||'Could not save. Try again.';if(g){g.disabled=false;g.textContent='TRY AGAIN';}});}
+function done(j,pay,extra){last={ref:j.order_ref,total:j.total,pay:pay,recv:extra&&extra.cash_received,change:j.change,name:$('cname').value.trim(),lines:items().map(function(i){var m=byId(i.id);return i.qty+'x '+(m?m.name:i.id);}),at:new Date()};
+  var chg=pay==='cash'&&typeof j.change==='number'?'<div class="chg" style="color:#27AE60">Give change: '+vnd(j.change)+'</div>':'';
+  ov('<div style="font-size:3.5rem">✅</div><h2>PAID - SENT TO KITCHEN</h2><div class="big">'+esc(j.order_ref)+'</div><div style="color:#D4A017;font-size:1.2rem;margin:6px 0">'+vnd(j.total)+' · '+pay.toUpperCase()+'</div>'+chg+'<button class="go" onclick="newOrder()">NEW ORDER</button><button class="back" onclick="printRcpt()">Print receipt</button>');
+  cart={};loose={};att={};idem=null;$('cname').value='';$('cnote').value='';drawTiles();drawLines();quote={total:0};paintTotal();}
+function newOrder(){closeOv();}
+function printRcpt(){if(!last)return;var l=last;$('rcpt').innerHTML='<div style="text-align:center;font-weight:bold;font-size:14px">LET\'S TACO DA NANG</div><div style="text-align:center">43 An Thuong 30</div><hr>'+esc(l.ref)+'<br>'+esc(l.at.toLocaleString())+(l.name?'<br>'+esc(l.name):'')+'<hr>'+l.lines.map(esc).join('<br>')+'<hr><b>TOTAL '+vnd(l.total)+'</b><br>Paid by '+esc(l.pay)+(l.pay==='cash'&&l.recv?'<br>Received '+vnd(l.recv)+'<br>Change '+vnd(l.change||0):'')+'<hr><div style="text-align:center">Thank you!</div>';window.print();}
+
+/* ---------- QR bank setup (owner) ---------- */
+function loadCfg(){LTAuth.api('/rest/v1/pos_config?select=*&id=eq.1').then(function(r){CFG=Array.isArray(r)&&r[0]?r[0]:null;});}
+function openCfg(){var c=CFG||{};ov('<h2>QR SETUP</h2><p style="color:#B8A99A;font-size:.85rem;margin:8px 0 12px">Bank short code (VietQR), e.g. VCB, TCB, MB, ACB, BIDV, VPB, TPB, OCB.</p><input class="inp" id="cb" placeholder="Bank code (e.g. VCB)" value="'+esc(c.bank_code||'')+'"><input class="inp" id="ca" inputmode="numeric" placeholder="Account number" value="'+esc(c.account_no||'')+'"><input class="inp" id="cn" placeholder="Account holder name" value="'+esc(c.account_name||'')+'"><div class="err" id="perr"></div><button class="go" id="go">SAVE</button><button class="back" onclick="closeOv()">Cancel</button>');
+  $('go').onclick=function(){var b={bank_code:$('cb').value.trim().toUpperCase(),account_no:$('ca').value.replace(/\s+/g,''),account_name:$('cn').value.trim().toUpperCase()};
+    if(!/^[A-Z0-9]{2,12}$/.test(b.bank_code)||!/^[0-9]{4,20}$/.test(b.account_no)){$('perr').textContent='Check the bank code and account number.';return;}
+    LTAuth.fetch('/rest/v1/pos_config?id=eq.1',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(b)}).then(function(r){return r&&r.ok?r.json():null;}).then(function(j){if(j&&j.length){CFG=j[0];closeOv();}else $('perr').textContent='Not saved. Only the owner can change this.';});};}
+</script>
+</body>
+</html>

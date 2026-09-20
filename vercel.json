@@ -15,7 +15,7 @@
       ]
     },
     {
-      "source": "/(admin|kitchen|qr-tables)",
+      "source": "/(admin|kitchen|qr-tables|pos)",
       "headers": [
         {
           "key": "X-Robots-Tag",
