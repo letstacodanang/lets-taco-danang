@@ -80,7 +80,7 @@ header{background:#1A0800;border-bottom:2px solid rgba(212,160,23,.3);height:56p
 </div>
 <header>
   <div class="logo">WALK-UP CHECKOUT</div>
-  <div class="hr"><button class="hbtn" id="tpbtn" onclick="openTP()">TABLE PAYMENTS <b id="tpn"></b></button><span id="who"></span><button class="hbtn" id="cfgbtn" style="display:none" onclick="openCfg()">QR SETUP</button><button class="hbtn" onclick="logout()">SIGN OUT</button></div>
+  <div class="hr"><a class="hbtn" id="plnk1" href="/admin" style="display:none;text-decoration:none">ADMIN</a><a class="hbtn" id="plnk2" href="/kitchen" style="display:none;text-decoration:none">KITCHEN</a><button class="hbtn" id="tpbtn" onclick="openTP()">TABLE PAYMENTS <b id="tpn"></b></button><span id="who"></span><button class="hbtn" id="cfgbtn" style="display:none" onclick="openCfg()">QR SETUP</button><button class="hbtn" onclick="logout()">SIGN OUT</button></div>
 </header>
 <div class="main">
   <div class="left">
@@ -130,7 +130,7 @@ function doLogin(ev){ev.preventDefault();var e=$('em').value.trim().toLowerCase(
   LTAuth.signIn(e,p).then(function(r){if(!r.ok){$('lerr').textContent=r.msg;return;}if(!ok(r.role)){LTAuth.signOut();$('lerr').textContent='This account cannot use the checkout.';return;}$('pw').value='';start();});return false;}
 function logout(){LTAuth.signOut();showLogin('');clearAll();}
 window.addEventListener('lt-auth-lost',function(){showLogin('Session expired - please sign in again');});
-function start(){$('login').style.display='none';var s=LTAuth.session()||{};$('who').textContent=s.name||'';$('cfgbtn').style.display=s.role==='owner'?'':'none';loadMenu();loadCfg();LTAuth.station('frontdesk');if(!window._tpOn){window._tpOn=1;pollTP();setInterval(pollTP,5000);}}
+function start(){$('login').style.display='none';var s=LTAuth.session()||{};$('who').textContent=s.name||'';$('cfgbtn').style.display=s.role==='owner'?'':'none';$('plnk1').style.display=$('plnk2').style.display=s.role==='owner'?'':'none';loadMenu();loadCfg();LTAuth.station('frontdesk');if(!window._tpOn){window._tpOn=1;pollTP();setInterval(pollTP,5000);}}
 (function(){var s=LTAuth.session();if(s&&ok(s.role)){LTAuth.ready().then(function(g){if(g)start();else showLogin('');});}else showLogin('');})();
 
 /* ---------- menu ---------- */

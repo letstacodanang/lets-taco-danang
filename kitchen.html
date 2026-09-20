@@ -82,6 +82,7 @@ header{background:#1A0800;border-bottom:2px solid rgba(212,160,23,0.3);padding:1
     <div class="hcount" id="kcount">0 ACTIVE</div>
     <div class="hclock" id="kclock">00:00:00</div>
     <div class="hpoll" title="Live"></div>
+    <a id="klnk1" href="/admin" style="display:none;text-decoration:none;background:transparent;border:1px solid rgba(212,160,23,0.4);color:#D4A017;border-radius:6px;padding:6px 12px;font-size:0.75rem;letter-spacing:2px">ADMIN</a><a id="klnk2" href="/pos" style="display:none;text-decoration:none;background:transparent;border:1px solid rgba(212,160,23,0.4);color:#D4A017;border-radius:6px;padding:6px 12px;font-size:0.75rem;letter-spacing:2px">FRONT DESK</a>
     <span id="kuser" style="font-size:0.8rem;color:#B8A99A;letter-spacing:1px"></span>
     <button onclick="kLogout()" style="background:transparent;border:1px solid rgba(212,160,23,0.4);color:#D4A017;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:0.75rem;letter-spacing:2px">SIGN OUT</button>
   </div>
@@ -267,6 +268,7 @@ function kShowLogin(msg){document.getElementById('klogin').style.display='flex';
 function kStart(){
   document.getElementById('klogin').style.display='none';
   document.getElementById('kuser').textContent=(LTAuth.session()||{}).name||'';
+  var _ow=(LTAuth.session()||{}).role==='owner';document.getElementById('klnk1').style.display=_ow?'':'none';document.getElementById('klnk2').style.display=_ow?'':'none';
   if(kStarted)return;kStarted=true;LTAuth.station('kitchen');poll();kTimer=setInterval(poll,2000);
 }
 function kStop(){kStarted=false;clearInterval(kTimer);lastIds=[];lastPaidIds=[];var _g=document.getElementById('kgrid');_g._sig=null;_g.innerHTML='';}
