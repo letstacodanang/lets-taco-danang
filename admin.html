@@ -833,9 +833,9 @@ function ltLogin(e,p){
   if(!e||!p){err.style.display='block';err.textContent='Please enter email and password';return;}
   LTAuth.signIn(e,p).then(function(r){
     if(!r.ok){attempts++;err.style.display='block';err.textContent=r.msg+' ('+attempts+'/5)';ltLockCheck();return;}
-    if(r.role!=='owner'&&r.role!=='staff'){
+    if(r.role!=='owner'){
       LTAuth.signOut();err.style.display='block';
-      err.textContent='This account does not have admin access. Ask the owner to assign a role.';return;
+      err.textContent='Admin is for the owner only. Kitchen and front-desk staff: use the Staff page.';return;
     }
     err.style.display='none';attempts=0;
     document.getElementById('lp').value='';document.getElementById('lps').value='';
@@ -853,9 +853,52 @@ function enterApp(r,fresh){
     sbF('/rest/v1/staff_shifts',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({staff_name:currentStaff,login_time:new Date().toISOString()})}).then(function(d){if(d&&d.length>0)shiftId=d[0].id;});
     showT('Welcome '+currentStaff+'!','Shift started. Have a great service!');
   }
+  if(isOwner){LTAuth.station('admin');initDuty();}
   initApp();
 }
 
+function initDuty(){
+  if(document.getElementById('dutybtn'))return;
+  var t=document.getElementById('rtog');if(!t)return;
+  var b=document.createElement('button');b.id='dutybtn';b.textContent='ON DUTY';
+  b.style.cssText='background:white;border:1.5px solid #E5E7EB;border-radius:30px;padding:8px 16px;cursor:pointer;font-weight:700;font-size:0.8rem;margin-right:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);';
+  b.onclick=openDuty;t.parentNode.insertBefore(b,t);
+  dutyLoad(true);setInterval(function(){dutyLoad(true);},30000);
+}
+var DUTY=[];
+function dutyStart(){var d=new Date(Date.now()+7*3600000);d.setUTCHours(0,0,0,0);return new Date(d.getTime()-7*3600000).toISOString();}
+function dutyLoad(quiet){
+  sbF('/rest/v1/work_sessions?select=*&started_at=gte.'+dutyStart()+'&order=started_at.desc').then(function(d){
+    if(!Array.isArray(d))return;DUTY=d;
+    var n={};d.forEach(function(x){if(!x.ended_at&&Date.now()-new Date(x.last_seen)<180000)n[x.email]=1;});
+    var c=Object.keys(n).length;var b=document.getElementById('dutybtn');if(b){b.textContent='ON DUTY: '+c;b.style.color=c?'#27AE60':'#6B7280';}
+    if(document.getElementById('dutyov'))drawDuty();
+  });
+}
+function hm(ms){var m=Math.max(0,Math.round(ms/60000));return Math.floor(m/60)+'h '+(m%60)+'m';}
+var STN={admin:'ADMIN',kitchen:'KITCHEN',frontdesk:'FRONT DESK'};
+function clk(ts){return new Date(ts).toLocaleTimeString('en-GB',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit'});}
+function drawDuty(){
+  var p={};
+  DUTY.forEach(function(x){
+    var live=!x.ended_at&&Date.now()-new Date(x.last_seen)<180000;
+    var end=x.ended_at?new Date(x.ended_at):new Date(x.last_seen);
+    var k=x.email;if(!p[k])p[k]={name:x.name||x.email,ms:0,live:false,st:'',since:x.started_at,last:x.last_seen};
+    p[k].ms+=Math.max(0,end-new Date(x.started_at));
+    if(live){p[k].live=true;p[k].st=STN[x.station]||x.station;p[k].since=x.started_at;}
+    else if(!p[k].live&&!p[k].st){p[k].st=STN[x.station]||x.station;p[k].since=x.started_at;}
+  });
+  var rows=Object.keys(p).sort(function(a,b){return (p[b].live-p[a].live)||(p[b].ms-p[a].ms);}).map(function(k){var r=p[k];
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #eee;"><div><div style="font-weight:700;">'+esc(r.name)+'</div><div style="font-size:0.8rem;color:#6B7280;">'+esc(r.st)+' · since '+clk(r.since)+'</div></div><div style="text-align:right;"><div style="font-weight:700;color:'+(r.live?'#27AE60':'#9CA3AF')+';">'+(r.live?'ON DUTY':'OFF')+'</div><div style="font-size:0.8rem;color:#6B7280;">'+hm(r.ms)+' today</div></div></div>';}).join('');
+  document.getElementById('dutybody').innerHTML=rows||'<div style="padding:24px;text-align:center;color:#6B7280;">Nobody has signed in yet today.</div>';
+}
+function openDuty(){
+  var o=document.getElementById('dutyov');if(o){o.remove();return;}
+  o=document.createElement('div');o.id='dutyov';o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  o.innerHTML='<div style="background:white;border-radius:14px;padding:20px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;color:#111;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><b style="font-size:1.1rem;">Who is working today</b><button id="dutyx" style="border:none;background:none;font-size:1.4rem;cursor:pointer;">✕</button></div><div style="font-size:0.8rem;color:#6B7280;margin-bottom:6px;">Sign-ins to Kitchen, Front Desk and Admin, Da Nang time.</div><div id="dutybody"></div></div>';
+  document.body.appendChild(o);document.getElementById('dutyx').onclick=function(){o.remove();};o.onclick=function(e){if(e.target===o)o.remove();};
+  drawDuty();dutyLoad();
+}
 var PGT={home:'Dashboard',dinein:'Dine In',orders:'All Orders',customers:'Customers',revenue:'Revenue',menu:'Menu Items',settings:'Settings',help:'Staff Guide'};
 function showPg(pg){
   if(pg==="marketing")setTimeout(loadMarketing,100);
@@ -1516,7 +1559,7 @@ window.addEventListener('load',function(){
 
 function restoreSession(){
   var s=LTAuth.session();
-  if(!s||(s.role!=='owner'&&s.role!=='staff'))return;
+  if(!s||s.role!=='owner')return;
   LTAuth.ready().then(function(ok){if(ok)enterApp(s,false);});
 }
 window.addEventListener('lt-auth-lost',function(){

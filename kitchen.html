@@ -267,7 +267,7 @@ function kShowLogin(msg){document.getElementById('klogin').style.display='flex';
 function kStart(){
   document.getElementById('klogin').style.display='none';
   document.getElementById('kuser').textContent=(LTAuth.session()||{}).name||'';
-  if(kStarted)return;kStarted=true;poll();kTimer=setInterval(poll,2000);
+  if(kStarted)return;kStarted=true;LTAuth.station('kitchen');poll();kTimer=setInterval(poll,2000);
 }
 function kStop(){kStarted=false;clearInterval(kTimer);lastIds=[];lastPaidIds=[];var _g=document.getElementById('kgrid');_g._sig=null;_g.innerHTML='';}
 function kLogin(ev){

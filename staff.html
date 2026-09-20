@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lets Taco - Staff</title>
+<meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#0a0300;color:#FAF0E6;font-family:Jost,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:#D4A017;letter-spacing:5px;text-align:center}
+.sub{color:#B8A99A;font-size:.9rem;margin:6px 0 24px;text-align:center}
+.wrap{width:100%;max-width:520px}
+.card{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:#1A0800;border:1px solid rgba(212,160,23,.3);border-radius:14px;padding:20px;margin-bottom:12px;color:inherit;font-family:inherit;cursor:pointer}
+.card:active{background:#2a1200}
+.ic{font-size:2rem}
+.cn{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:#D4A017}
+.cd{font-size:.85rem;color:#B8A99A;margin-top:2px}
+.tag{margin-left:auto;font-size:.65rem;letter-spacing:2px;color:#B8A99A;border:1px solid rgba(184,169,154,.4);border-radius:10px;padding:3px 8px;white-space:nowrap}
+form{background:#1A0800;border:1px solid rgba(212,160,23,.3);border-radius:14px;padding:24px}
+input{width:100%;padding:14px;margin-bottom:12px;border-radius:8px;border:1px solid rgba(212,160,23,.3);background:#0a0300;color:#FAF0E6;font-size:1rem;font-family:inherit}
+.go{width:100%;padding:16px;border:none;border-radius:10px;background:#D4A017;color:#0F0500;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;cursor:pointer}
+.go:disabled{opacity:.5}
+.back{display:block;margin:14px auto 0;background:none;border:none;color:#B8A99A;text-decoration:underline;font-size:.9rem;cursor:pointer;font-family:inherit}
+.err{color:#E8735A;font-size:.9rem;min-height:1.2em;margin-top:12px;text-align:center}
+.who{text-align:center;color:#B8A99A;font-size:.9rem;margin-bottom:16px}
+.who b{color:#FAF0E6}
+h2{font-family:'Bebas Neue',sans-serif;letter-spacing:4px;color:#D4A017;font-size:1.6rem;text-align:center;margin-bottom:4px}
+.note{color:#B8A99A;font-size:.8rem;text-align:center;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">LET'S TACO STAFF</div>
+  <div class="sub">Choose where you are working. Your sign-in records who is on duty and when.</div>
+  <div id="who" class="who" style="display:none"></div>
+  <div id="pick"></div>
+  <form id="frm" style="display:none" onsubmit="return login(event)">
+    <h2 id="ft"></h2>
+    <div class="note" id="fn"></div>
+    <input id="em" type="email" autocomplete="username" placeholder="Your email">
+    <input id="pw" type="password" autocomplete="current-password" placeholder="Password">
+    <button class="go" id="gb" type="submit">SIGN IN &amp; START</button>
+    <div class="err" id="err"></div>
+    <button type="button" class="back" onclick="showPick()">Choose a different station</button>
+  </form>
+  <div class="err" id="perr"></div>
+  <button class="back" id="so" style="display:none" onclick="signOut()">Not you? Sign out</button>
+</div>
+<script src="/auth.js"></script>
+<script>
+var ST=[
+ {k:'admin',n:'ADMIN',ic:'👑',d:'Sales, menu, reports and settings.',tag:'OWNER ONLY',go:'/admin',roles:['owner']},
+ {k:'kitchen',n:'KITCHEN',ic:'🔥',d:'See the orders and cook them.',tag:'',go:'/kitchen',roles:['kitchen','staff','owner']},
+ {k:'frontdesk',n:'FRONT DESK',ic:'💳',d:'Walk-up checkout and table payments.',tag:'',go:'/pos',roles:['staff','owner']}];
+var cur=null,sess=null;
+function $(i){return document.getElementById(i);}
+function find(k){for(var i=0;i<ST.length;i++)if(ST[i].k===k)return ST[i];}
+function showPick(){cur=null;$('frm').style.display='none';$('pick').style.display='block';$('perr').textContent='';
+  $('pick').innerHTML=ST.map(function(s){var no=sess&&s.roles.indexOf(sess.role)<0;
+    return '<button class="card" style="'+(no?'opacity:.45':'')+'" data-k="'+s.k+'"><span class="ic">'+s.ic+'</span><span><div class="cn">'+s.n+'</div><div class="cd">'+s.d+'</div></span>'+(s.tag?'<span class="tag">'+s.tag+'</span>':'')+'</button>';}).join('');
+  $('pick').querySelectorAll('.card').forEach(function(b){b.onclick=function(){choose(b.getAttribute('data-k'));};});
+  $('who').style.display=sess?'block':'none';$('so').style.display=sess?'block':'none';
+  if(sess)$('who').innerHTML='Signed in as <b>'+esc(sess.name||sess.email)+'</b> ('+esc(sess.role)+')';}
+function choose(k){var s=find(k);cur=s;$('perr').textContent='';
+  if(sess){if(s.roles.indexOf(sess.role)<0){$('perr').textContent=s.k==='admin'?'Admin is for the owner only.':'This login cannot use '+s.n+'.';return;}enter(s);return;}
+  $('pick').style.display='none';$('frm').style.display='block';$('ft').textContent=s.n;$('fn').textContent=s.k==='admin'?'Owner login':'Use your own staff login - never share it.';$('err').textContent='';setTimeout(function(){$('em').focus();},50);}
+function login(ev){ev.preventDefault();var e=$('em').value.trim().toLowerCase(),p=$('pw').value;if(!e||!p){$('err').textContent='Enter your email and password';return false;}
+  $('gb').disabled=true;$('err').textContent='';
+  LTAuth.signIn(e,p).then(function(r){$('gb').disabled=false;
+    if(!r.ok){$('err').textContent=r.msg;return;}
+    if(cur.roles.indexOf(r.role)<0){LTAuth.signOut();$('err').textContent=cur.k==='admin'?'Admin is for the owner only.':'This login cannot use '+cur.n+'.';return;}
+    $('pw').value='';enter(cur);});return false;}
+function enter(s){$('perr').textContent='Starting '+s.n+'...';var done=false;function go(){if(done)return;done=true;location.href=s.go;}
+  LTAuth.station(s.k).then(go,go);setTimeout(go,4000);}
+function signOut(){LTAuth.signOut();sess=null;showPick();}
+window.addEventListener('lt-auth-lost',function(){sess=null;showPick();});
+(function(){var s=LTAuth.session();showPick();if(s){LTAuth.ready().then(function(ok){if(ok){sess=s;showPick();}});}})();
+</script>
+</body>
+</html>

@@ -87,6 +87,24 @@
     });
   }
 
+  /* Station clock-in: records who is working where (kitchen / front desk / admin) and when. */
+  var WS = 'lt_ws', wsTimer = null;
+  function wsGet() { try { return JSON.parse(localStorage.getItem(WS) || 'null'); } catch (e) { return null; } }
+  function wsSet(v) { try { if (v) localStorage.setItem(WS, JSON.stringify(v)); else localStorage.removeItem(WS); } catch (e) {} }
+  function wsBeat() {
+    var s = wsGet(); if (!s || !st) return;
+    LT.fetch('/rest/v1/rpc/station_ping', { method: 'POST', body: JSON.stringify({ p_id: s.id }) })
+      .then(function (r) { return r && r.ok ? r.json() : null; })
+      .then(function (ok) { if (ok === false) wsBegin(s.station); }).catch(function () {});
+  }
+  function wsTick() { if (!wsTimer) wsTimer = setInterval(wsBeat, 60000); }
+  function wsBegin(name) {
+    return LT.fetch('/rest/v1/rpc/station_start', { method: 'POST', body: JSON.stringify({ p_station: name }) })
+      .then(function (r) { return r && r.ok ? r.json() : null; })
+      .then(function (id) { if (id && st) { wsSet({ id: id, station: name, email: st.email }); wsTick(); } return id; })
+      .catch(function () { return null; });
+  }
+
   var LT = {
     url: SB_URL,
     key: SB_KEY,
@@ -106,12 +124,21 @@
     },
     signOut: function () {
       var t = st && st.at;
+      var ws = wsGet();
+      if (ws && t) { try { fetch(SB_URL + '/rest/v1/rpc/station_end', { method: 'POST', keepalive: true, headers: { apikey: SB_KEY, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_id: ws.id }) }); } catch (e) {} }
+      wsSet(null); if (wsTimer) { clearInterval(wsTimer); wsTimer = null; }
       clear();
       if (t) { try { fetch(SB_URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + t } }); } catch (e) {} }
     },
     /* Current session summary from local state (no network) or null. */
     session: function () { return st ? { role: st.role, name: st.name, email: st.email } : null; },
     role: function () { return st ? st.role : ''; },
+    /* Clock in at a station ('admin' | 'kitchen' | 'frontdesk'); safe to call on every page load. */
+    station: function (name) {
+      var s = wsGet();
+      if (s && st && s.station === name && s.email === st.email) { wsTick(); wsBeat(); return Promise.resolve(s.id); }
+      return wsBegin(name);
+    },
     /* Resolves true when a usable (or refreshed) session exists. */
     ready: function () { return ensure(); },
     /* Raw authenticated fetch against the Supabase project. Resolves a Response (or null when signed out). */

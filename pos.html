@@ -80,7 +80,7 @@ header{background:#1A0800;border-bottom:2px solid rgba(212,160,23,.3);height:56p
 </div>
 <header>
   <div class="logo">WALK-UP CHECKOUT</div>
-  <div class="hr"><span id="who"></span><button class="hbtn" id="cfgbtn" style="display:none" onclick="openCfg()">QR SETUP</button><button class="hbtn" onclick="logout()">SIGN OUT</button></div>
+  <div class="hr"><button class="hbtn" id="tpbtn" onclick="openTP()">TABLE PAYMENTS <b id="tpn"></b></button><span id="who"></span><button class="hbtn" id="cfgbtn" style="display:none" onclick="openCfg()">QR SETUP</button><button class="hbtn" onclick="logout()">SIGN OUT</button></div>
 </header>
 <div class="main">
   <div class="left">
@@ -130,7 +130,7 @@ function doLogin(ev){ev.preventDefault();var e=$('em').value.trim().toLowerCase(
   LTAuth.signIn(e,p).then(function(r){if(!r.ok){$('lerr').textContent=r.msg;return;}if(!ok(r.role)){LTAuth.signOut();$('lerr').textContent='This account cannot use the checkout.';return;}$('pw').value='';start();});return false;}
 function logout(){LTAuth.signOut();showLogin('');clearAll();}
 window.addEventListener('lt-auth-lost',function(){showLogin('Session expired - please sign in again');});
-function start(){$('login').style.display='none';var s=LTAuth.session()||{};$('who').textContent=s.name||'';$('cfgbtn').style.display=s.role==='owner'?'':'none';loadMenu();loadCfg();}
+function start(){$('login').style.display='none';var s=LTAuth.session()||{};$('who').textContent=s.name||'';$('cfgbtn').style.display=s.role==='owner'?'':'none';loadMenu();loadCfg();LTAuth.station('frontdesk');if(!window._tpOn){window._tpOn=1;pollTP();setInterval(pollTP,5000);}}
 (function(){var s=LTAuth.session();if(s&&ok(s.role)){LTAuth.ready().then(function(g){if(g)start();else showLogin('');});}else showLogin('');})();
 
 /* ---------- menu ---------- */
@@ -185,7 +185,7 @@ function paintTotal(){$('total').textContent=vnd(quote.total);$('qerr').textCont
 function pack(pay,extra){var p={pay:pay,name:$('cname').value.trim(),notes:$('cnote').value.trim()||null,idem_key:idem,items:items(),attach:cleanAtt()};if(extra)for(var k in extra)p[k]=extra[k];return p;}
 function cleanAtt(){var o={};for(var d in att){var a={};for(var m in att[d])if(att[d][m]>0)a[m]=att[d][m];if(Object.keys(a).length&&cart[d])o[d]=a;}return o;}
 function ov(html){$('box').innerHTML=html;$('ov').classList.add('show');}
-function closeOv(){$('ov').classList.remove('show');}
+function closeOv(){$('ov').classList.remove('show');$('box').removeAttribute('data-tp');}
 function startPay(pay){if(!(quote.total>0)||quote.error)return;idem=idem||('pos-'+((window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2)));
   if(pay==='cash')cashUI();else if(pay==='qr')qrUI();else cardUI();}
 function cashUI(){var t=quote.total;var q=[t,50000,100000,200000,500000].filter(function(v,i,a){return v>=t&&a.indexOf(v)===i;}).slice(0,5);
@@ -212,6 +212,21 @@ function done(j,pay,extra){last={ref:j.order_ref,total:j.total,pay:pay,recv:extr
   cart={};loose={};att={};idem=null;$('cname').value='';$('cnote').value='';drawTiles();drawLines();quote={total:0};paintTotal();}
 function newOrder(){closeOv();}
 function printRcpt(){if(!last)return;var l=last;$('rcpt').innerHTML='<div style="text-align:center;font-weight:bold;font-size:14px">LET\'S TACO DA NANG</div><div style="text-align:center">43 An Thuong 30</div><hr>'+esc(l.ref)+'<br>'+esc(l.at.toLocaleString())+(l.name?'<br>'+esc(l.name):'')+'<hr>'+l.lines.map(esc).join('<br>')+'<hr><b>TOTAL '+vnd(l.total)+'</b><br>Paid by '+esc(l.pay)+(l.pay==='cash'&&l.recv?'<br>Received '+vnd(l.recv)+'<br>Change '+vnd(l.change||0):'')+'<hr><div style="text-align:center">Thank you!</div>';window.print();}
+
+/* ---------- table payments (dine-in guests who asked to pay) ---------- */
+var TP=[],tpSeen={},tpInit=false;
+function tpBeep(){try{var c=new(window.AudioContext||window.webkitAudioContext)();[0,0.2,0.4].forEach(function(t){var o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=988;g.gain.setValueAtTime(0.4,c.currentTime+t);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+t+0.15);o.start(c.currentTime+t);o.stop(c.currentTime+t+0.15);});}catch(e){}}
+function pollTP(){LTAuth.api('/rest/v1/orders?select=id,order_ref,table_number,total,customer_name&order_type=eq.dinein&payment_status=eq.requested&status=neq.cancelled&order=created_at.asc').then(function(d){
+  if(!Array.isArray(d))return;var fresh=d.some(function(o){return !tpSeen[o.id];});d.forEach(function(o){tpSeen[o.id]=1;});if(fresh&&tpInit)tpBeep();tpInit=true;TP=d;
+  $('tpn').textContent=d.length?'('+d.length+')':'';$('tpbtn').style.background=d.length?'#C0392B':'transparent';$('tpbtn').style.color=d.length?'#fff':'#D4A017';
+  if($('box').getAttribute('data-tp'))drawTP();});}
+function openTP(){ov('');$('box').setAttribute('data-tp','1');drawTP();}
+function drawTP(){var h='<h2>TABLE PAYMENTS</h2><p style="color:#B8A99A;font-size:.85rem;margin-bottom:12px">Guests who asked to pay. Collect the money, then tap how they paid.</p>';
+  h+=TP.length?TP.map(function(o){return '<div class="ln" style="text-align:left"><div class="lr"><span class="lname">TABLE '+esc(o.table_number||'?')+' · '+esc(o.order_ref)+'</span><span style="color:#D4A017;font-weight:700">'+vnd(o.total)+'</span></div><div class="pay" style="margin-top:8px"><button class="pb pcash" style="padding:10px;font-size:1.05rem" data-o="'+esc(o.id)+'" data-pm="cash">CASH</button><button class="pb pqr" style="padding:10px;font-size:1.05rem" data-o="'+esc(o.id)+'" data-pm="qr">QR</button><button class="pb pcard" style="padding:10px;font-size:1.05rem" data-o="'+esc(o.id)+'" data-pm="card">CARD</button></div></div>';}).join(''):'<div class="empty">No tables waiting to pay</div>';
+  h+='<div class="err" id="perr"></div><button class="back" onclick="closeOv()">Close</button>';$('box').innerHTML=h;$('box').setAttribute('data-tp','1');
+  $('box').querySelectorAll('[data-pm]').forEach(function(b){b.onclick=function(){b.disabled=true;
+    LTAuth.fetch('/rest/v1/orders?id=eq.'+encodeURIComponent(b.getAttribute('data-o')),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({payment_status:'paid',payment_method:b.getAttribute('data-pm')})}).then(function(r){
+      if(r&&r.ok)pollTP();else{b.disabled=false;var e=$('perr');if(e)e.textContent='Could not save. Try again.';}});};});}
 
 /* ---------- QR bank setup (owner) ---------- */
 function loadCfg(){LTAuth.api('/rest/v1/pos_config?select=*&id=eq.1').then(function(r){CFG=Array.isArray(r)&&r[0]?r[0]:null;});}
