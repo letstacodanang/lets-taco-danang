@@ -1001,8 +1001,10 @@ function loadO(){
 function mkDiv(cls,content){return '<div class="'+cls+'">'+content+'</div>';}
 function mkSpan(cls,content){return '<span class="'+cls+'">'+content+'</span>';}
 
+function ltTick(root){(root||document).querySelectorAll('.tago').forEach(function(e){var t=tAgo(e.getAttribute('data-ts'));if(e.textContent!==t)e.textContent=t;});}
+setInterval(function(){ltTick(document);},10000);
 function renderOL(orders,container){
-  if(!orders||!orders.length){container.innerHTML=mkDiv('empty','No orders found');return;}
+  if(!orders||!orders.length){container._sig=null;container.innerHTML=mkDiv('empty','No orders found');return;}
   // Separate by type
   var din=orders.filter(function(o){return o.order_type==='dinein';});
   var tak=orders.filter(function(o){return o.order_type==='takeout'||o.order_type==='pickup';});
@@ -1017,7 +1019,15 @@ function renderOL(orders,container){
   if(del.length)html+=renderGroup('DELIVERY',del);
   if(other.length)html+=renderGroup('ORDERS',other);
   if(!html)html=mkDiv('empty','No orders found');
+  var _sig=html.replace(/<span class="tago"[^>]*>[^<]*<\/span>/g,'');
+  if(container._sig===_sig&&container.children.length){ltTick(container);return;}
+  var _open=[];
+  container.querySelectorAll('.oc[data-oid]').forEach(function(c){var b=c.querySelector('.oc-body');if(b&&b.style.display==='block')_open.push(c.getAttribute('data-oid'));});
+  var _sy=window.scrollY;
+  container._sig=_sig;
   container.innerHTML=html;
+  _open.forEach(function(id){var c=container.querySelector('.oc[data-oid="'+id+'"]');if(c){c.querySelector('.oc-body').style.display='block';c.querySelector('.oc-arr').textContent='▼';}});
+  if(window.scrollY!==_sy)window.scrollTo(0,_sy);
   // Attach expand toggles
   container.querySelectorAll('.oc-hdr').forEach(function(hdr){
     hdr.addEventListener('click',function(){
@@ -1109,7 +1119,7 @@ function renderCard(o){
   var isDone=o.status==='delivered'||o.status==='cancelled';
   var card='';
   // Collapsed header - always visible
-  card+='<div class="oc '+(SCS[o.status]||'sp')+'" style="margin-bottom:8px;padding:0;overflow:hidden;'+(isDone?'opacity:0.6;':'')+'">';
+  card+='<div data-oid="'+o.id+'" class="oc '+(SCS[o.status]||'sp')+'" style="margin-bottom:8px;padding:0;overflow:hidden;'+(isDone?'opacity:0.6;':'')+'">';
   card+='<div class="oc-hdr" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;'+(isNew?'background:rgba(192,57,43,0.08);':'')+'">';
   card+='<div style="display:flex;align-items:center;gap:10px;">';
   card+='<span class="oc-arr" style="color:#D4A017;font-size:0.7rem;">▶</span>';
@@ -1119,7 +1129,7 @@ function renderCard(o){
   card+='</div>';
   card+='<div style="display:flex;align-items:center;gap:8px;">';
   card+='<span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:#D4A017;">'+fV(o.total||0)+'</span>';
-  card+='<span style="font-size:0.7rem;color:#B8A99A;">'+tAgo(o.created_at)+'</span>';
+  card+='<span class="tago" data-ts="'+esc(o.created_at||'')+'" style="font-size:0.7rem;color:#B8A99A;">'+tAgo(o.created_at)+'</span>';
   card+='</div>';
   card+='</div>';
   // Expanded body - hidden by default, click to expand

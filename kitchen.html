@@ -131,13 +131,15 @@ function statusMap(o){
   return null;
 }
 
+function ltTick(){document.querySelectorAll('.tago').forEach(function(e){var t=tAgo(e.getAttribute('data-ts'));if(e.textContent!==t)e.textContent=t;});}
+setInterval(ltTick,1000);
 function render(orders){
   var g=document.getElementById("kgrid");
   var active=orders.filter(function(o){return["placed","accepted","prepping","cooking","ready"].indexOf(o.status)>-1;});
   document.getElementById("kcount").textContent=active.length+" ACTIVE";
 
   if(!active.length){
-    g.innerHTML="<div class=\"empty-state\"><div class=\"emoji\">🌮</div><p>No active orders — standing by</p></div>";
+    g._sig=null;g.innerHTML="<div class=\"empty-state\"><div class=\"emoji\">🌮</div><p>No active orders — standing by</p></div>";
     lastIds=[];
     return;
   }
@@ -174,7 +176,12 @@ function render(orders){
     other.forEach(function(o){html+=renderCard(o);});
   }
 
+  var _sig=html.replace(/<span class="tago"[^>]*>[^<]*<\/span>/g,'');
+  if(g._sig===_sig&&g.children.length){ltTick();return;}
+  var _sy=window.scrollY;
+  g._sig=_sig;
   g.innerHTML=html;
+  if(window.scrollY!==_sy)window.scrollTo(0,_sy);
 
   // Attach button listeners
   g.querySelectorAll(".card-btn:not(.btn-disabled)").forEach(function(btn){
@@ -238,7 +245,7 @@ function renderCard(o){
   html+=payBanner;
   html+="<div class=\"card-items\">"+ihtml+"</div>";
   html+=notesRow;
-  html+="<div class=\"card-time\">Ordered "+tAgo(o.created_at)+"</div>";
+  html+="<div class=\"card-time\">Ordered <span class=\"tago\" data-ts=\""+esc(o.created_at||"")+"\">"+tAgo(o.created_at)+"</span></div>";
   html+="<button class=\"card-btn "+sm.btn+"\" data-id=\""+o.id+"\" data-action=\""+sm.btntxt+"\">"+sm.btntxt+"</button>";
   html+="</div>";
   return html;
@@ -261,7 +268,7 @@ function kStart(){
   document.getElementById('kuser').textContent=(LTAuth.session()||{}).name||'';
   if(kStarted)return;kStarted=true;poll();kTimer=setInterval(poll,2000);
 }
-function kStop(){kStarted=false;clearInterval(kTimer);lastIds=[];lastPaidIds=[];document.getElementById('kgrid').innerHTML='';}
+function kStop(){kStarted=false;clearInterval(kTimer);lastIds=[];lastPaidIds=[];var _g=document.getElementById('kgrid');_g._sig=null;_g.innerHTML='';}
 function kLogin(ev){
   ev.preventDefault();
   var e=document.getElementById('kemail').value.trim().toLowerCase(),p=document.getElementById('kpass').value;
